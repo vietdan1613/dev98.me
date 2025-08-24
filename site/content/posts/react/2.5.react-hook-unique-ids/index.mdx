@@ -1,0 +1,131 @@
+---
+title: "React Hook: Unique IDs"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHooks']
+date: 2025-06-06
+thumbnail: image.jpg
+featured: true
+---
+
+**Building Accessible Forms in React with `useId`**
+
+When building forms in React, accessibility should never be an afterthought—it's a fundamental part of delivering a high-quality user experience. One of the simplest but most critical practices is making sure every input field is **properly associated with its label**. This ensures users with screen readers or motor impairments can interact with your form just as effectively as everyone else.
+
+But when you're creating **reusable components**, this simple rule gets a bit trickier. Let's explore why—and how React’s `useId` hook helps solve the problem.
+
+---
+
+## Why Unique IDs Matter
+
+Each input element in your form should have a unique `id`, and its corresponding label should use the `htmlFor` attribute (or `for` in plain HTML) pointing to that ID:
+
+```html
+<label for="email">Email:</label>
+<input id="email" type="email" />
+```
+
+This connection:
+
+* Helps screen readers announce the label when focusing the input.
+* Allows users to click the label to focus the input.
+* Makes your forms more intuitive and usable for everyone.
+
+However, when you're building **reusable components** like `<Field />`, hardcoding IDs isn't an option—you’d risk duplicating IDs if the component is used multiple times. And generating random IDs comes with its own problems, especially in server-rendered (SSR) React apps.
+
+---
+
+## Enter: `useId` 🎯
+
+React’s [`useId`](https://react.dev/reference/react/useId) hook solves this problem elegantly. It generates a **unique and stable ID** string for each instance of a component, and it's **consistent between server and client**, making it SSR-safe.
+
+Here’s how you can use it:
+
+```tsx
+import { useId } from 'react'
+
+function FormField() {
+	const id = useId()
+	return (
+		<div>
+			<label htmlFor={id}>Name:</label>
+			<input id={id} type="text" />
+		</div>
+	)
+}
+```
+
+Unlike `useState` or `useEffect`, `useId` doesn’t accept any arguments and doesn’t return a setter. It just gives you a consistent, unique ID you can rely on throughout the component's lifecycle.
+
+---
+
+## Making a Reusable `<Field />` Component
+
+Let’s say you’re building a generic `Field` component for your app. You want to:
+
+* Ensure each input has a proper label association.
+* Avoid ID collisions.
+* Support custom IDs when needed.
+
+Here’s how you could implement that:
+
+```tsx
+function Field({ label, id: customId, name, ...props }) {
+	const generatedId = useId()
+	const id = customId ?? generatedId
+
+	return (
+		<div>
+			<label htmlFor={id}>{label}</label>
+			<input id={id} name={name} {...props} />
+		</div>
+	)
+}
+```
+
+Now, if a parent passes a specific `id`, your component will use it. Otherwise, it falls back to a safely generated unique ID.
+
+✅ This means:
+
+* Labels always work as expected.
+* You're SSR-safe.
+* You don't need to worry about managing IDs manually.
+
+---
+
+## Important Caveats
+
+* `useId` is **for DOM element associations only**—like linking a label to an input or associating `aria-describedby` attributes.
+* Don't use it for **React keys** in lists. Keys should always come from your data.
+
+Incorrect:
+
+```tsx
+items.map(item => <li key={useId()}>{item}</li>) // ❌ BAD
+```
+
+Correct:
+
+```tsx
+items.map(item => <li key={item.id}>{item.name}</li>) // ✅ GOOD
+```
+
+---
+
+## Bonus: What’s That `identifierPrefix` Thing?
+
+The `useId` hook also works with an optional `identifierPrefix` feature in advanced cases (mostly when working with multiple React roots or frameworks that integrate React). You probably won’t need it—but [here’s the doc if you’re curious](https://react.dev/reference/react/useId).
+
+---
+
+## Final Thoughts
+
+Accessibility is about *inclusion*, and small details like proper `id`/`label` connections can make a big difference. With `useId`, React gives us a powerful, ergonomic tool to ensure our forms are accessible, even when abstracted into reusable components.
+
+Next time you're building a form field component, give `useId` a spin—it’s the simplest way to make your UI **just work**, for everyone.
+
+---
+
+👨‍💻 *Want to dig deeper into accessibility and form design in React? Check out the official [React docs on `useId`](https://react.dev/reference/react/useId).*
+
+Let’s keep building better web experiences—one unique ID at a time.

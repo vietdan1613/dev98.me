@@ -1,0 +1,197 @@
+---
+title: "React Testing: Avoid implementation details"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-23
+thumbnail: image.jpg
+featured: true
+---
+
+**🧪 Avoiding Implementation Details in Your React Tests**
+
+When writing tests for your React components, there's one golden rule that can make your code more robust, flexible, and maintainable:
+
+> ✅ **Don’t test implementation details.**
+> ❌ **Test what the user sees and does.**
+
+Let’s break down what that means, why it matters, and how to fix tests that break unnecessarily when you refactor your components.
+
+---
+
+## 💭 What Are Implementation Details?
+
+**Implementation details** are the internal workings of your code — how an outcome is achieved. In contrast, **public behavior** is what the end user sees or interacts with.
+
+Here’s an example with a simple utility function:
+
+```js
+multiply(4, 5) // 20
+```
+
+The implementation of `multiply()` could be anything:
+
+```js
+const multiply = (a, b) => a * b
+```
+
+Or even:
+
+```js
+function multiply(a, b) {
+  let total = 0
+  for (let i = 0; i < b; i++) {
+    total += a
+  }
+  return total
+}
+```
+
+The point? The user doesn’t care how you got the result — just that it’s correct.
+
+Now let’s apply this principle to **React component testing**.
+
+---
+
+## 🚨 A Real Testing Problem
+
+Here’s a simple `Counter` component:
+
+```jsx
+function Counter() {
+  const [count, setCount] = React.useState(0)
+  const increment = () => setCount(c => c + 1)
+  return <button onClick={increment}>{count}</button>
+}
+```
+
+In our test, we might do this:
+
+```js
+const { container } = render(<Counter />)
+fireEvent.click(container.firstChild)
+expect(container.firstChild.textContent).toBe('1')
+```
+
+But what if we refactor?
+
+```jsx
+function Counter() {
+  const [count, setCount] = React.useState(0)
+  const increment = () => setCount(c => c + 1)
+  return (
+    <span>
+      <button onClick={increment}>{count}</button>
+    </span>
+  )
+}
+```
+
+💥 Boom. The test fails — even though the component works just fine for the user. Why?
+Because we wrote the test based on the component’s **structure** — an **implementation detail**.
+
+---
+
+## ✅ How to Test the Right Way
+
+Let’s fix that using **React Testing Library's user-centric queries**.
+
+```js
+import { render, screen, fireEvent } from '@testing-library/react'
+import Counter from '../counter'
+
+test('increments the counter', () => {
+  render(<Counter />)
+
+  const button = screen.getByRole('button', { name: '0' })
+  fireEvent.click(button)
+
+  expect(button).toHaveTextContent('1')
+})
+```
+
+### Why This Is Better:
+
+* ✅ `screen.getByRole('button', { name: '0' })` matches how users experience the UI
+* ✅ Doesn’t rely on specific tag structure or DOM tree
+* ✅ Won’t break if we wrap elements or change HTML tags
+* ✅ Easy to refactor your component without rewriting tests
+
+> 📚 Learn more about `screen`:
+> [https://testing-library.com/docs/dom-testing-library/api-queries#screen](https://testing-library.com/docs/dom-testing-library/api-queries#screen)
+
+---
+
+## 💯 Bonus: Simulate Events Like a Real User
+
+Even calling `fireEvent.click(button)` isn’t *quite* how users interact. When a user clicks a button, they:
+
+* Hover over it
+* Focus it
+* Mouse down
+* Mouse up
+* Then click!
+
+That’s a lot of interaction, and `fireEvent.click()` only simulates one event.
+
+So let’s go a step further.
+
+### Enter `@testing-library/user-event`
+
+This library simulates **real user behavior** more accurately.
+
+```js
+import userEvent from '@testing-library/user-event'
+
+test('increments the counter', async () => {
+  render(<Counter />)
+
+  const button = screen.getByRole('button', { name: '0' })
+  await userEvent.click(button)
+
+  expect(button).toHaveTextContent('1')
+})
+```
+
+### Benefits of `userEvent`
+
+* 🎯 Simulates real interaction flow
+* 🎮 Fires all relevant events in the right order
+* 🤝 Encourages user-first testing patterns
+
+> 🧪 Explore how it works behind the scenes:
+> [`click()` source code](https://github.com/testing-library/user-event/blob/main/src/click.ts)
+
+---
+
+## 🧼 Recap: Avoid Implementation Details
+
+| ❌ Bad Practice                    | ✅ Good Practice                              |
+| --------------------------------- | -------------------------------------------- |
+| Query by `container.firstChild`   | Use `screen.getByRole` or `screen.getByText` |
+| Assert with `textContent === ...` | Use `toHaveTextContent()`                    |
+| Use `fireEvent.click()`           | Use `await userEvent.click()`                |
+| Break tests when HTML changes     | Build refactor-friendly, stable tests        |
+
+---
+
+## 🧠 Final Thoughts
+
+Tests are only valuable if they continue to give you confidence **after a refactor**.
+
+That means writing tests that focus on what the user **sees** and **does**, not how your component is built.
+
+So next time you write a test, ask yourself:
+
+> “Would this still pass if I changed the HTML structure but kept the same behavior?”
+
+If not, it’s time to ditch the implementation details.
+
+---
+
+## 📋 Practice + Reflect
+
+Ready to practice this skill and retain what you learned?
+Fill out the elaboration and feedback form:
+
+👉 [Avoid Implementation Details – Feedback Form](https://ws.kcd.im/?ws=Testing%20React%20Applications%20%F0%9F%A7%90&e=03%3A%20Avoid%20implementation%20details&em=)

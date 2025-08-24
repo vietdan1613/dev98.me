@@ -1,0 +1,217 @@
+---
+title: "React Hooks: Lifting State"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHooks']
+date: 2025-06-04
+thumbnail: image.jpg
+featured: true
+---
+
+**🪄 Mastering State Management in React: Lifting and Colocating Stat**e
+
+React makes it easy to build dynamic user interfaces by managing UI state. But what happens when multiple components need to share or manage that state? In this blog post, we’ll walk through one of the most important concepts in React development: **lifting and colocating state**.
+
+We'll break this into three core parts:
+
+1. **Lifting State** – Sharing state across sibling components.
+2. **Lifting More State** – Centralizing state for global behavior.
+3. **Colocating State** – Pushing state back down for maintainability and performance.
+
+Let’s dive in! 🏊‍♂️
+
+---
+
+## 🎈 Part 1: Lifting State — Sharing Data Between Siblings
+
+A common challenge for beginners is:
+**"How do I share state between sibling components?"**
+
+### The answer: **Lift the State Up**
+
+You move the state to the closest common parent and pass it down via props.
+
+### Let's start with a simple example:
+
+```tsx
+import { useState } from 'react'
+
+function App() {
+  return (
+    <div>
+      <Counter />
+    </div>
+  )
+}
+
+function Counter() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  )
+}
+```
+
+### Now let’s add a sibling component:
+
+```tsx
+function App() {
+  return (
+    <div>
+      <Counter />
+      <CountDisplay />
+    </div>
+  )
+}
+
+function CountDisplay() {
+  return <div>Count: 0</div>
+}
+```
+
+Right now, `CountDisplay` doesn't know the actual count.
+To fix this, we **lift the state to the App component**:
+
+```tsx
+function App() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <div>
+      <Counter count={count} setCount={setCount} />
+      <CountDisplay count={count} />
+    </div>
+  )
+}
+
+function Counter({ count, setCount }) {
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  )
+}
+
+function CountDisplay({ count }) {
+  return <div>Count: {count}</div>
+}
+```
+
+✅ **Now both components are synced through shared state.**
+This pattern of lifting state is extremely common and essential to understanding React's unidirectional data flow.
+
+---
+
+## 🧠 Part 2: Lifting More State — For Shared Features
+
+Imagine we now have a **blog app** where each post can be "liked" with a heart ❤️. Initially, you may have implemented the like functionality *inside each Card component*, using local state.
+
+```tsx
+function Card({ post }) {
+  const [liked, setLiked] = useState(false)
+
+  return (
+    <div>
+      <h2>{post.title}</h2>
+      <button onClick={() => setLiked(!liked)}>
+        {liked ? '💖' : '🖤'}
+      </button>
+    </div>
+  )
+}
+```
+
+But now the product team wants a new feature:
+
+> “Sort posts based on whether they’re liked.”
+
+To achieve this, we need a **global understanding** of which posts are liked — that means we have to **lift the `liked` state** up to a parent, such as the `MatchingPosts` component.
+
+This involves:
+
+* Managing all `liked` post IDs in the parent component.
+* Passing the `liked` status and toggle function down as props to each card.
+
+Once lifted, we can easily sort the posts and re-render based on their liked status.
+
+✅ **Key takeaway:**
+*Lift state when multiple components depend on the same piece of data or when global behavior (like sorting) is needed.*
+
+---
+
+## ⚖️ Part 3: Colocating State — Pushing It Back Down
+
+After implementing and releasing the feature to sort posts by likes, users report:
+
+> “It’s confusing to have posts reorder themselves when I like something.”
+
+So the product team decides to remove the sorting functionality. Now, no other component needs to know which posts are liked.
+
+Does that mean the lifted state is still useful?
+
+🛑 **Nope. It’s time to colocate.**
+
+Since the `liked` state is now only needed inside the `Card` component, we should **move it back** into that component to improve:
+
+* **Performance** (fewer re-renders of the parent)
+* **Maintainability** (simpler prop chains)
+
+Reverting back to this is ideal:
+
+```tsx
+function Card({ post }) {
+  const [liked, setLiked] = useState(false)
+
+  return (
+    <div>
+      <h2>{post.title}</h2>
+      <button onClick={() => setLiked(!liked)}>
+        {liked ? '💖' : '🖤'}
+      </button>
+    </div>
+  )
+}
+```
+
+✅ **Key takeaway:**
+*Colocate state whenever possible. Don’t keep it higher in the component tree than it needs to be.*
+
+> 🧪 **Pro tip**: Always evaluate *who uses the state*. If it’s just one component — keep it there.
+
+---
+
+## 💡 Final Thoughts
+
+React gives you flexibility in how you structure and manage your state. Learning **when to lift** and **when to colocate** is a hallmark of progressing from junior to senior React developer.
+
+Here’s a summary:
+
+| Scenario                               | Action             |
+| -------------------------------------- | ------------------ |
+| Multiple components need shared data   | Lift the state     |
+| Component needs isolated state         | Colocate the state |
+| Global behavior like sorting/filtering | Lift the state     |
+| State is no longer shared              | Colocate it again  |
+
+---
+
+## 📚 Further Reading
+
+* [Sharing State Between Components – React Docs](https://react.dev/learn/sharing-state-between-components)
+* [When to break up a component – Kent C. Dodds](https://kentcdodds.com/blog/when-to-break-up-a-component-into-multiple-components)
+* [State Colocation Will Make Your React App Faster – Kent C. Dodds](https://kentcdodds.com/blog/state-colocation-will-make-your-react-app-faster)
+
+---
+
+👨‍🏫 **Practice what you’ve learned**:
+Next time you're building a feature, ask yourself:
+
+> *"Who actually needs this piece of state?"*
+
+Then decide whether to **lift** or **colocate** based on that answer.
+
+Happy coding! 🚀
+

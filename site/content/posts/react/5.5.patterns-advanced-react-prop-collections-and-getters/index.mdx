@@ -1,0 +1,235 @@
+---
+title: "Advanced React Patterns: Prop Collections and Getters"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-07-06
+thumbnail: image.jpg
+featured: true
+---
+
+**🧰 Prop Collections and Getters in React: Building Flexible Hooks Without Sacrificing Usability**
+
+<callout-success>
+<strong>One-liner:</strong> The <strong>Prop Collections and Getters</strong> pattern allows hooks to provide easy-to-use, accessible, and flexible APIs for common UI interactions.
+</callout-success>
+
+React hooks are amazing for encapsulating stateful logic, but when you’re building reusable hooks—especially for component libraries—you often need to do a bit more than just return state and state setters.
+
+This is where the **Prop Collections and Prop Getters** patterns shine. They help abstract away common event handling, accessibility concerns, and interaction logic—making it easier for consumers of your hook to use them correctly with minimal configuration.
+
+Let’s explore how this works. 👇
+
+---
+
+## 🤖 Problem: Too Much Boilerplate
+
+Let’s say you're building a simple toggle button using a custom `useToggle` hook. You’d typically expect users to do this:
+
+```tsx
+function App() {
+  const { on, toggle } = useToggle()
+  return <button aria-pressed={on} onClick={toggle}>{on ? 'On' : 'Off'}</button>
+}
+```
+
+Not too bad, right?
+
+But in more complex scenarios, users might need to remember:
+
+* `aria-pressed` for accessibility
+* `onClick` to trigger `toggle`
+* Custom labels or styling
+
+This can become error-prone. Wouldn’t it be great if your hook could *suggest* the right props or even *generate* them for the user?
+
+---
+
+## 🧩 Solution: Prop Collections
+
+A **prop collection** is a bundle of props your hook returns that users can spread onto an element.
+
+### Example:
+
+```tsx
+function useCounter(initialCount = 0) {
+  const [count, setCount] = React.useState(initialCount)
+  const increment = () => setCount(c => c + 1)
+
+  return {
+    count,
+    increment,
+    counterButtonProps: {
+      children: count,
+      onClick: increment,
+    },
+  }
+}
+
+function App() {
+  const counter = useCounter()
+  return <button {...counter.counterButtonProps} />
+}
+```
+
+💡 Prop collections make it easy to use your hook for **typical cases**, without thinking about implementation details.
+
+---
+
+## ⚠️ Problem with Collections: Overriding Props
+
+What happens if someone needs to customize a prop—say, they want to add their own `onClick`?
+
+```tsx
+<button
+  {...togglerProps}
+  onClick={() => console.log('Custom click')}
+/>
+```
+
+Uh oh… Your `onClick` just got overwritten! The toggle logic no longer runs.
+
+---
+
+## 🔄 Enter: Prop Getters
+
+**Prop Getters** solve this by turning the prop object into a function.
+
+### Instead of this:
+
+```tsx
+<button {...togglerProps} />
+```
+
+### We do this:
+
+```tsx
+<button {...getTogglerProps({ onClick: () => console.log('custom') })} />
+```
+
+Now the getter function can **merge** or **compose** the incoming props with its internal behavior—so both `toggle()` and your custom `console.log()` work together.
+
+---
+
+## 🛠️ Building a Prop Getter in `useToggle`
+
+Here’s how it might look:
+
+```tsx
+function useToggle() {
+  const [on, setOn] = React.useState(false)
+  const toggle = () => setOn(prev => !prev)
+
+  const getTogglerProps = ({
+    onClick,
+    ...props
+  }: React.ComponentProps<'button'> = {}) => {
+    return {
+      'aria-pressed': on,
+      onClick: (e: React.MouseEvent) => {
+        onClick?.(e)
+        toggle()
+      },
+      ...props,
+    }
+  }
+
+  return { on, toggle, getTogglerProps }
+}
+```
+
+This ensures the toggle functionality **always runs**, even when developers pass their own `onClick`.
+
+---
+
+## ✅ Benefits of Prop Getters
+
+| Benefit           | Description                                             |
+| ----------------- | ------------------------------------------------------- |
+| **Composability** | Users can layer their own props on top of internal ones |
+| **Accessibility** | Ensure the correct ARIA attributes are always included  |
+| **Encapsulation** | Logic stays inside your hook, UI stays flexible         |
+| **Reusability**   | Build components and hooks once, use them everywhere    |
+
+---
+
+## 🧪 Example in Action
+
+Here’s how you use it:
+
+```tsx
+function App() {
+  const { on, getTogglerProps } = useToggle()
+
+  return (
+    <div>
+      <button {...getTogglerProps()}>
+        {on ? 'ON' : 'OFF'}
+      </button>
+
+      <button
+        {...getTogglerProps({
+          onClick: () => console.log('Custom click'),
+          'aria-label': 'custom-button',
+        })}
+      >
+        {on ? 'Custom On' : 'Custom Off'}
+      </button>
+    </div>
+  )
+}
+```
+
+Now both buttons work flawlessly—and even your accessibility tooling will thank you. 🧼
+
+---
+
+## 🧠 Bonus Tip: Build on Top of Hooks
+
+You can use prop getters inside a component like `ToggleButton`, then hide all the wiring from the outside world:
+
+```tsx
+function ToggleButton() {
+  const { getTogglerProps } = useToggle()
+  return <button {...getTogglerProps()} />
+}
+```
+
+Or allow consumers to opt-in to either:
+
+* A fully built component (`<ToggleButton />`)
+* A customizable hook with prop getters (`useToggle()`)
+
+This hybrid approach gives you the best of both worlds: **power + simplicity**.
+
+---
+
+## 📦 Real-World Libraries Using This Pattern
+
+* [Downshift](https://github.com/downshift-js/downshift): Combobox, autocomplete, select menus
+* [Conform](https://conform.guide): For validating and managing accessible forms
+* [Reakit](https://reakit.io): Low-level accessible component toolkit
+
+---
+
+## 🔚 Conclusion
+
+The **Prop Collections and Getters** pattern is a powerful addition to your React toolkit—especially when building **hooks for reusable UI logic**.
+
+It helps you:
+
+* Reduce boilerplate for consumers
+* Preserve flexibility with user-defined props
+* Ensure correct and accessible behavior
+
+Whether you're creating a design system, open-source library, or an internal component platform, adopting this pattern can make your APIs both **easy to use** and **hard to misuse**.
+
+---
+
+## 📚 Further Reading
+
+* 🧱 [Compound Components](https://epicreact.dev/compound-components)
+* 🔁 [Mixing Component Patterns](https://kentcdodds.com/blog/mixing-component-patterns)
+* ⚙️ [Downshift Prop Getters in Action](https://www.downshift-js.com)
+
+---
