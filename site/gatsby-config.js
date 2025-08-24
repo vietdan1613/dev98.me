@@ -54,14 +54,14 @@ module.exports = {
         name: 'Home',
         slug: '/'
       },
-      {
-        name: 'Tutors',
-        slug: '/authors'
-      },
-      {
-        name: 'Contact',
-        slug: '/contact'
-      }
+      // {
+      //   name: 'Tutors',
+      //   slug: '/authors'
+      // },
+      // {
+      //   name: 'Contact',
+      //   slug: '/contact'
+      // }
     ],
 
     //Footer Menu Items (2 Sets)
