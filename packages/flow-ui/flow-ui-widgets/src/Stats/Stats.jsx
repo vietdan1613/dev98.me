@@ -39,7 +39,7 @@ const Stats = () => {
 				<FaUserGraduate />
 			</Heading>
 			<Heading variant="h2" sx={styles.number}>
-				250+
+				150+
 				<Heading as="p" variant="h4" sx={styles.text}>
 					REACTJS
 				</Heading>

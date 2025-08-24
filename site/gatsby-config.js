@@ -36,15 +36,15 @@ module.exports = {
     social: [
       {
         name: 'Github',
-        url: 'https://github.com/gatsbyjs'
+        url: 'https://github.com/danielnguyen5070'
       },
       {
-        name: 'Twitter',
-        url: 'https://twitter.com/gatsbyjs'
+        name: 'Curriculum Vitae',
+        url: 'https://drive.google.com/file/d/16IyXUTxGuNRLI0Cnl5VQ7t4BjSUwBFps/view?usp=sharing'
       },
       {
-        name: 'Instagram',
-        url: 'https://github.com/gatsbyjs'
+        name: 'Linkedin',
+        url: 'https://www.linkedin.com/in/daniel-nguyen-1998y/'
       }
     ],
 
