@@ -29,8 +29,7 @@ const HeroContent = () => {
 					Hi, I'm <span>Daniel Nguyen</span>. Frontend Developer
 				</Heading>
 				<Heading variant="h3" sx={styles.running}>
-					Specialized in ReactJS and JavaScript, I create engaging and
-					user-friendly web applications.
+					Specialized in ReactJS and JavaScript
 				</Heading>
 			</Section>
 			<Box variant="buttons.group" sx={styles.buttons}>

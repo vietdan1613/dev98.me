@@ -41,6 +41,10 @@ module.exports = {
       {
         name: 'Linkedin',
         url: 'https://www.linkedin.com/in/daniel-nguyen-1998y/'
+      },
+      {
+        name: 'Youtube',
+        url: 'https://www.youtube.com/@Dev98-n2w'
       }
     ],
 

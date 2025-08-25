@@ -39,19 +39,19 @@ const Stats = () => {
 				<FaUserGraduate />
 			</Heading>
 			<Heading variant="h2" sx={styles.number}>
-				150+
+				60+
 				<Heading as="p" variant="h4" sx={styles.text}>
 					REACTJS
 				</Heading>
 			</Heading>
 			<Heading variant="h2" sx={styles.number}>
-				30+
+				20+
 				<Heading as="p" variant="h4" sx={styles.text}>
 					JAVASCRIPT
 				</Heading>
 			</Heading>
 			<Heading variant="h2" sx={styles.number}>
-				15+
+				10+
 				<Heading as="p" variant="h4" sx={styles.text}>
 					NEXTJS
 				</Heading>
