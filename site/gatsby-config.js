@@ -39,10 +39,6 @@ module.exports = {
         url: 'https://github.com/danielnguyen5070'
       },
       {
-        name: 'Curriculum Vitae',
-        url: 'https://drive.google.com/file/d/16IyXUTxGuNRLI0Cnl5VQ7t4BjSUwBFps/view?usp=sharing'
-      },
-      {
         name: 'Linkedin',
         url: 'https://www.linkedin.com/in/daniel-nguyen-1998y/'
       }
