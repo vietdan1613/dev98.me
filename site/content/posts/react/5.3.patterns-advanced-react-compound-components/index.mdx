@@ -20,44 +20,6 @@ featured: true
 
 A **compound component** is a group of components that work together to form a cohesive UI unit. If you've used native HTML form elements, you’ve already seen this in action:
 
-```html
-<select>
-  <option value="1">Option 1</option>
-  <option value="2">Option 2</option>
-</select>
-```
-
-Here, `<select>` manages the state, and `<option>` elements describe how the select behaves. The options don’t hold any state themselves, but they rely on the context of the `<select>` component to work correctly.
-
-This declarative design is what we aim to replicate in React with **compound components**.
-
----
-
-## 👶 The Naive Approach
-
-Let’s say you want to build your own custom dropdown:
-
-```tsx
-<CustomSelect
-  options={[
-    { value: '1', display: 'Option 1' },
-    { value: '2', display: 'Option 2' },
-  ]}
-/>
-```
-
-It works, but it's rigid. What if you want to style individual options differently? Or run logic based on which option is selected?
-
-To handle all that, you’d need to bloat your component with extra props and APIs. That’s where the compound component pattern comes in—to give developers **control over presentation and flexibility** without overcomplicating the API.
-
----
-
-## 🎯 The Real Goal: Reusability and Flexibility
-
-For the rest of this example, we’ll focus on a simpler case: a `<Toggle />` component.
-
-Your typical implementation might look like this:
-
 ```tsx
 <Toggle
   on={isOn}

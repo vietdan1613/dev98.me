@@ -18,62 +18,7 @@ featured: true
 
 React Hooks gave us a powerful and expressive way to write components. But they also introduced a subtle shift in behavior: functions within your component “remember” the values from when they were created. This is due to how **JavaScript closures** work.
 
-Let’s illustrate this with an example.
-
-### React Class Components: Always Get the Latest Props/State
-
-In class components, accessing the latest values was straightforward:
-
-```tsx
-class PetFeeder extends React.Component {
-	state = { selectedPetFood: null }
-
-	feedPet = async () => {
-		const canEat = await this.props.pet.canEat(this.state.selectedPetFood)
-		if (canEat) {
-			this.props.pet.eat(this.state.selectedPetFood)
-		}
-	}
-
-	render() {
-		return (
-			<div>
-				<PetFoodChooser
-					onSelection={selectedPetFood => this.setState({ selectedPetFood })}
-				/>
-				<button onClick={this.feedPet}>Feed {this.props.pet.name}</button>
-			</div>
-		)
-	}
-}
-```
-
-### ⚠️ The Bug
-
-Now imagine the user selects "worms" and clicks “Feed.” While waiting for `canEat(worms)` to return, they change their selection to "grass." When the check completes, we might mistakenly feed the pet **grass** instead of **worms** — even though the check was for worms.
-
-This kind of bug is subtle, hard to reproduce, and very real in asynchronous code.
-
-### ✅ The Fix (In Class Components)
-
-You could solve this by caching the props/state at the time the function runs:
-
-```tsx
-feedPet = async () => {
-	const { pet } = this.props
-	const { selectedPetFood } = this.state
-	const canEat = await pet.canEat(selectedPetFood)
-	if (canEat) {
-		pet.eat(selectedPetFood)
-	}
-}
-```
-
-This ensures the values being used are **snapshotted** at the time of the action — no surprises.
-
----
-
-## ⚙️ React Hooks Flip the Default
+### ⚙️ React Hooks Flip the Default
 
 Hooks changed the game. Now, closures capture **whatever values existed when the function was defined**.
 
@@ -83,12 +28,12 @@ Here’s the same `PetFeeder` component using hooks:
 function PetFeeder({ pet }) {
 	const [selectedPetFood, setSelectedPetFood] = useState(null)
 
-	const feedPet = async () => {
+	const feedPet = useCallback(async () => {
 		const canEat = await pet.canEat(selectedPetFood)
 		if (canEat) {
 			pet.eat(selectedPetFood)
 		}
-	}
+	}, []) // ← no dependencies — stale closure!
 
 	return (
 		<div>
