@@ -55,10 +55,8 @@ We’ll manually render the component to a DOM node, just like a developer would
 6. **Clean up** after your test
 
 ```js
-import * as React from 'react'
-import { createRoot } from 'react-dom/client'
-import { act } from 'react-dom/test-utils'
-
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom'
 // Assuming this is your component
 import Counter from '../counter'
 
@@ -66,7 +64,7 @@ test('counter increments and decrements', () => {
   const container = document.createElement('div')
   document.body.appendChild(container)
 
-  act(() => {
+  flushSync(() => {
     createRoot(container).render(<Counter />)
   })
 
@@ -76,12 +74,12 @@ test('counter increments and decrements', () => {
 
   expect(message.textContent).toBe('Current count: 0')
 
-  act(() => {
+  flushSync(() => {
     incrementButton.click()
   })
   expect(message.textContent).toBe('Current count: 1')
 
-  act(() => {
+  flushSync(() => {
     decrementButton.click()
   })
   expect(message.textContent).toBe('Current count: 0')
@@ -105,7 +103,7 @@ const clickEvent = new MouseEvent('click', {
   button: 0,
 })
 
-act(() => {
+flushSync(() => {
   incrementButton.dispatchEvent(clickEvent)
 })
 ```
