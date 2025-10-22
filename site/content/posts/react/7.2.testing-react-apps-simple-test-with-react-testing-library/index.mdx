@@ -10,7 +10,7 @@ featured: true
 
 **🧪 Simplifying Your Tests with React Testing Library**
 
-Welcome back to your journey in testing React applications! Previously, we built a test using `ReactDOM`, manually creating DOM nodes, appending them to the body, cleaning up, and wrapping interactions in `act()`. It worked—but it was a bit clunky.
+Welcome back to your journey in testing React applications! Previously, we built a test using `ReactDOM`, manually creating DOM nodes, appending them to the body, cleaning up, and wrapping interactions in `flushSync()`. It worked—but it was a bit clunky.
 
 Now it’s time to **streamline and modernize** your test setup with a powerful tool designed specifically for this purpose: **React Testing Library**.
 
@@ -20,7 +20,7 @@ Now it’s time to **streamline and modernize** your test setup with a powerful 
 
 React Testing Library (RTL) is the React-specific implementation of the [DOM Testing Library](https://testing-library.com/), which also powers tools for Angular, Vue, React Native, and more.
 
-RTL encourages best practices by helping you test components in a way that’s **closer to how users interact with them**. It removes boilerplate, automatically handles cleanup, and wraps everything in `act()` behind the scenes.
+RTL encourages best practices by helping you test components in a way that’s **closer to how users interact with them**. It removes boilerplate, automatically handles cleanup, and wraps everything in `flushSync()` behind the scenes.
 
 Let’s explore how this library can help you write **cleaner, more readable, and more robust tests**.
 
@@ -32,7 +32,7 @@ In our earlier test, we had to:
 
 * Manually create a `div` and append it to the `document.body`
 * Render the component using `createRoot`
-* Use `act()` for every interaction
+* Use `flushSync()` for every interaction
 * Manually clean up the DOM after the test
 * Write low-level DOM queries like `querySelector()`
 
@@ -112,7 +112,7 @@ Here’s what we accomplished today:
 | Old Way (`ReactDOM`) | New Way (React Testing Library)  |
 | -------------------- | -------------------------------- |
 | Manual DOM setup     | `render()` abstracts setup       |
-| `act()` everywhere   | Wrapped for you automatically    |
+| `flushSync()` everywhere   | Wrapped for you automatically    |
 | `textContent` checks | `toHaveTextContent` matcher      |
 | Cleanup required     | Auto cleanup between tests       |
 | Low-level selectors  | High-level queries (`getByText`) |

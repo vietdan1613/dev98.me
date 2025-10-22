@@ -49,16 +49,18 @@ Here's how we can test it:
 ```js
 // __tests__/fetch.test.js
 import * as React from 'react'
-import { rest } from 'msw'
+import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { render, waitForElementToBeRemoved, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Fetch from '../fetch'
 
 const server = setupServer(
-  rest.get('/greeting', (req, res, ctx) => {
-    return res(ctx.json({ greeting: 'hello there' }))
-  }),
+  http.post('/greeting', async ({ request }) => {
+    const data = await request.json() 
+    const { username, password } = data
+    return HttpResponse.json({ username: username })
+  })
 )
 
 beforeAll(() => server.listen())
@@ -78,44 +80,12 @@ test('loads and displays greeting', async () => {
 ```
 
 ✅ `setupServer` creates an in-memory mock server
-✅ `rest.get()` defines a mock handler for a GET request to `/greeting`
+✅ `http.get()` defines a mock handler for a GET request to `/greeting`
 ✅ `server.listen()` activates it for tests
 ✅ `waitForElementToBeRemoved` waits for loading state to disappear
 ✅ `screen.getByRole` interacts just like a user would
 
 ---
-
-## 😬 Testing Failure States
-
-Let’s test what happens when the server returns an error:
-
-```js
-test('handles server error', async () => {
-  server.use(
-    rest.get('/greeting', (req, res, ctx) => {
-      return res(ctx.status(500))
-    })
-  )
-
-  render(<Fetch url="/greeting" />)
-
-  await userEvent.click(screen.getByText('Load Greeting'))
-
-  await waitForElementToBeRemoved(() => screen.getByText('Loading...'))
-
-  expect(screen.getByRole('alert')).toHaveTextContent('Oops, failed to fetch!')
-  expect(screen.getByRole('button')).not.toHaveAttribute('disabled')
-})
-```
-
-This test:
-
-* Overrides the original handler using `server.use`
-* Simulates a 500 Internal Server Error
-* Checks that the correct error message is displayed
-
----
-
 ## 💯 Extra Credit: Make Your Mocking Even Better
 
 ### 1. ✅ Reuse Centralized Server Handlers
@@ -178,13 +148,14 @@ Use **`server.use()`** with a custom response handler:
 
 ```js
 server.use(
-  rest.post(
-    'https://auth-provider.example.com/api/login',
-    (req, res, ctx) => {
-      return res(ctx.status(500), ctx.json({ error: 'Server error!' }))
-    }
-  )
-)
+        http.post('/greeting', async () => {
+            await delay(1000) // Simulate network delay
+            return HttpResponse.json(
+                { message: err_message },
+                { status: 500 }
+            )
+        })
+    )
 ```
 
 This local override avoids:
