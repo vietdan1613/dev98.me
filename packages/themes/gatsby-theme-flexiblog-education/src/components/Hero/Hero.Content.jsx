@@ -39,7 +39,7 @@ const HeroContent = () => {
 				<Button
 					variant="white"
 					as="a"
-					href="https://drive.google.com/file/d/16IyXUTxGuNRLI0Cnl5VQ7t4BjSUwBFps/view?usp=sharing"
+					href="https://drive.google.com/file/d/1dOc3_NeCNR4BOYcIU2ZLGKY6W4vAlHbi/view?usp=sharing"
 					target="_blank"
 					rel="noopener noreferrer"
 				>

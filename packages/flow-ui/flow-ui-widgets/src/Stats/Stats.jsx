@@ -45,17 +45,17 @@ const Stats = () => {
 				</Heading>
 			</Heading>
 			<Heading variant="h2" sx={styles.number}>
-				20+
+				50+
 				<Heading as="p" variant="h4" sx={styles.text}>
-					JAVASCRIPT
+					OTHERS
 				</Heading>
 			</Heading>
-			<Heading variant="h2" sx={styles.number}>
+			{/* <Heading variant="h2" sx={styles.number}>
 				10+
 				<Heading as="p" variant="h4" sx={styles.text}>
 					NEXTJS
 				</Heading>
-			</Heading>
+			</Heading> */}
 		</Box>
 	);
 };
