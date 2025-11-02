@@ -46,6 +46,19 @@ Works perfectly with TypeScript, React hooks, and Redux DevTools.
 
 ---
 
+## Redux Data Flow Diagram
+
+```
++-------------+        +-------------+        +-------------+
+|   UI Event  | -----> |   Action    | -----> |   Reducer   |
+|  (dispatch) |        |  (Intent)    |       |   (Logic)   |
++-------------+        +-------------+        +-------------+
+       ^                                            |
+       |                                            v
+       +------------------- Store ------------------+
+                        (Global State)
+```
+
 ## 🧩 The Core Building Blocks
 
 Let’s break down the main pieces of Redux Toolkit.
@@ -175,25 +188,6 @@ And wrap your app with `<Provider store={store}>` in `index.js`.
 
 ---
 
-## 🧰 Pro Tips for Clean Redux Toolkit Code
-
-✅ **Organize by feature, not by file type**
-
-```
-src/
-  features/
-    counter/
-      counterSlice.js
-      Counter.jsx
-```
-
-✅ **Use TypeScript if possible** — RTK is strongly typed.
-✅ **Use `createEntityAdapter`** for normalized collections (like lists of Pokémon).
-✅ **Persist state** using `redux-persist` if needed.
-✅ **Avoid putting UI state** (like modal open/close) in Redux unless it’s global.
-
----
-
 ## 🔥 Final Thoughts
 
 Redux Toolkit is **Redux done right**.
@@ -202,20 +196,3 @@ It keeps all the benefits — predictable state, time-travel debugging, DevTools
 If you’re starting a new React project today, **RTK should be your default choice** for state management.
 
 Whether you’re building a simple counter or a full-featured Pokémon app 🐉, Redux Toolkit helps you stay clean, scalable, and modern.
-
----
-
-### 💬 What’s Next?
-
-In my next post, I’ll show how to use **Redux Toolkit with the PokéAPI** to build a complete Pokédex app — including async data fetching, caching, and favorites.
-
----
-
-### 🏷️ Tags:
-
-`#React` `#ReduxToolkit` `#Frontend` `#CleanCode` `#JavaScript`
-
----
-
-Would you like me to rewrite this blog in a **more casual “YouTube creator” tone** (like a script or Medium-style storytelling piece)?
-That version would match your video teaching series perfectly.

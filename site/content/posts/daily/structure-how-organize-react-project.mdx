@@ -1,0 +1,184 @@
+---
+title: How I Organize React Projects
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-02
+thumbnailText: Structure
+---
+
+After building and refactoring several React applications, I realized that **how you organize your project matters as much as the code itself**.
+A clean structure doesn’t just look nice — it makes scaling, debugging, and collaborating infinitely smoother.
+
+Here are five lessons that completely changed how I structure React projects 👇
+
+---
+
+## 1️⃣ Organize by **Feature**, Not by **Type**
+
+A common mistake many developers make (including my past self) is splitting everything by type:
+
+```
+src/
+  components/
+  hooks/
+  pages/
+  utils/
+```
+
+That seems neat at first — until your app grows. Suddenly, you’re jumping across files and folders just to make one change.
+
+A better way: **group by feature**.
+Keep everything related to a feature together — components, hooks, and API calls included.
+
+```
+src/
+  features/
+    auth/
+      components/
+      hooks/
+      api/
+    dashboard/
+      components/
+      hooks/
+      api/
+```
+
+This way, your app scales naturally. When you add or remove a feature, it’s self-contained and easy to manage.
+
+---
+
+## 2️⃣ Create a **shared/** Folder for Reusable Code
+
+Some elements — buttons, modals, utility functions — are used everywhere.
+Put these in a `shared/` folder to **avoid duplication** and keep your code DRY (Don’t Repeat Yourself).
+
+```
+src/
+  shared/
+    components/
+    hooks/
+    utils/
+```
+
+This helps maintain consistency across your app and reduces future headaches.
+
+---
+
+## 3️⃣ **Naming Conventions Matter**
+
+Clear naming = clear thinking. Here’s what works well:
+
+* **Components →** PascalCase → `UserProfile.jsx`
+* **Hooks & Utils →** camelCase → `useAuth.js`, `formatDate.js`
+* **index.js →** use only for re-exports
+
+Small details like this make your project easier to navigate — especially for new contributors.
+
+---
+
+## 4️⃣ Think in **Layers** (Frontend System Design)
+
+Just like in backend development, frontend apps have layers too. Understanding them helps you keep your architecture clean and modular.
+
+* **UI Layer →** Components
+* **State Layer →** Context, Redux, or Zustand
+* **Data Layer →** API calls (Axios, fetch, React Query)
+* **Utilities Layer →** Helper functions
+
+👉 **Rule:** Keep these layers **decoupled**.
+Never mix your API logic directly inside UI components. It might work now — but it’ll hurt later.
+
+---
+
+## 5️⃣ A Scalable Project Structure Example
+
+Here’s a structure I’ve found works beautifully for real-world apps:
+
+```
+src/
+│
+├── app/                         # 🧠 App-level setup (root config)
+│   ├── App.jsx                  # Main app component
+│   ├── index.jsx                # ReactDOM.createRoot entry point
+│   ├── routes/                  # Route definitions (React Router / Next)
+│   │   └── AppRoutes.jsx
+│   ├── providers/               # Global providers (Redux, Theme, QueryClient)
+│   │   ├── ReduxProvider.jsx
+│   │   ├── ThemeProvider.jsx
+│   │   └── QueryProvider.jsx
+│   └── store/                   # Redux store or Zustand setup
+│       └── store.js
+│
+├── features/                    # 🚀 Each feature is self-contained
+│   ├── auth/
+│   │   ├── components/          # Auth-specific UI (LoginForm, RegisterForm)
+│   │   ├── hooks/               # Custom hooks (useAuth, useLogin)
+│   │   ├── api/                 # API calls (login, logout, refreshToken)
+│   │   ├── slices/              # Redux slices or Zustand store
+│   │   ├── utils/               # Helper functions only for auth
+│   │   ├── pages/               # Feature pages (LoginPage, RegisterPage)
+│   │   └── index.js             # Optional re-export
+│   │
+│   ├── dashboard/
+│   │   ├── components/          # Cards, charts, etc.
+│   │   ├── hooks/
+│   │   ├── api/
+│   │   ├── slices/
+│   │   ├── utils/
+│   │   ├── pages/
+│   │   └── index.js
+│   │
+│   └── ...other-features/
+│
+├── shared/                      # 🌍 Reusable across features
+│   ├── components/              # Common UI (Button, Modal, Table)
+│   ├── hooks/                   # Generic hooks (useToggle, useDebounce)
+│   ├── utils/                   # Global helpers (formatDate, storage)
+│   ├── api/                     # Common API config (axiosClient, endpoints)
+│   ├── constants/               # App-wide constants (roles, routes)
+│   ├── context/                 # Global contexts if not using Redux
+│   ├── types/                   # TypeScript types or propTypes (if TS)
+│   └── layouts/                 # Reusable layouts (MainLayout, AuthLayout)
+│
+├── assets/                      # 🎨 Static files
+│   ├── images/
+│   ├── icons/
+│   └── fonts/
+│
+├── styles/                      # 💅 Global styling
+│   ├── globals.css
+│   ├── variables.css
+│   └── tailwind.css
+│
+├── tests/                       # 🧪 Integration and e2e tests
+│   └── setupTests.js
+│
+├── index.html                   # Entry HTML (if using Vite or CRA)
+└── main.jsx                     # App bootstrap (for Vite)
+```
+
+Simple, predictable, and scalable.
+
+### Example Aliases (Vite or Webpack)
+
+```
+// vite.config.js
+resolve: {
+  alias: {
+    '@app': '/src/app',
+    '@features': '/src/features',
+    '@shared': '/src/shared',
+    '@assets': '/src/assets',
+  }
+}
+```
+---
+
+## ⚡ Bonus Tips
+
+* 🧪 Keep test files next to components → `Button.test.jsx`
+* 🗂️ Document your structure in `README.md`
+* ⚙️ Keep config files at the root → `.eslintrc`, `tailwind.config.js`, etc.
+
+---
