@@ -1,0 +1,116 @@
+---
+title: "🎯 Advanced React APIs: Imperative Handles"
+category: React
+author: Daniel Nguyen
+tags: ['#AdvancedReactAPIs']
+date: 2025-06-17
+thumbnailText: Advanced React APIs
+---
+
+**🎯 Imperative Handles in React 19**
+
+In React, we usually build UIs in a **declarative** way. But sometimes, you may want to imperatively interact with a child component—for example:
+
+* Focusing an input field
+* Scrolling to the bottom of a container
+* Triggering animations or modals
+
+To do this, React allows you to **expose methods** from a child component to the parent using a `ref`. This `ref` is created with `useRef` and passed down to the child. Once inside the child, you can attach methods to it.
+
+---
+
+## 🧠 Basic Idea: Exposing Methods via `ref`
+
+```tsx
+type InputAPI = { focusInput: () => void }
+
+function MyInput({
+	ref,
+	...props
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+	ref: React.RefObject<InputAPI>
+}) {
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	ref.current = {
+		focusInput: () => inputRef.current?.focus(),
+	}
+
+	return <input ref={inputRef} {...props} />
+}
+
+function App() {
+	const myInputRef = useRef<InputAPI>(null)
+
+	return (
+		<div>
+			<MyInput ref={myInputRef} placeholder="Enter your name" />
+			<button onClick={() => myInputRef.current?.focusInput()}>
+				Focus the input
+			</button>
+		</div>
+	)
+}
+```
+
+✅ **This works**, but has limitations:
+
+* ❌ Doesn't support **callback refs**
+* ❌ Can break under **React's concurrent rendering**
+* ❌ Not ideal with React features like **Suspense**
+
+---
+
+## ✅ The Better Way: `useImperativeHandle`
+
+React provides a built-in hook—`useImperativeHandle`—to **safely** expose imperative methods. In React 19, you can now **access `ref` directly as a prop**, so there's **no need for `forwardRef`**.
+
+```tsx
+type InputAPI = { focusInput: () => void }
+
+function MyInput({
+	ref,
+	...props
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+	ref: React.RefObject<InputAPI>
+}) {
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	useImperativeHandle(
+		ref,
+		() => ({
+			focusInput: () => inputRef.current?.focus(),
+		}),
+		[]
+	)
+
+	return <input ref={inputRef} {...props} />
+}
+```
+
+Notice that we passed an **empty dependency array** to `useImperativeHandle`. That’s fine—even if you're using refs inside—because React refs don’t change between renders, so they don’t need to be included in dependencies.
+
+> 📘 Learn more: [Why you shouldn't put refs in a dependency array](https://epicreact.dev/why-you-shouldnt-put-refs-in-a-dependency-array)
+
+---
+
+## ⚠️ When to Use This
+
+`useImperativeHandle` is useful for:
+
+* DOM interactions (focus, scroll, play, pause, etc.)
+* Custom components exposing **actions** to their parent
+* Building **reusable component libraries**
+
+> ⚠️ But keep in mind: **imperative code should be a last resort**. It's harder to test, debug, and reason about. Prefer **declarative** solutions when possible.
+
+📖 More on that here: [Imperative vs Declarative Programming](https://tylermcginnis.com/imperative-vs-declarative-programming/)
+
+---
+
+## ✅ Summary
+
+* `useImperativeHandle` lets child components expose custom methods to their parent.
+* In **React 19**, `ref` can be accessed directly from `props`, so there's no need to use `forwardRef`.
+* Prefer **declarative solutions** first—but when you need to go imperative, now you can do it cleanly.
+

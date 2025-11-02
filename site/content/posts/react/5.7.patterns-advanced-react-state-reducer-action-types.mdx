@@ -1,0 +1,188 @@
+---
+title: "🧩 Advanced React Patterns: State Reducer"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-07-08
+thumbnailText: Advanced React Patterns
+---
+
+**🧠 The State Reducer Pattern in React: Giving Control Back to Developers**
+
+<callout-success>
+<strong>One-liner:</strong> The <strong>State Reducer Pattern</strong> lets you invert control over internal state management, enabling users of your hook or component to customize how state updates happen.
+</callout-success>
+
+As a library author or even just a dev building reusable hooks or components, you’ve probably run into this problem:
+
+> “Can we make this component behave *slightly* differently in just this one scenario?”
+
+You could add a new prop. Then a new branch of logic. Then another. Soon enough, your component becomes a bloated maze of flags and conditionals.
+
+There’s a better way.
+
+Enter: the **State Reducer Pattern** — a clean and powerful way to hand control back to the consumer of your hook or component.
+
+---
+
+## 🤔 What’s the Problem?
+
+Let’s say you’re building a `useToggle` hook. Pretty standard:
+
+```tsx
+function toggleReducer(state, action) {
+  switch (action.type) {
+    case 'toggle':
+      return { on: !state.on }
+    case 'reset':
+      return { on: false }
+    default:
+      throw new Error(`Unhandled action: ${action.type}`)
+  }
+}
+
+function useToggle() {
+  const [state, dispatch] = useReducer(toggleReducer, { on: false })
+  const toggle = () => dispatch({ type: 'toggle' })
+  const reset = () => dispatch({ type: 'reset' })
+
+  return { on: state.on, toggle, reset }
+}
+```
+
+Now, someone wants to prevent toggling after 4 clicks. 😅 Should you:
+
+* Add a `maxToggleCount` prop?
+* Track `clickCount` internally?
+* Create a separate `AdvancedToggle`?
+
+Nope. That’s where the **State Reducer Pattern** shines.
+
+---
+
+## 🔄 Inversion of Control: The Key Idea
+
+With this pattern, instead of baking every state rule into the hook, you let **users decide how state updates**.
+
+They pass in a custom reducer, and your hook **delegates state changes to it**:
+
+```tsx
+function useToggle({ reducer = defaultToggleReducer } = {}) {
+  const [state, dispatch] = useReducer(reducer, { on: false })
+
+  const toggle = () => dispatch({ type: 'toggle' })
+  const reset = () => dispatch({ type: 'reset' })
+
+  return { on: state.on, toggle, reset }
+}
+```
+
+Now, the user can implement their own logic:
+
+```tsx
+function customToggleReducer(state, action) {
+  if (action.type === 'toggle' && state.timesClicked >= 4) {
+    return state // ignore the action
+  }
+
+  switch (action.type) {
+    case 'toggle':
+      return { on: !state.on, timesClicked: state.timesClicked + 1 }
+    case 'reset':
+      return { on: false, timesClicked: 0 }
+    default:
+      return state
+  }
+}
+
+const { on, toggle, reset } = useToggle({ reducer: customToggleReducer })
+```
+
+✅ You just inverted control of the state logic without having to clutter your original hook.
+
+---
+
+## 🧰 Exporting the Default Reducer
+
+Your hook might have some useful behavior that developers still want, even if they’re customizing things. Rewriting the entire reducer from scratch just to tweak one behavior? No thanks.
+
+Here’s how you fix that: **export your default reducer** so users can call it within theirs.
+
+```tsx
+export function defaultToggleReducer(state, action) {
+  switch (action.type) {
+    case 'toggle':
+      return { on: !state.on }
+    case 'reset':
+      return { on: false }
+    default:
+      return state
+  }
+}
+```
+
+Now consumers can write:
+
+```tsx
+function toggleStateReducer(state, action) {
+  if (action.type === 'toggle' && state.clicks >= 4) {
+    return state
+  }
+
+  // Let the default handle the rest
+  return defaultToggleReducer(state, action)
+}
+```
+
+This lets them opt in to *just enough* control, without reimplementing your entire logic.
+
+---
+
+## 🧠 Why This Matters
+
+This pattern promotes **composability and flexibility** without sacrificing simplicity in the base implementation.
+
+| Benefits                | How                                                  |
+| ----------------------- | ---------------------------------------------------- |
+| 🔄 Inversion of control | Consumer manages state transitions                   |
+| 🧱 Extensibility        | Handle custom actions and constraints                |
+| 🚫 Avoid prop explosion | Don’t add a prop for every possible behavior         |
+| ♻️ Reuse default logic  | Consumers can call your reducer for standard actions |
+
+---
+
+## ✅ Best Practices
+
+* **Always provide a default reducer** so your hook can be used without customization.
+* **Export the default reducer** so it’s available for consumers needing partial customization.
+* **Document your action types** so users know what they can intercept.
+* Use `useReducer` instead of `useState` when building advanced hooks—it naturally supports this pattern.
+
+---
+
+## 🧪 Real Example: `downshift`
+
+The popular autocomplete library [`downshift`](https://github.com/downshift-js/downshift) is a poster child of this pattern. It uses the **stateReducer** pattern to give users complete control over how the dropdown behaves—without ever having to fork the library.
+
+---
+
+## 🧁 Wrap-Up
+
+The **State Reducer Pattern** gives you the best of both worlds:
+
+* Simplicity for those who need it.
+* Customization for those who want it.
+
+As your hook’s usage grows and edge cases pop up, this pattern helps you scale flexibility without growing complexity.
+
+> 🛠️ Let your users decide what state changes mean—for them.
+
+---
+
+## 🔍 Want a Demo?
+
+Need a working CodeSandbox or full example of `useToggle` using this pattern? Let me know and I’ll share a ready-to-use version. 🧑‍🔧
+
+---
+
+Happy reducing! ✂️

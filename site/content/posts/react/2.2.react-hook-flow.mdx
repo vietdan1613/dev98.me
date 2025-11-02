@@ -1,0 +1,200 @@
+---
+title: "🪄 React Hooks: Side-Effects"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHooks']
+date: 2025-06-03
+thumbnailText: React Hooks
+---
+
+**🎣 Understanding `useEffect` in React: Managing Side Effects the Right Way**
+
+React’s declarative model makes building UIs clean and efficient—but what happens when your app needs to interact with the **outside world**? That’s where the `useEffect` hook comes in.
+
+In this blog post, we’ll walk through:
+
+* What side effects are
+* How `useEffect` works
+* Why cleanup is important
+* A real-world scenario using `popstate`
+* How to prevent memory leaks
+
+Let’s dive in!
+
+---
+
+## 📌 What Are Side Effects?
+
+In React, **side effects** refer to operations that interact with the world outside of the component. These are things that React itself doesn’t control, such as:
+
+* **Browser APIs**: local storage, geolocation, media devices
+* **Third-party libraries**: like Chart.js or D3
+* **Subscriptions**: like WebSocket connections or event listeners
+* **Timers**: like `setTimeout` or `setInterval`
+
+React gives us the `useEffect` hook to manage these operations safely.
+
+---
+
+## ⚙️ Basic `useEffect` Syntax
+
+Here’s how you typically use `useEffect`:
+
+```tsx
+useEffect(() => {
+  // 1. Run side-effect here
+  doSomething()
+
+  // 2. Optional cleanup function
+  return () => {
+    doSomeCleanup()
+  }
+}, [dep1, dep2]) // 3. Dependency array
+```
+
+### Breakdown:
+
+* The **callback** runs *after* React renders the component and updates the DOM.
+* The **cleanup function** runs before the component is removed from the DOM, or before running the effect again due to a dependency change.
+* The **dependency array** tells React when to re-run the effect. An empty array (`[]`) means the effect only runs on mount/unmount.
+
+---
+
+## 🌀 Lifecycle Flow of Hooks
+
+React’s lifecycle for function components with hooks can be broken into three phases:
+
+![example](./imgs/hook-flow-diagram.png 'example')
+
+### 1. **Mount Phase**
+
+* Runs lazy initializers in `useState`/`useReducer`.
+* DOM is updated.
+* Layout effects (`useLayoutEffect`) are applied.
+* Browser paints the screen.
+* Side effects (`useEffect`) run *after* the paint.
+
+### 2. **Update Phase**
+
+* Component re-renders.
+* Layout effects are cleaned up and reapplied.
+* DOM is updated again.
+* Side effects are cleaned up and re-executed.
+
+### 3. **Unmount Phase**
+
+* React calls cleanup functions from `useEffect` and `useLayoutEffect`.
+
+🎨 The [React Hook Flow diagram](https://github.com/donavon/hook-flow) beautifully visualizes this, color-coded by lifecycle phase:
+
+* 🟢 **Green**: Lazy initializers
+* 🔴 **Red**: DOM and Layout effects
+* 🟡 **Yellow**: Side effects after paint
+
+---
+
+## 🧪 Real-World Example: Syncing with URL
+
+Suppose you have a search form that updates the query parameter in the URL when a user submits:
+
+```tsx
+setGlobalSearchParams({ query: 'cat' }) // Updates URL without a page reload
+```
+
+But when the user hits the back button, the input field doesn’t update accordingly. To fix this, you can use the `popstate` event:
+
+```tsx
+useEffect(() => {
+  function handlePopState() {
+    setQuery(getQueryParam()) // Sync input with URL
+  }
+
+  window.addEventListener('popstate', handlePopState)
+
+  return () => {
+    window.removeEventListener('popstate', handlePopState)
+  }
+}, [])
+```
+
+### 🧠 Lazy Initialization Tip
+
+You can initialize state from URL params *only once* on mount using a lazy initializer:
+
+```tsx
+const [query, setQuery] = useState(getQueryParam)
+```
+
+This avoids unnecessary recalculations on re-renders.
+
+---
+
+## 🧼 Cleaning Up Effects
+
+Here’s the problem: if you add an event listener every time your component mounts but never remove it, you’re leaking memory. And in dynamic applications, components are often added/removed repeatedly.
+
+Let’s say you toggle a form with a checkbox:
+
+* ✅ Checking it mounts the component and adds a `popstate` listener.
+* ❌ Unchecking it removes the component, but the listener remains!
+* 😱 Repeat this and memory usage balloons over time.
+
+### 🔍 Why Does This Happen?
+
+Each time you add an event listener, a **callback function is retained in memory**. If you don't remove the listener, that function (and all the variables it closes over) remains in memory—forever.
+
+This is called a **memory leak**.
+
+### ✅ Solution: Cleanup Function
+
+Always clean up your effects like this:
+
+```tsx
+useEffect(() => {
+  function handleEvent() {
+    // Do something
+  }
+
+  window.addEventListener('some-event', handleEvent)
+
+  return () => {
+    window.removeEventListener('some-event', handleEvent)
+  }
+}, [])
+```
+
+This ensures that **every time your component unmounts**, the listener is removed and memory is freed.
+
+---
+
+## 🧪 Test It Yourself
+
+If you want to test for memory leaks:
+
+1. Use the [Chrome DevTools Memory Tab](https://developer.chrome.com/docs/devtools/memory)
+2. Open the [Browser Task Manager](https://developer.chrome.com/docs/devtools/memory-problems#monitor_memory_use_in_realtime_with_the_chrome_task_manager)
+3. Toggle the component many times
+4. Check whether memory usage keeps increasing
+
+---
+
+## 📘 Summary
+
+| Concept                   | Summary                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| `useEffect`               | Runs code *after* DOM updates                             |
+| Dependencies              | Tell React *when* to re-run the effect                    |
+| Cleanup function          | Avoids memory leaks by unsubscribing/listening clean-up   |
+| `popstate` event          | Lets you react to back/forward browser actions            |
+| Lazy state initialization | Improves performance by computing initial state only once |
+| Memory leaks              | Result from not cleaning up subscriptions or listeners    |
+
+---
+
+## 📚 More Resources
+
+* [React Docs: useEffect](https://reactjs.org/docs/hooks-effect.html)
+* [Hook Flow Diagram](https://github.com/donavon/hook-flow)
+* [React useEffect Flow by Bharathi Kannan](https://www.bharathikannan.com/blog/react-useeffect-flow)
+
+---

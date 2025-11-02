@@ -1,0 +1,227 @@
+---
+title: "🧩 Advanced React Patterns: Slots"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-07-05
+thumbnailText: Advanced React Patterns
+---
+
+**🎛️ Mastering the Slots Pattern in React for Component Flexibility**
+
+<callout-success>
+<strong>One-liner:</strong> The <strong>Slots Pattern</strong> allows components to take on specific roles within a parent’s layout, enabling flexible composition and safer, accessible design.
+</callout-success>
+
+---
+
+## 🧱 Problem: Balancing Flexibility and Correctness in UI Libraries
+
+When building a component library, you're constantly balancing two goals:
+
+1. **Correctness** – accessibility, semantic markup, behavior.
+2. **Flexibility** – giving developers the freedom to structure their UI however they want.
+
+How can we ensure developers don’t break important things (like accessibility), but still offer composability?
+
+That’s where **Slots** come in. 🎯
+
+---
+
+## 🤔 What Are Slots?
+
+Slots allow child components to declare **their role** within a parent component. The parent can then provide **role-specific props** through context—without controlling layout or markup structure.
+
+### Real-World Analogy
+
+In HTML, consider this form element:
+
+```tsx
+<CheckboxGroup>
+  <Label>Pets</Label>
+  <MyCheckbox value="dogs">Dogs</MyCheckbox>
+  <MyCheckbox value="cats">Cats</MyCheckbox>
+  <Text slot="description">Select your pets.</Text>
+</CheckboxGroup>
+```
+
+The `Text` component has `slot="description"`, telling the parent:
+
+> "Hey, I’m the description."
+
+Then `CheckboxGroup` supplies the appropriate props—like `id` and `aria-describedby`—based on the slot name.
+
+This pattern is widely used in libraries like [`react-aria`](https://react-spectrum.adobe.com/react-aria/index.html), and it's fantastic for **decoupling layout from logic**, **enabling accessibility**, and **promoting reusability**.
+
+---
+
+## 🛠️ Implementing the Slot Pattern
+
+Here’s how we do it in React:
+
+### Step 1: Provide Slot Props via Context
+
+Your parent component (e.g. `TextField`) generates the data and passes it through context.
+
+```tsx
+function TextField({ children }) {
+  const id = useId()
+  const slots = {
+    label: { htmlFor: id },
+    input: { id },
+  }
+
+  return (
+    <SlotContext.Provider value={slots}>
+      {children}
+    </SlotContext.Provider>
+  )
+}
+```
+
+### Step 2: Consume Slot Props in Children
+
+A hook merges the provided props with the default/slot-specific ones:
+
+```tsx
+function useSlotProps(props, slotName) {
+  const slotContext = useContext(SlotContext)
+  const slotProps = slotContext?.[slotName] ?? {}
+  return { ...slotProps, ...props }
+}
+```
+
+Now your components can declare which role they serve:
+
+```tsx
+function Label(props) {
+  const labelProps = useSlotProps(props, 'label')
+  return <label {...labelProps} />
+}
+
+function Input(props) {
+  const inputProps = useSlotProps(props, 'input')
+  return <input {...inputProps} />
+}
+```
+
+✅ Accessibility props are applied
+✅ Layout is customizable
+✅ Logic is abstracted
+
+---
+
+## 📦 Real-World Benefits
+
+Let's look at a real use case.
+
+### Problem: Manual IDs = Mistakes
+
+Developers often forget to manually associate `<label>` and `<input>` using `id` and `htmlFor`, which breaks accessibility.
+
+Using the slots pattern, your `TextField` component can handle the logic behind the scenes:
+
+```tsx
+<TextField>
+  <Label>Email</Label>
+  <Input />
+</TextField>
+```
+
+Behind the scenes, `Label` and `Input` receive automatically generated `id` and `htmlFor` props—ensuring correctness **without extra work.**
+
+---
+
+## ⚡ Going Further: Generic Slot Components
+
+Let’s make our API even more powerful.
+
+### Before:
+
+You might have separate components like:
+
+```tsx
+<Toggle>
+  <ToggleOn>Party time 🎉</ToggleOn>
+  <ToggleOff>Sad town 😭</ToggleOff>
+  <ToggleButton />
+</Toggle>
+```
+
+Now let’s unify this using **generic components + slots**:
+
+### After:
+
+```tsx
+<Toggle>
+  <Label>Party mode</Label>
+  <Switch />
+  <Text slot="onText">Let’s party 🥳</Text>
+  <Text slot="offText">Sad town 😭</Text>
+</Toggle>
+```
+
+The `Toggle` parent passes slot-specific props:
+
+```tsx
+const slots = {
+  label: { htmlFor: switchId },
+  switch: { id: switchId, on: isOn, onClick: toggle },
+  onText: { hidden: !isOn },
+  offText: { hidden: isOn },
+}
+```
+
+Your `Text` and `Switch` components handle the rest:
+
+```tsx
+function Text({ slot, ...props }) {
+  const textProps = useSlotProps(props, slot)
+  return <span {...textProps} />
+}
+
+function Switch({ slot, ...props }) {
+  const switchProps = useSlotProps(props, slot)
+  return <button {...switchProps}>{switchProps.on ? 'ON' : 'OFF'}</button>
+}
+```
+
+No more manually passing state. No custom hooks. No prop drilling.
+Just clean, declarative composition. ✨
+
+---
+
+## 🔄 Bonus: Removing Boilerplate
+
+Once this pattern is in place:
+
+* You can delete repetitive components (`ToggleOn`, `ToggleOff`, `ToggleButton`)
+* Reduce bugs from forgetting to wire up state or props
+* Give developers full control over structure and styling
+
+It’s especially helpful when building **design systems**, **accessibility wrappers**, and **framework-agnostic UI kits**.
+
+---
+
+## 🧪 Final Thoughts
+
+The **Slots Pattern** is a step up from compound components:
+
+| Feature               | Compound Components  | Slots Pattern            |
+| --------------------- | -------------------- | ------------------------ |
+| State Sharing         | Context              | Context                  |
+| Layout Flexibility    | Moderate             | Very High                |
+| Customization         | Limited (custom API) | Unlimited (native props) |
+| Accessibility Support | Manual               | Built-in                 |
+
+If you're building component libraries (especially reusable or accessible ones), **slots are your secret weapon.**
+
+---
+
+## 🔗 Resources
+
+* 📘 [React Aria Documentation](https://react-spectrum.adobe.com/react-aria/index.html)
+* 🧠 [Compound Components Pattern](https://epicreact.dev/compound-components)
+* 🧩 [Creating Flexible Layouts with Context](https://kentcdodds.com/blog/application-state-management-with-react)
+
+---

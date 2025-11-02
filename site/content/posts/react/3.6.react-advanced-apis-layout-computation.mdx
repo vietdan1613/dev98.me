@@ -1,0 +1,110 @@
+---
+title: "🎯 Advanced React APIs: Layout Computation"
+category: React
+author: Daniel Nguyen
+tags: ['#AdvancedReactAPIs']
+date: 2025-06-16
+thumbnailText: Advanced React APIs
+---
+
+**🧠 Understanding `useLayoutEffect`: Fixing UI Flicker with Precise Layout Computation in React**
+
+When building interactive UIs, sometimes the layout of a component depends on the dimensions or position of another component. A common scenario is a **tooltip** that must appear either above or below a target element—based on how much space is available.
+
+This kind of positioning logic might seem straightforward at first: just check the element’s position and update the state accordingly. But here’s where it gets tricky…
+
+---
+
+## 💡 The Problem: Measuring Layout After the Paint
+
+When we render a component, the browser updates the DOM. Only **after that**, we can measure things like width, height, or position using methods like `getBoundingClientRect()`.
+
+In many cases, developers use the `useEffect` hook for this:
+
+```tsx
+useEffect(() => {
+	const rect = ref.current?.getBoundingClientRect()
+	if (!rect) return
+	const { height } = rect
+	setTooltipHeight(height)
+}, [])
+```
+
+This hook runs after the render is committed to the screen, so you’re **measuring layout after the paint**.
+
+That means your component:
+
+1. Renders first (possibly in the wrong position).
+2. Measures its layout.
+3. Updates its state.
+4. Renders again (this time in the correct position).
+
+On low-end devices, this results in **visible flickering**—the user briefly sees the incorrect position before the correct one is applied.
+
+---
+
+## 🔧 The Fix: Measuring Before the Paint with `useLayoutEffect`
+
+To prevent this flickering, we can use React’s `useLayoutEffect` instead of `useEffect`. It has **the exact same API**, but it runs **synchronously after the DOM is updated and before the browser repaints the screen**.
+
+In other words:
+
+* `useEffect` → Runs *after* the paint.
+* `useLayoutEffect` → Runs *before* the paint.
+
+By switching to `useLayoutEffect`, your component can:
+
+1. Render.
+2. Measure its layout *before* the browser paints the screen.
+3. Apply the correct positioning.
+4. Show the user the correct layout immediately—no flicker!
+
+Here’s the updated code:
+
+```tsx
+useLayoutEffect(() => {
+	const rect = ref.current?.getBoundingClientRect()
+	if (!rect) return
+	const { height } = rect
+	setTooltipHeight(height)
+}, [])
+```
+
+Now, when a user hovers over an element (like a heart icon), the tooltip will appear in the right position the first time it renders—no awkward flickering!
+
+---
+
+## 👩‍🔬 Real-World Example: Simulating the Flicker
+
+In a recent test, one of our engineers added an artificial delay to simulate a low-end device scenario. On hover, the tooltip would briefly appear **below** the heart icon, then jump **above** it once layout measurements were complete.
+
+This clearly illustrated the problem of using `useEffect` for layout-sensitive components. The solution? Replacing `useEffect` with `useLayoutEffect` eliminated the flicker entirely.
+
+---
+
+## 🧭 When to Use `useLayoutEffect`
+
+You should only use `useLayoutEffect` when:
+
+* You need to **measure the layout** of DOM elements.
+* You must **apply updates before the browser paints**.
+* You’re working with **animations** or precise **positioning** (like tooltips, popovers, modals, etc.).
+
+For all other side effects (like fetching data, setting up subscriptions, logging, etc.), `useEffect` is still the preferred and more efficient choice.
+
+---
+
+## 📚 Further Reading
+
+* [React Docs: useLayoutEffect](https://react.dev/reference/react/useLayoutEffect)
+* [Blog: `useEffect` vs `useLayoutEffect` by Kent C. Dodds](https://kentcdodds.com/blog/useeffect-vs-uselayouteffect)
+
+---
+
+## 🧠 TL;DR
+
+* 🧩 `useEffect` runs **after paint**, leading to potential flickers.
+* 🧩 `useLayoutEffect` runs **before paint**, allowing you to make layout adjustments invisibly.
+* 💡 Use `useLayoutEffect` when layout measurements impact UI positioning on first render.
+
+With this knowledge, your UI will look smoother, feel faster, and behave more predictably—even on low-end devices.

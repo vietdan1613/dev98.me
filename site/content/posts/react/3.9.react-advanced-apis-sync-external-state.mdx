@@ -1,0 +1,209 @@
+---
+title: "🎯 Advanced React APIs: Sync Exernal Store"
+category: React
+author: Daniel Nguyen
+tags: ['#AdvancedReactAPIs']
+date: 2025-06-19
+thumbnailText: Advanced React APIs
+---
+
+**Synchronizing External State in React Using `useSyncExternalStore`**
+
+When building modern web applications, not everything runs inside React’s bubble. APIs like **Geolocation** or **Media Queries** live outside React’s state management, but we still need to respond to changes in them. How do we bring those into React’s world?
+
+This is where the [`useSyncExternalStore`](https://react.dev/reference/react/useSyncExternalStore) hook shines. It's designed to help you subscribe to and stay in sync with state that lives *outside* of React.
+
+In this blog, we’ll walk through how to use this hook with **Geolocation**, **Media Queries**, and even how to prep for **server-side rendering**.
+
+---
+
+## 🧠 Why Synchronize External State?
+
+React's component model is designed around internal state and props. But sometimes, you need to work with:
+
+* Browser APIs like `navigator.geolocation`
+* Platform features like `matchMedia` (for media queries)
+* Global state libraries or pub/sub models
+
+These sources of state change outside of React, and we want React to update when those changes occur. `useSyncExternalStore` gives us the tools to do exactly that.
+
+---
+
+## 🌍 Syncing with Geolocation API
+
+Let’s start by syncing the user’s location from the **Geolocation API**. This is external to React, so we’ll use `useSyncExternalStore` to bridge the gap.
+
+```tsx
+import { useSyncExternalStore } from 'react'
+
+type LocationData =
+  | { status: 'unavailable'; geo?: never }
+  | { status: 'available'; geo: GeolocationPosition }
+
+let location: LocationData = { status: 'unavailable' }
+
+function subscribeToGeolocation(callback: () => void) {
+  const watchId = navigator.geolocation.watchPosition((position) => {
+    location = { status: 'available', geo: position }
+    callback()
+  })
+  return () => {
+    location = { status: 'unavailable' }
+    navigator.geolocation.clearWatch(watchId)
+  }
+}
+
+function getGeolocationSnapshot() {
+  return location
+}
+
+function MyLocation() {
+  const location = useSyncExternalStore(
+    subscribeToGeolocation,
+    getGeolocationSnapshot
+  )
+
+  return (
+    <div>
+      {location.status === 'unavailable'
+        ? 'Your location is unavailable'
+        : <>
+            Your location is {location.geo.coords.latitude.toFixed(2)}°,{' '}
+            {location.geo.coords.longitude.toFixed(2)}°
+          </>
+      }
+    </div>
+  )
+}
+```
+
+Here’s how it works:
+
+* `subscribeToGeolocation` sets up a subscription and calls the callback when data changes.
+* `getGeolocationSnapshot` retrieves the current value.
+* `useSyncExternalStore` ties everything together.
+
+---
+
+## 📱 Tracking Media Queries with `matchMedia`
+
+CSS handles responsive design well, but sometimes, JavaScript needs to know when a media query matches—say, to disable animations on narrow screens or lazy-load heavy content.
+
+To monitor this, we can create a general-purpose utility.
+
+### Step 1: Make the Store
+
+```tsx
+export function makeMediaQueryStore(mediaQuery: string) {
+  const mql = window.matchMedia(mediaQuery)
+  let current = mql.matches
+
+  function subscribe(callback: () => void) {
+    mql.addEventListener('change', callback)
+    return () => mql.removeEventListener('change', callback)
+  }
+
+  function getSnapshot() {
+    return mql.matches
+  }
+
+  return function useMediaQueryMatch() {
+    return useSyncExternalStore(subscribe, getSnapshot)
+  }
+}
+```
+
+### Step 2: Use the Hook
+
+```tsx
+const useNarrowScreen = makeMediaQueryStore('(max-width: 600px)')
+
+function App() {
+  const isNarrow = useNarrowScreen()
+  return <div>{isNarrow ? 'Narrow screen' : 'Wide screen'}</div>
+}
+```
+
+Now, whenever the screen size changes across the media query threshold, the component updates reactively.
+
+---
+
+## ⚙️ Server-Side Rendering (SSR) Considerations
+
+When you render React on the server, there's a tricky problem: APIs like `window.matchMedia` don’t exist there. And React will throw a warning unless we handle it.
+
+### The Solution
+
+You can omit the third argument (`getServerSnapshot`) from `useSyncExternalStore`, and React will defer rendering until hydration—**but you need to wrap your component in `<Suspense>`**.
+
+```tsx
+import { Suspense } from 'react'
+
+function App() {
+  return (
+    <Suspense fallback="">
+      <NarrowScreenNotifier />
+    </Suspense>
+  )
+}
+```
+
+### Simulating SSR
+
+To simulate SSR and hydration:
+
+```tsx
+const rootEl = document.createElement('div')
+document.body.append(rootEl)
+
+rootEl.innerHTML = (await import('react-dom/server')).renderToString(<App />)
+
+await new Promise(resolve => setTimeout(resolve, 1000))
+
+ReactDOM.hydrateRoot(rootEl, <App />, {
+  onRecoverableError: (error) => {
+    if (error.message.includes('Missing getServerSnapshot')) return
+    console.error('Caught error during hydration:', error)
+  }
+})
+```
+
+This mimics a delay between HTML rendering and JavaScript loading, helping you test how the app behaves during hydration.
+
+---
+
+## 🔄 `useSyncExternalStore` Recap
+
+Here's the core API again:
+
+```tsx
+const value = useSyncExternalStore(
+  subscribe,        // when to re-read value
+  getSnapshot,      // how to read current value
+  getServerSnapshot // optional, for SSR
+)
+```
+
+* Use this for **external state** (not managed by React).
+* Essential when building with **Geolocation**, **Media Queries**, **global pub/sub**, etc.
+* Helpful in preparing for **SSR and hydration**.
+
+---
+
+## 🧪 Final Thoughts
+
+React gives us powerful internal state tools, but real-world apps always touch external systems. With `useSyncExternalStore`, we can stay in sync with the outside world while maintaining React's declarative rendering.
+
+Whether you're building responsive UIs or integrating platform APIs, this hook is your bridge to the external universe.
+
+---
+
+If you found this post helpful, feel free to share or bookmark it for your future React projects!
+
+📚 **Further Reading**:
+
+* [React Docs – useSyncExternalStore](https://react.dev/reference/react/useSyncExternalStore)
+* [MDN – matchMedia](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia)
+* [React Suspense for Data Fetching](https://react.dev/reference/react/Suspense)
+
+---

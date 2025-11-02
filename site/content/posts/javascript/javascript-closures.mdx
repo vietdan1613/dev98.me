@@ -1,0 +1,105 @@
+---
+title: "🔒 Understanding JavaScript Closures"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#Javascript']
+date: 2024-04-11
+thumbnailText: JavaScript
+---
+
+## 🔐 What Are Closures in JavaScript?
+
+A **closure** is created when a **function “remembers” the variables from its outer scope**, even after that outer function has finished executing.
+
+### Definition:
+> A closure is the combination of a function and the lexical environment within which that function was declared.
+
+In simple terms, a closure gives you access to an outer function’s variables **from an inner function**, even after the outer function has returned.
+
+---
+
+## 🧠 Basic Example
+
+```js
+function outer() {
+  const name = 'Daniel';
+
+  function inner() {
+    console.log(`Hello, ${name}`);
+  }
+
+  return inner;
+}
+
+const greet = outer(); // outer() has finished, but...
+greet(); // Hello, Daniel ✅ still remembers `name`
+```
+
+## ⚠️ Drawbacks of Closures
+
+While closures are powerful, they come with a few **gotchas**:
+
+### 1. **Memory Leaks**
+Closures keep variables alive even after the outer function is done. If not handled properly, this can cause memory to be held longer than necessary.
+
+```js
+function leaky() {
+  let bigData = new Array(1000000).fill('leak');
+  return () => console.log(bigData.length);
+}
+```
+
+### 2. **Debugging Difficulty**
+Closures can make debugging tricky, especially in deeply nested functions or asynchronous callbacks where the source of a variable isn’t obvious.
+
+### 3. **Overuse Can Reduce Readability**
+Too many nested closures can make your code hard to read and maintain — a common problem in callback-heavy code (a.k.a. callback hell).
+
+---
+
+Awesome follow-up! 🙌 Closures are super powerful and **widely used in real-world applications** — often behind the scenes. Here's when and why you'd **intentionally use closures in a JavaScript application**:
+
+---
+
+## 🚀 Real-World Use Cases for Closures in Applications
+
+### 1. **Debounce & Throttle Helpers**
+
+Closures help maintain state across calls in utility functions.
+
+```js
+function debounce(callback, delay) {
+  let timeout;
+
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  };
+}
+```
+
+The `timeout` variable lives across function calls thanks to a closure.
+
+---
+
+### 2. **Module Pattern (Pre-ES6 Private State)**
+
+Before classes and `#privateFields`, closures were used for building modules with private logic:
+
+```js
+const counterModule = (function() {
+  let count = 0;
+
+  return {
+    inc: () => ++count,
+    get: () => count
+  };
+})();
+
+console.log(counterModule.inc()); // 1
+console.log(counterModule.get()); // 1
+```
+
+Still useful for standalone utilities or plugins.

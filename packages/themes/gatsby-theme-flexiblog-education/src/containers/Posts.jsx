@@ -19,8 +19,8 @@ const Posts = ({ data: { posts = {}, featuredPosts = {} }, ...props }) => {
 					<Hero />
 				</Main>
 			</Stack>
-			<Divider />
-			<Stack>
+			{/* <Divider /> */}
+			{/* <Stack>
 				<Main>
 					<CardList
 						nodes={featuredPosts.nodes}
@@ -32,8 +32,8 @@ const Posts = ({ data: { posts = {}, featuredPosts = {} }, ...props }) => {
 						autoPlay
 					/>
 				</Main>
-			</Stack>
-			<Divider />
+			</Stack> */}
+			{/* <Divider /> */}
 			{/* <Stack>
         <Main>
           <Testimonial />
