@@ -1,0 +1,159 @@
+---
+title: "Redux Toolkit: Persisting Redux State with `redux-persist`"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-10
+thumbnailText: Redux Toolkit
+---
+
+> **Keeping state even after the user refreshes the page.**
+
+By default, Redux resets state when the page reloads. That means any stored data—like cart items, theme preferences, or user selections—disappears. To fix this, we can **persist** the Redux state to `localStorage`.
+
+In this lesson, we’ll learn:
+
+* How to use **redux-persist**
+* How to choose **which parts of Redux state to persist**
+* Common mistakes and how to avoid them
+
+---
+
+## 💾 Why Persist State?
+
+Imagine a shopping cart app.
+A user adds 3 items → refreshes the page → cart becomes empty.
+
+That’s a **bad user experience**.
+
+Persisting state ensures:
+✅ Data doesn’t disappear
+✅ User experience feels smooth
+✅ App behaves more like a native app
+
+---
+
+## 📦 Step 1 — Install `redux-persist`
+
+Run:
+
+```bash
+npm install redux-persist
+```
+
+---
+
+## 🧱 Step 2 — Configure the Persisted Store
+
+Open your `store.js`:
+
+```js
+import { configureStore } from "@reduxjs/toolkit";
+import storage from "redux-persist/lib/storage";
+import { persistReducer, persistStore } from "redux-persist";
+import { combineReducers } from "redux";
+import thunk from "redux-thunk";
+
+import counterReducer from "./features/counter/counterSlice";
+import pokemonReducer from "./features/pokemon/pokemonSlice";
+
+const persistConfig = {
+  key: "root",
+  storage,
+  whitelist: ["counter"], // choose which slices to persist
+};
+
+const rootReducer = combineReducers({
+  counter: counterReducer,
+  pokemon: pokemonReducer,
+});
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: [thunk],
+});
+
+export const persistor = persistStore(store);
+```
+
+### Why `whitelist`?
+
+We don’t always want to persist *everything*.
+
+Examples:
+
+| Slice                   | Should Persist? | Why                      |
+| ----------------------- | --------------- | ------------------------ |
+| User theme (light/dark) | ✅ Yes           | Good user UX             |
+| Login token             | ❗ Maybe         | Only if securely handled |
+| API data lists          | ❌ No            | Can be re-fetched easily |
+| Shopping cart           | ✅ Yes           | Critical user context    |
+
+Only persist what matters.
+
+---
+
+## 🔗 Step 3 — Wrap App with PersistGate
+
+Open `main.jsx` / `index.js`:
+
+```js
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import { Provider } from "react-redux";
+import { store, persistor } from "./store";
+import { PersistGate } from "redux-persist/integration/react";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <Provider store={store}>
+    <PersistGate loading={<p>Loading...</p>} persistor={persistor}>
+      <App />
+    </PersistGate>
+  </Provider>
+);
+```
+
+Now Redux will **restore state from localStorage** before rendering the UI.
+
+---
+
+## 🧠 Avoiding Common Pitfalls
+
+| Problem                            | Cause                            | Fix                                                 |
+| ---------------------------------- | -------------------------------- | --------------------------------------------------- |
+| “Could not serialize state” errors | Non-serializable values in state | Store only plain objects & primitives               |
+| Persisting too much slows the app  | Persisting large API lists       | Use `whitelist` to persist **only important state** |
+| UI shows outdated data             | API data persisted accidentally  | Don’t persist API slices                            |
+
+### Golden Rule:
+
+> Persist **state that is meaningful to the user**, not just convenient for the developer.
+
+---
+
+## ✅ Result
+
+You now have:
+
+* Redux state **saved across refresh**
+* Clean store configuration
+* Control over *which* state persists
+
+Your app is now more **user-friendly** and feels **professional and polished**.
+
+---
+
+## 🎯 Summary
+
+| Concept         | Purpose                             |
+| --------------- | ----------------------------------- |
+| `redux-persist` | Saves Redux state to storage        |
+| `whitelist`     | Controls which slices get persisted |
+| `PersistGate`   | Delays UI until state is restored   |
+
+State persistence is a powerful UX improvement—use it wisely.
+
+---

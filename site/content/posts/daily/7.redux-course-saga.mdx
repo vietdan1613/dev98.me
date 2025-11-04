@@ -1,0 +1,238 @@
+---
+title: "Redux Toolkit: Using Redux-Saga to Load Pokémon Details"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-11
+thumbnailText: Redux Toolkit
+---
+
+So far, we’ve used Redux Toolkit and `createAsyncThunk` to handle API requests. But in larger applications, you may want **more control over side effects**, such as:
+
+* Canceling requests when leaving a page
+* Retrying failed requests
+* Running parallel or sequential workflows
+* Triggering multiple actions from one request
+* Listening for specific UI or navigation events
+
+This is where **Redux-Saga** shines.
+
+In this article, we will integrate **Redux-Saga** to load Pokémon details from the Pokémon API when the user selects a Pokémon from the list.
+
+---
+
+## 🧠 What is Redux-Saga?
+
+Redux-Saga is a middleware for Redux that uses **generator functions (`function*`)** to handle async workflows in a more declarative way.
+
+Instead of doing:
+
+```js
+dispatch(fetchPokemonDetails());
+```
+
+and hoping your async function handles everything…
+
+Saga lets you describe **how the side effect should work**:
+
+```js
+takeLatest("pokemon/fetchDetail", fetchPokemonDetailSaga);
+```
+
+This is more predictable and easier to test.
+
+---
+
+## 🏗 Step 1 — Install Redux-Saga
+
+```bash
+npm install redux-saga
+```
+
+---
+
+## 🧱 Step 2 — Create Pokémon Detail Slice
+
+```
+src/features/pokemonDetail/pokemonDetailSlice.js
+```
+
+```js
+import { createSlice } from "@reduxjs/toolkit";
+
+const pokemonDetailSlice = createSlice({
+  name: "pokemonDetail",
+  initialState: {
+    data: null,
+    loading: false,
+    error: null,
+  },
+  reducers: {
+    fetchPokemonDetail: (state) => {
+      state.loading = true;
+    },
+    fetchPokemonDetailSuccess: (state, action) => {
+      state.loading = false;
+      state.data = action.payload;
+      state.error = null;
+    },
+    fetchPokemonDetailFailure: (state) => {
+      state.loading = false;
+      state.error = "Failed to load Pokémon details.";
+    },
+  },
+});
+
+export const {
+  fetchPokemonDetail,
+  fetchPokemonDetailSuccess,
+  fetchPokemonDetailFailure,
+} = pokemonDetailSlice.actions;
+
+export default pokemonDetailSlice.reducer;
+```
+
+Notice:
+This slice does **not** fetch data directly — the Saga will handle that.
+
+---
+
+## 🧙 Step 3 — Create Saga to Fetch Pokémon Details
+
+```
+src/features/pokemonDetail/pokemonDetailSaga.js
+```
+
+```js
+import { call, put, takeLatest } from "redux-saga/effects";
+import {
+  fetchPokemonDetail,
+  fetchPokemonDetailSuccess,
+  fetchPokemonDetailFailure,
+} from "./pokemonDetailSlice";
+
+function* handleFetchPokemonDetail(action) {
+  try {
+    const response = yield call(fetch, action.payload);
+    const data = yield response.json();
+    yield put(fetchPokemonDetailSuccess(data));
+  } catch (error) {
+    yield put(fetchPokemonDetailFailure());
+  }
+}
+
+export function* pokemonDetailSaga() {
+  yield takeLatest(fetchPokemonDetail.type, handleFetchPokemonDetail);
+}
+```
+
+### What’s Happening Here?
+
+| Effect       | Meaning                                            |
+| ------------ | -------------------------------------------------- |
+| `takeLatest` | Only run the latest request (cancel previous ones) |
+| `call`       | Executes an async function                         |
+| `put`        | Dispatches a Redux action                          |
+
+---
+
+## 🏪 Step 4 — Add Saga Middleware to Store
+
+Edit your `store.js`:
+
+```js
+import { configureStore } from "@reduxjs/toolkit";
+import createSagaMiddleware from "redux-saga";
+import pokemonDetailReducer from "./features/pokemonDetail/pokemonDetailSlice";
+import { pokemonDetailSaga } from "./features/pokemonDetail/pokemonDetailSaga";
+
+const sagaMiddleware = createSagaMiddleware();
+
+export const store = configureStore({
+  reducer: {
+    pokemonDetail: pokemonDetailReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
+});
+
+sagaMiddleware.run(pokemonDetailSaga);
+```
+
+We disable thunk because Saga will handle async logic.
+
+---
+
+## 🎨 Step 5 — Display Pokémon Detail in the UI
+
+Example usage in `PokemonDetail.jsx`:
+
+```jsx
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPokemonDetail } from "../features/pokemonDetail/pokemonDetailSlice";
+import { useEffect } from "react";
+
+export function PokemonDetail({ url }) {
+  const dispatch = useDispatch();
+  const { data, loading, error } = useSelector(
+    (state) => state.pokemonDetail
+  );
+
+  useEffect(() => {
+    dispatch(fetchPokemonDetail(url));
+  }, [url, dispatch]);
+
+  if (loading) return <p>Loading details...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!data) return null;
+
+  return (
+    <div>
+      <h2>{data.name.toUpperCase()}</h2>
+      <img src={data.sprites.front_default} alt={data.name} />
+    </div>
+  );
+}
+```
+
+---
+
+## ✅ Result
+
+You now have:
+
+* A Redux slice to store Pokémon detail data
+* A Redux-Saga that handles async fetching
+* UI that loads smoothly and handles cancel/reload properly
+
+When you click a Pokémon, its details load **efficiently** and **predictably**.
+
+---
+
+## 🧠 Why Saga is a Good Choice Here
+
+| Feature                              | Benefit                                              |
+| ------------------------------------ | ---------------------------------------------------- |
+| `takeLatest`                         | Cancels old requests to avoid race conditions        |
+| Generator Functions                  | Easy-to-read async workflows                         |
+| Effect Helpers (`call`, `put`, etc.) | Declarative side-effect logic                        |
+| Easy to test                         | Pure generator functions instead of nested callbacks |
+
+Saga shines when your app grows and you need **control**.
+
+---
+
+## 🚀 Want the Next Step?
+
+I can now create an advanced blog about:
+
+**Auto Refresh & Cancel API Requests with Redux-Saga**
+(for example: refresh Pokémon detail every 10 seconds and stop when leaving the page)
+
+Just tell me:
+
+**Do you want your explanation style to be:**
+
+1. Simple
+2. Energetic YouTube style
+3. Professional / Senior-Dev tone

@@ -1,0 +1,169 @@
+---
+title: "Redux Toolkit: Deploying Your React + Redux App to the Web"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-11
+thumbnailText: Redux Toolkit
+---
+
+You now know how to:
+
+* Build UI with React
+* Manage global state with Redux Toolkit
+* Fetch real data with `createAsyncThunk` or Redux-Saga
+* Debug with Redux DevTools
+* Persist user state for a better experience
+
+Now it’s time to **share your work with the world**! 🌍
+In this lesson, we’ll learn how to **deploy** your React application so anyone can access it online.
+
+---
+
+## 🏗 Step 1 — Build the App for Production
+
+Before deployment, we need to generate an optimized version of your app.
+
+From your project folder, run:
+
+```bash
+npm run build
+```
+
+This creates a **dist** (Vite) or **build** (CRA) folder containing:
+
+* Minified JavaScript & CSS files
+* Optimized images
+* A ready-to-deploy production app
+
+### Why Do We Need This Step?
+
+Because development mode:
+
+* Includes debugging tools
+* Runs with slower builds
+* Is not optimized for users
+
+The production build:
+✅ Loads faster
+✅ Consumes less bandwidth
+✅ Runs efficiently on any browser
+
+---
+
+## ☁️ Step 2 — Choose a Hosting Platform
+
+We’ll focus on **Netlify** and **Vercel**, two popular platforms that are:
+
+* Free
+* Fast to deploy
+* Automatic HTTPS
+* GitHub integration supported
+
+Pick one:
+
+| Platform    | Best For                   | Notes                              |
+| ----------- | -------------------------- | ---------------------------------- |
+| **Netlify** | Simple SPA hosting         | Drag-and-drop deployment available |
+| **Vercel**  | React + Next.js ecosystems | Smooth with GitHub auto-deploy     |
+
+Both are excellent, so use whichever feels more convenient.
+
+---
+
+## 🌐 Deploying to Netlify (Option 1)
+
+### Method A — Drag-and-Drop (Easiest)
+
+1. Run:
+
+   ```bash
+   npm run build
+   ```
+2. Go to [https://app.netlify.com/drop](https://app.netlify.com/drop)
+3. Drag your **dist** or **build** folder into the window
+
+🎉 Your app is instantly live.
+
+---
+
+### Method B — Deploy with GitHub
+
+1. Push code to GitHub
+2. Go to [https://app.netlify.com/](https://app.netlify.com/)
+3. **New Site → Import from Git Repository**
+4. Select your repo
+5. Build command:
+
+   ```
+   npm run build
+   ```
+6. Publish directory:
+
+   * `dist` (for Vite)
+   * `build` (for CRA)
+
+✅ Netlify auto-builds every time you push updates.
+
+---
+
+## 🚀 Deploying to Vercel (Option 2)
+
+1. Install CLI (optional but useful):
+
+   ```bash
+   npm install -g vercel
+   ```
+2. Run:
+
+   ```bash
+   vercel
+   ```
+3. Follow the prompts → your app goes live.
+
+Or:
+
+1. Visit [https://vercel.com/import](https://vercel.com/import)
+2. Import your GitHub repo
+3. Deploy
+
+✅ Vercel also auto-builds on every push.
+
+---
+
+## 🎉 Your Project Is Now Live!
+
+Share your link with:
+
+* Friends or colleagues
+* Resume or portfolio
+* Social media or dev community networks
+
+This is a major milestone — you now have a **real production app** online.
+
+---
+
+## 🔑 Deployment Tips
+
+| Tip                                         | Why It Matters                     |
+| ------------------------------------------- | ---------------------------------- |
+| Always run `npm run build` before deploying | Ensures optimized bundle           |
+| Use GitHub linking                          | Enables automatic redeploy on push |
+| Verify environment variables if using APIs  | Avoid key exposure                 |
+| Test performance with Lighthouse            | Identify speed improvements        |
+
+---
+
+## 🎯 Summary
+
+You just learned how to:
+
+| Step                        | Outcome                               |
+| --------------------------- | ------------------------------------- |
+| Create production build     | Optimized version ready to deploy     |
+| Deploy to Netlify or Vercel | Your app is now accessible on the web |
+| Share project               | Showcase your skills publicly         |
+
+This is a **huge milestone**. Deploying your app makes your learning **real**.
+
+---

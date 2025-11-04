@@ -1,0 +1,149 @@
+---
+title: "Redux Toolkit: Adding Custom Middleware — Logging State Changes"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-08
+thumbnailText: Redux Toolkit
+---
+
+Middleware plays a powerful role in Redux applications — it allows us to run **custom logic** between when an action is dispatched and when it reaches the reducer.
+
+In this article, we’ll learn how to create a **logging middleware** to track actions and state changes.
+This is extremely helpful for debugging, monitoring user behavior, or understanding state flow in the app.
+
+---
+
+## 🔍 What is Middleware?
+
+**Middleware** is a function that sits between:
+
+```
+Component → dispatch(action) → Middleware → Reducer → Updated State
+```
+
+This means we can:
+
+* Log actions
+* Block or modify actions
+* Perform side-effects (analytics, persistence, etc.)
+
+Redux Toolkit already includes some middleware, like:
+
+* `redux-thunk` (for async actions)
+* `immutable` & `serializable` state checks (for development)
+
+But we can still **add custom middleware**.
+
+---
+
+## 📝 Creating a Logging Middleware
+
+Let’s create a middleware that logs:
+
+* The action being dispatched
+* The previous state
+* The new state after the reducer updates it
+
+Create a file:
+
+```
+src/middleware/logger.js
+```
+
+```js
+export const logger = (store) => (next) => (action) => {
+  console.log("%cAction Dispatched:", "color: #4CAF50; font-weight: bold;", action);
+  console.log("%cPrevious State:", "color: #FF5722;", store.getState());
+
+  const result = next(action); // let reducer run
+
+  console.log("%cUpdated State:", "color: #2196F3;", store.getState());
+  console.log("---------------------------------------------------");
+
+  return result;
+};
+```
+
+### What’s happening here?
+
+| Part                | Meaning                            |
+| ------------------- | ---------------------------------- |
+| `store.getState()`  | Reads current global state         |
+| `next(action)`      | Passes action to reducer           |
+| Logs before + after | Helps visually track state updates |
+
+---
+
+## 🏪 Step 2 — Add Middleware to the Store
+
+Open your store file:
+
+```
+src/store.js
+```
+
+```js
+import { configureStore } from "@reduxjs/toolkit";
+import { logger } from "./middleware/logger";
+import counterReducer from "./features/counter/counterSlice";
+
+export const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(logger),
+});
+```
+
+### Why `.concat()`?
+
+* `getDefaultMiddleware()` returns the built-in RTK middleware
+* `.concat(logger)` adds our custom middleware to the chain
+
+---
+
+## ✅ Result
+
+Now, whenever you trigger a Redux action, your console will display:
+
+```
+Action Dispatched: increment
+Previous State: { counter: { value: 5 } }
+Updated State: { counter: { value: 6 } }
+---------------------------------------------------
+```
+
+This makes it easy to:
+
+* Debug unexpected state changes
+* Understand application flow
+* See exactly what each action does
+
+---
+
+## 🎯 When Should You Use Logging Middleware?
+
+✅ During development
+✅ When debugging complex applications
+✅ When learning Redux
+✅ When reviewing reducer behavior
+
+❌ Do **not** use it in production unless you truly need it
+It may reveal sensitive data or slow down performance.
+
+---
+
+## 🧠 Summary
+
+| Concept                                    | Explanation                                  |
+| ------------------------------------------ | -------------------------------------------- |
+| Middleware                                 | Code that runs between dispatch and reducers |
+| Logger Middleware                          | Helps observe state updates step-by-step     |
+| Added via `middleware` config in RTK store | Works alongside default middleware           |
+
+Middleware is one of the most powerful features of Redux.
+It gives you control, visibility, and flexibility.
+
+---

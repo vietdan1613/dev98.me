@@ -1,0 +1,174 @@
+---
+title: "Redux Toolkit: Redux DevTools & Debugging Your App"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-07
+thumbnailText: Redux Toolkit
+---
+
+By now, we’ve built slices, dispatched actions, and even fetched data from APIs using `createAsyncThunk`. But as your app grows, debugging becomes more and more important.
+
+This is where **Redux DevTools** comes in — a powerful debugging tool that lets you **see inside your Redux store in real time**.
+
+In this lesson, we’ll learn how to:
+
+* Use **Time-Travel Debugging**
+* **Inspect actions** and state changes step-by-step
+* Debug issues like **API errors** and **infinite re-renders**
+
+---
+
+## 🔎 What is Redux DevTools?
+
+Redux DevTools is a browser extension that helps you:
+
+* See **every action** that gets dispatched
+* Inspect **how the state changes** after each action
+* Jump backward and forward through state history (**time-travel**)
+
+### Install It:
+
+Chrome: [https://chrome.google.com/webstore/detail/redux-devtools](https://chrome.google.com/webstore/detail/redux-devtools)
+Firefox: [https://addons.mozilla.org/en-US/firefox/addon/reduxdevtools/](https://addons.mozilla.org/en-US/firefox/addon/reduxdevtools/)
+
+Once installed, open your browser dev tools → you’ll see a **Redux** tab.
+
+---
+
+## 🕰 Time-Travel Debugging
+
+Time-travel debugging allows you to **go back to previous states** to understand how they changed.
+
+For example:
+
+1. Click **+** three times on the counter app
+2. You’ll see actions:
+
+   * increment
+   * increment
+   * increment
+3. Click on each action in the DevTools panel
+4. The UI will update to show what the app looked like at that moment
+
+This is extremely helpful for:
+
+* Testing user flows
+* Tracking UI bugs
+* Understanding **unexpected state changes**
+
+---
+
+## 🔍 Inspecting Actions & State Changes
+
+Every time you dispatch an action, Redux DevTools logs:
+
+| Item       | What it tells you                              |
+| ---------- | ---------------------------------------------- |
+| **Action** | What happened (e.g., `fetchPokemon/pending`)   |
+| **State**  | The full Redux state before & after the action |
+| **Diff**   | What changed in the state                      |
+
+For example, when fetching Pokémon:
+
+```
+fetchPokemon/pending
+fetchPokemon/fulfilled
+```
+
+You can inspect how `status`, `items`, and `error` changed at each step.
+
+### This makes debugging super clear.
+
+---
+
+## 🐞 Debugging Common Issues
+
+### 1. API Not Working → Check Action Sequence
+
+If the fetch fails, DevTools will show:
+
+```
+fetchPokemon/rejected
+```
+
+Click it → check `error` state → now you know what went wrong
+(e.g., wrong URL, CORS issue, API offline)
+
+---
+
+### 2. Infinite Re-Render Loop
+
+If your component keeps re-rendering repeatedly:
+
+* Check if you're calling `dispatch()` **inside render** instead of `useEffect`.
+
+❌ BAD:
+
+```jsx
+dispatch(fetchPokemon());
+```
+
+✅ GOOD:
+
+```jsx
+useEffect(() => {
+  dispatch(fetchPokemon());
+}, [dispatch]);
+```
+
+DevTools can show you **hundreds of repeated actions** → this is a red flag.
+
+---
+
+### 3. State Not Updating
+
+If the UI doesn't reflect assigned updates:
+
+* Check your reducer logic in the slice
+* Ensure you're modifying the correct value
+* Look at the **Diff** panel to confirm the state changed
+
+---
+
+## 🎯 Summary
+
+Redux DevTools helps you:
+
+| Feature                  | Benefit                                       |
+| ------------------------ | --------------------------------------------- |
+| Time-Travel Debugging    | Understand how the state evolved step-by-step |
+| Action Inspection        | See exactly what triggered state changes      |
+| State Diff               | Quickly spot what changed and why             |
+| Debug Loops / API Issues | Fix problems faster                           |
+
+Learning how to debug is just as important as learning how to code. Debug faster → Learn faster → Build better.
+
+---
+
+## 🚀 Next Lesson (Video 9): Performance Optimization with Selectors
+
+In the next video, we’ll learn about:
+
+* Memoized selectors with **Reselect**
+* Preventing unnecessary re-renders
+* Structuring slices efficiently
+
+This will make your Redux app **faster and smoother**, especially as it grows.
+
+---
+
+If you'd like, I can now create:
+
+✅ A **YouTube narration script**
+✅ Visual slide images you can show in the video
+✅ Thumbnail text ideas
+
+Just tell me:
+Should your video tone be:
+
+1. Beginner-friendly
+2. Energetic YouTuber vibe
+3. Serious / professional instructional style
+
+Reply with **1, 2, or 3**.
