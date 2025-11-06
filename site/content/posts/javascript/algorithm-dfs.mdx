@@ -1,0 +1,88 @@
+---
+title: "🌲 DFS (Depth-First Search)"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#Javascript']
+date: 2025-11-05
+thumbnailText: A  lgorithm
+---
+
+> **DFS goes as deep as possible before going back.**
+
+## What is a Graph?
+
+A **graph** is just a collection of **nodes** (also called vertices) and **connections** between them (called edges).
+Example:
+
+![example-graph](./imgs/dfs.png 'example-graph')
+
+Graphs can represent:
+
+* Maps
+* Networks
+* Friendships (like Facebook friends graph)
+* Game paths
+* And more!
+
+---
+
+## 🧠 So What is DFS?
+
+**DFS (Depth-First Search)** is a way to explore a graph by going **as deep as possible** down one path *before* backtracking.
+
+Think of it like exploring a maze:
+
+1. Choose a direction.
+2. Keep going forward.
+3. If you reach a dead-end, go back to the last junction.
+4. Try a different path.
+5. Repeat until everything is explored.
+
+---
+
+## 🎨 Visual Thinking
+
+Imagine each node has neighbors. DFS will:
+
+* Visit a node
+* Then visit **the first neighbor**
+* Then the neighbor of that neighbor
+* And so on…
+
+It goes **deep**, not wide.
+
+This is different from BFS (Breadth-First Search), which explores layer by layer.
+
+---
+
+### 🏁 When to Use DFS?
+
+Use DFS when:
+✅ You want to explore **deep paths first**
+✅ You need to **detect cycles**
+✅ You need to **check if nodes are connected**
+✅ You're searching possible solutions (like puzzles)
+
+## Code Example
+
+link: https://leetcode.com/problems/keys-and-rooms/
+
+```js
+var canVisitAllRooms = function(rooms) {
+  const visited = new Set();
+
+  function dfs(room) {
+    if (visited.has(room)) return;
+
+    visited.add(room);
+
+    for (const key of rooms[room]) {
+      dfs(key);
+    }
+  }
+
+  dfs(0);
+
+  return visited.size === rooms.length;
+};
+```
