@@ -1,0 +1,155 @@
+---
+title: "TailwindCSS 1: Introduction - A Faster Way to Build User Interfaces"
+category: Daily
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-01
+thumbnailText: Tailwind CSS
+---
+
+If you’ve ever felt overwhelmed writing CSS, struggled to name classes, or spent too much time adjusting spacing until your layout “looks right,” then **TailwindCSS** might be exactly what you need. In this article, we’ll look at what TailwindCSS is, why it’s so popular, and how to set it up quickly in your project.
+
+---
+
+## 🎯 What is TailwindCSS?
+
+**TailwindCSS** is a **utility-first CSS framework**.
+This means instead of writing traditional CSS rules and applying them to classes, Tailwind provides **small, reusable utility classes** that you can apply directly to your HTML to style your UI.
+
+For example, instead of writing:
+
+```css
+.button {
+  background-color: blue;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+}
+```
+
+With Tailwind, you simply write:
+
+```html
+<button class="bg-blue-500 text-white px-4 py-2 rounded">
+  Click me
+</button>
+```
+
+👉 It's cleaner, faster, and keeps your styling directly where it’s being used.
+
+---
+
+## ⚡ Why is TailwindCSS Faster Than Hand-Written CSS?
+
+### **1. No more thinking of class names**
+
+Forget naming conventions like `btn-primary` or `hero-container`.
+
+Tailwind uses **descriptive utility classes**:
+
+* `text-center`
+* `mt-6`
+* `rounded-lg`
+* `bg-gray-800`
+
+### **2. Extremely flexible**
+
+You can design **any** layout or style — without fighting predefined components, like in Bootstrap.
+
+### **3. Built-in responsive classes**
+
+Responsive design is incredibly simple:
+
+```html
+<p class="text-sm md:text-lg">
+  This text is small on mobile and larger on desktop.
+</p>
+```
+
+### **4. No massive CSS files**
+
+Instead of maintaining long CSS files that get messy over time, Tailwind keeps styles close to the HTML elements that need them.
+Much easier to maintain.
+
+---
+
+## 🔧 How to Install TailwindCSS
+
+There are two popular ways to use Tailwind:
+
+---
+
+### ✅ Method 1: Use **CDN** (Quick & Easy)
+
+If you just want to try Tailwind, this is the fastest way.
+
+Create an `index.html` file:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tailwind Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6">
+  <h1 class="text-3xl font-bold">Hello Tailwind!</h1>
+</body>
+</html>
+```
+
+Open it in your browser.
+If the “Hello Tailwind!” text appears large and bold → Tailwind is working ✅
+
+---
+
+### 🧱 Method 2: Install Using **npm** (for real projects)
+
+```bash
+npm install -D tailwindcss
+npx tailwindcss init
+```
+
+Then add this to your CSS file:
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+This setup is recommended when working on production websites.
+
+---
+
+## 🎨 Demo: Create a Nice Button in Seconds
+
+Add this inside your `<body>`:
+
+```html
+<button class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+  Click me
+</button>
+```
+
+No external CSS needed.
+You already have:
+✅ Background color
+✅ Hover effect
+✅ Padding & radius
+
+---
+
+## ✅ Conclusion
+
+By the end of this article, you now understand:
+
+| What You Learned            | Explanation                                   |
+| --------------------------- | --------------------------------------------- |
+| **What TailwindCSS is**     | A utility-first CSS framework                 |
+| **Why it’s faster**         | No custom class naming and styles stay inline |
+| **How to install it**       | Using CDN or npm                              |
+| **How to build UI quickly** | Using utility classes directly in HTML        |
+

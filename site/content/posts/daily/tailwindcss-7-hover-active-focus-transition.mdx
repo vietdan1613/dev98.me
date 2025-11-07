@@ -1,0 +1,150 @@
+---
+title: "TailwindCSS 7:  Hover Effects, Active States & Transitions"
+category: Daily
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-07
+thumbnailText: Tailwind CSS
+---
+
+A good UI isn’t just about layout and colors — it’s also about how the interface **responds** when the user interacts with it.
+Hover effects, focus highlights, and smooth transitions make your design feel clean, modern, and alive.
+
+In this lesson, we’ll learn how to easily add these effects using TailwindCSS.
+
+---
+
+## 🎯 What You Will Learn
+
+| Feature      | Purpose                            |
+| ------------ | ---------------------------------- |
+| `hover:*`    | Change style when cursor hovers    |
+| `active:*`   | Style while clicking               |
+| `focus:*`    | Style when focusing (keyboard/tab) |
+| `transition` | Smooth animation for hover changes |
+| `duration-*` | Control animation speed            |
+
+Let’s create interactive UI with almost **no custom CSS**.
+
+---
+
+## 🖱 Hover Styles (`hover:*`)
+
+Tailwind allows hover styling by adding the prefix `hover:` before any utility class.
+
+Example — change button background on hover:
+
+```html
+<button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+  Hover Me
+</button>
+```
+
+🎨 The color slightly darkens = better feedback to the user.
+
+---
+
+## 🖲 Active State (`active:*`)
+
+Add effects while the button is being **pressed**:
+
+```html
+<button class="bg-blue-500 active:bg-blue-700 text-white px-4 py-2 rounded">
+  Press Me
+</button>
+```
+
+This gives a subtle “press down” feel.
+
+---
+
+## 🎯 Focus State (`focus:*`)
+
+Useful for accessibility and keyboard navigation:
+
+```html
+<input
+  class="border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+/>
+```
+
+* `focus:ring-2` → adds a soft glow around the input
+* Helps users know where they are typing
+
+---
+
+## 🎞 Smooth Transitions (`transition`, `duration-*`)
+
+Without transitions, hover effects change instantly.
+We want smooth animations:
+
+```html
+<button
+  class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition duration-300"
+>
+  Smooth Hover
+</button>
+```
+
+* `transition` → enable animation
+* `duration-300` → animation lasts 0.3s (comfortable speed)
+
+---
+
+## 🧪 Mini Demo: Modern Interactive Button
+
+```html
+<button
+  class="
+    bg-indigo-500 
+    text-white 
+    px-6 
+    py-3 
+    rounded-lg 
+    hover:bg-indigo-600 
+    active:bg-indigo-700 
+    transition 
+    duration-300
+  "
+>
+  Get Started
+</button>
+```
+
+This button has:
+
+* Clean hover effect
+* Slight press animation when clicked
+* Smooth transitions
+  → **Professional UI feel** 💎
+
+---
+
+## 💡 Bonus: Card Hover Elevation Effect
+
+```html
+<div class="p-6 bg-white rounded-lg shadow hover:shadow-lg transition duration-300">
+  <h3 class="text-xl font-semibold mb-2">Product Title</h3>
+  <p class="text-gray-600">Card hover effects create depth.</p>
+</div>
+```
+
+* `shadow` → normal shadow
+* `hover:shadow-lg` → stronger shadow on hover
+* Makes the card look like it **lifts off the page**
+
+---
+
+## ✅ Summary
+
+| Utility      | Purpose                        |
+| ------------ | ------------------------------ |
+| `hover:*`    | Change style when hovered      |
+| `active:*`   | Style while clicking           |
+| `focus:*`    | Accessibility + focus feedback |
+| `transition` | Enable animations              |
+| `duration-*` | Control animation timing       |
+
+Small interaction details = **big improvement in perceived quality**.
+
+---

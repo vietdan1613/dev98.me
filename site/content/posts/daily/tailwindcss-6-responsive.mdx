@@ -1,0 +1,125 @@
+---
+title: "TailwindCSS 6: Responsive Design - Build Mobile-First UI Easily"
+category: Daily
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-06
+thumbnailText: Tailwind CSS
+---
+
+So far, we’ve learned how to use spacing, colors, Flexbox, and Grid in TailwindCSS. Now it’s time to make our designs **responsive** — so they look good on **mobile, tablet, and desktop**.
+
+TailwindCSS makes responsive design **simple and intuitive**, using something called **breakpoint prefixes**.
+
+---
+
+## 🎯 What You Will Learn
+
+| Concept                         | Purpose                                   |
+| ------------------------------- | ----------------------------------------- |
+| Mobile-first approach           | Design small screens first, then scale up |
+| Tailwind breakpoints            | `sm`, `md`, `lg`, `xl`                    |
+| Responsive utility classes      | Apply styles based on screen size         |
+| Real example: responsive navbar |                                           |
+
+Let’s start 👇
+
+---
+
+## 🧩 Tailwind Breakpoints
+
+Tailwind uses **mobile-first breakpoints**, meaning styles apply to all screens **unless** you add a prefix.
+
+| Prefix | Min Width | Device Type                    |
+| ------ | --------- | ------------------------------ |
+| `sm:`  | 640px     | Small screens / tablets        |
+| `md:`  | 768px     | Medium screens / small laptops |
+| `lg:`  | 1024px    | Large screens / desktops       |
+| `xl:`  | 1280px    | Bigger desktops                |
+
+### How to read this:
+
+* No prefix → applies to **mobile first**
+* Add prefix → applies from that screen size **and up**
+
+---
+
+## 🎨 Example: Responsive Text Size
+
+```html
+<p class="text-base sm:text-lg md:text-xl lg:text-2xl">
+  This text size increases as the screen gets larger.
+</p>
+```
+
+| Screen Size | Text Size   |
+| ----------- | ----------- |
+| Mobile      | `text-base` |
+| Tablet      | `text-lg`   |
+| Laptop      | `text-xl`   |
+| Desktop     | `text-2xl`  |
+
+Simple & clear ✅
+
+---
+
+## 📏 Example: Responsive Width
+
+```html
+<div class="w-full md:w-1/2 lg:w-1/3 bg-gray-200 p-4">
+  Responsive box
+</div>
+```
+
+* On mobile → full width
+* On medium screens → half width
+* On large screens → one-third width
+
+---
+
+## 🧪 Real Demo: Responsive Navigation Bar
+
+Here’s a navigation bar that stacks items on mobile, and aligns them horizontally on desktop:
+
+```html
+<nav class="p-4 bg-gray-900 text-white">
+  <div class="flex items-center justify-between">
+    <h1 class="text-xl font-bold">MyWebsite</h1>
+    <button class="block md:hidden bg-gray-700 px-3 py-2 rounded">
+      Menu
+    </button>
+  </div>
+
+  <ul class="flex flex-col gap-4 mt-4 md:mt-0 md:flex-row md:gap-8">
+    <li><a href="#" class="hover:text-gray-300">Home</a></li>
+    <li><a href="#" class="hover:text-gray-300">About</a></li>
+    <li><a href="#" class="hover:text-gray-300">Contact</a></li>
+  </ul>
+</nav>
+```
+
+### What’s happening:
+
+| Code                       | Effect                                       |
+| -------------------------- | -------------------------------------------- |
+| `md:hidden`                | Hide menu button on larger screens           |
+| `flex-col` → `md:flex-row` | Stack items on mobile, row layout on desktop |
+| `gap-*` + responsive       | Clean spacing on all screens                 |
+
+✅ Mobile-friendly
+✅ Desktop-ready
+✅ No custom CSS needed
+
+---
+
+## ✅ Summary
+
+| Feature              | Example                  | Meaning                                |
+| -------------------- | ------------------------ | -------------------------------------- |
+| Breakpoints          | `sm: md: lg:`            | Apply styles at specific screen widths |
+| Mobile-first         | No prefix                | Default styling for small screens      |
+| Responsive utilities | `md:text-xl`, `lg:w-1/3` | Change style based on screen size      |
+
+Tailwind’s responsive system is **simple, powerful, and clean**.
+
+---
