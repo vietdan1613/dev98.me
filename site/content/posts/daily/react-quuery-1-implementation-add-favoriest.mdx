@@ -1,0 +1,189 @@
+---
+title: "React Query: Add Favorites Feature Using useMutation + localStorage"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-12-11
+thumbnailText: React State Management
+---
+
+
+When building a real-world app, it’s common to let users **save favorites** — whether it’s products, articles, or in our case, Pokémon. In this post, we’ll extend our **React Query Pokémon Browser** by adding a **Favorites** feature with:
+
+* ✅ `useMutation` for updating favorites
+* ✅ Optimistic UI (instant visual feedback)
+* ✅ Persistence using `localStorage`
+* ✅ Shared global state using React Query cache
+
+This will make the UI feel fast and keep favorites stored across page reloads.
+
+---
+
+## ⭐ Why Use `useMutation`?
+
+React Query gives us two main primitives:
+
+| Purpose                 | Hook                            | Example                |
+| ----------------------- | ------------------------------- | ---------------------- |
+| Fetching (reading) data | `useQuery` / `useInfiniteQuery` | Fetch Pokémon list     |
+| Changing (writing) data | `useMutation`                   | Add / remove favorites |
+
+Our Favorites list is **state that changes**, so `useMutation` is the right tool.
+
+---
+
+## 1. Create a Favorites Manager Hook
+
+We’ll store favorites in **React Query cache**, and sync it to **localStorage** so that it persists across refreshes.
+
+**`src/useFavorites.ts`**
+
+```tsx
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+const STORAGE_KEY = 'favorites';
+
+function loadFavorites(): string[] {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+}
+
+function saveFavorites(favorites: string[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+}
+
+export function useFavorites() {
+  const queryClient = useQueryClient();
+
+  // ✅ Load favorites from cache or localStorage
+  const { data: favorites = [] } = useQuery<string[]>({
+    queryKey: ['favorites'],
+    queryFn: () => loadFavorites(),
+  });
+
+  // ✅ Toggle favorite using mutation + optimistic update
+  const toggleFavorite = useMutation({
+    mutationFn: (name: string) => {
+      const updated = favorites.includes(name)
+        ? favorites.filter((f) => f !== name)
+        : [...favorites, name];
+
+      saveFavorites(updated);
+      return updated;
+    },
+    onMutate: (name) => {
+      queryClient.setQueryData<string[]>(['favorites'], (prev = []) =>
+        prev.includes(name) ? prev.filter((f) => f !== name) : [...prev, name]
+      );
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['favorites'], updated);
+    },
+  });
+
+  return { favorites, toggleFavorite: toggleFavorite.mutate };
+}
+```
+
+### What’s Happening Here?
+
+| Step | Action                                                                 |
+| ---- | ---------------------------------------------------------------------- |
+| 1    | Favorites are loaded from `localStorage`                               |
+| 2    | Favorites are stored in React Query cache (`['favorites']`)            |
+| 3    | When a user toggles ★, we update cache immediately (**optimistic UI**) |
+| 4    | Then we save the updated list to localStorage                          |
+
+This makes the app feel **instant** and **persistent**.
+
+---
+
+## 2. Use Favorites in Pokémon List
+
+Now we display a ⭐ button next to each Pokémon.
+
+**`src/PokemonList.tsx`** (modified part only)
+
+```tsx
+import { useFavorites } from './useFavorites';
+
+export function PokemonList({ onSelect }: { onSelect: (name: string) => void }) {
+  const { favorites, toggleFavorite } = useFavorites();
+
+  // existing infinite query...
+
+  return (
+    <ul className="grid grid-cols-2 gap-4">
+      {data?.pages.flatMap(page =>
+        page.results.map((pokemon) => {
+          const isFav = favorites.includes(pokemon.name);
+
+          return (
+            <li
+              key={pokemon.name}
+              className="p-3 bg-white shadow flex justify-between items-center rounded hover:bg-gray-50"
+            >
+              <span className="capitalize cursor-pointer" onClick={() => onSelect(pokemon.name)}>
+                {pokemon.name}
+              </span>
+
+              <button className="text-xl" onClick={() => toggleFavorite(pokemon.name)}>
+                {isFav ? '⭐' : '☆'}
+              </button>
+            </li>
+          );
+        })
+      )}
+    </ul>
+  );
+}
+```
+
+---
+
+## 3. Add Favorite Button to Detail Page
+
+**`src/PokemonDetail.tsx`**
+
+```tsx
+import { useFavorites } from './useFavorites';
+
+export function PokemonDetail({ name, onBack }: { name: string; onBack: () => void }) {
+  const { favorites, toggleFavorite } = useFavorites();
+  const isFav = favorites.includes(name);
+
+  // existing Pokémon query...
+
+  return (
+    <div className="p-4">
+      <button className="text-blue-600 underline mb-4" onClick={onBack}>← Back</button>
+
+      <div className="flex items-center gap-3">
+        <h1 className="text-3xl font-bold capitalize">{data?.name}</h1>
+
+        <button className="text-2xl" onClick={() => toggleFavorite(name)}>
+          {isFav ? '⭐' : '☆'}
+        </button>
+      </div>
+
+      <img src={data?.sprites.front_default} className="mt-4 w-32" />
+    </div>
+  );
+}
+```
+
+---
+
+## 🎉 And that's it!
+
+You have now added:
+
+| Feature                            | Benefit                            |
+| ---------------------------------- | ---------------------------------- |
+| `useMutation` + optimistic updates | UI responds instantly              |
+| React Query cache state            | Favorites shared across components |
+| localStorage persistence           | Favorites survive browser refresh  |
+| Minimal complexity                 | No Redux / Context needed          |
+
+This is a **production-grade Favorites feature** in only ~50 lines of code.
+
+---

@@ -103,30 +103,38 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 This will load the Pokémon in pages and let the user load more.
 
 ```jsx
+// src/PokemonList.tsx
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-const fetchPokemonPage = async ({ pageParam = 'https://pokeapi.co/api/v2/pokemon?limit=20' }) => {
+interface Pokemon {
+  name: string;
+  url: string;
+}
+
+interface PokemonPage {
+  results: Pokemon[];
+  next: string | null;
+}
+
+const fetchPokemonPage = async ({ pageParam }: { pageParam: string }): Promise<PokemonPage> => {
   const res = await fetch(pageParam);
   return res.json();
 };
 
-export function PokemonList({ onSelect }) {
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
+export function PokemonList({ onSelect }: { onSelect: (name: string) => void }) {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<PokemonPage>({
     queryKey: ['pokemon'],
     queryFn: fetchPokemonPage,
+    initialPageParam: 'https://pokeapi.co/api/v2/pokemon?limit=20', // ✅ Required in v5
     getNextPageParam: (lastPage) => lastPage.next,
   });
 
   return (
     <div className="p-4">
       <h1 className="text-3xl font-semibold mb-4">Pokémon</h1>
+
       <ul className="grid grid-cols-2 gap-4">
-        {data?.pages.flatMap((page) =>
+        {data?.pages.flatMap(page =>
           page.results.map((pokemon) => (
             <li
               key={pokemon.name}
@@ -144,7 +152,7 @@ export function PokemonList({ onSelect }) {
         disabled={!hasNextPage || isFetchingNextPage}
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
       >
-        {isFetchingNextPage ? "Loading..." : hasNextPage ? "Load More" : "Nothing More"}
+        {isFetchingNextPage ? 'Loading...' : hasNextPage ? 'Load More' : 'No More Pokémon'}
       </button>
     </div>
   );
@@ -156,14 +164,22 @@ export function PokemonList({ onSelect }) {
 ## 6. Pokémon Detail Page with `useQuery`
 
 ```jsx
+// src/PokemonDetail.tsx
 import { useQuery } from '@tanstack/react-query';
 
-const fetchPokemonDetail = async (name) => {
+interface PokemonDetailData {
+  name: string;
+  sprites: {
+    front_default: string;
+  };
+}
+
+const fetchPokemonDetail = async (name: string): Promise<PokemonDetailData> => {
   const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
   return res.json();
 };
 
-export function PokemonDetail({ name, onBack }) {
+export function PokemonDetail({ name, onBack }: { name: string; onBack: () => void }) {
   const { data, isLoading } = useQuery({
     queryKey: ['pokemon', name],
     queryFn: () => fetchPokemonDetail(name),
@@ -174,8 +190,8 @@ export function PokemonDetail({ name, onBack }) {
   return (
     <div className="p-4">
       <button onClick={onBack} className="text-blue-600 underline mb-4">← Back</button>
-      <h1 className="text-3xl font-bold capitalize">{data.name}</h1>
-      <img src={data.sprites.front_default} className="mt-4 w-32" />
+      <h1 className="text-3xl font-bold capitalize">{data?.name}</h1>
+      <img src={data?.sprites.front_default} className="mt-4 w-32" />
     </div>
   );
 }
@@ -236,13 +252,3 @@ React Query makes server state manageable, scalable, and elegant.
 ---
 
 If you want, I can now continue with:
-
-### 🔥 Next Steps
-
-* Add **Favorites** (with `useMutation` + optimistic UI)
-* Add **Local Storage sync**
-* Add **Search filtering**
-* Add **Routing with React Router**
-
-Just say:
-**"Continue with favorites feature"** 👀
