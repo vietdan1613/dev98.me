@@ -45,146 +45,178 @@ React Query **solves all of this** with a clean, declarative API.
 
 ---
 
-## **Key Features**
+## ✅ Core Concepts
 
-| Feature                          | Description                                                      |
-| -------------------------------- | ---------------------------------------------------------------- |
-| **Caching**                      | Automatically caches server data to avoid unnecessary requests   |
-| **Background Refetching**        | Refreshes data silently when the app regains focus or reconnects |
-| **Smart Updates**                | Only updates the UI when data actually changes                   |
-| **Pagination & Infinite Scroll** | Built-in helpers for paginated APIs                              |
-| **Auto Retry**                   | Automatically retries failed requests with exponential backoff   |
-| **DevTools**                     | Visual debugging tools right in the browser                      |
-
----
-
-## **Installing React Query**
-
-```bash
-npm install @tanstack/react-query
-```
-
-Or, with Yarn:
-
-```bash
-yarn add @tanstack/react-query
-```
-
-Next, wrap your app with the `QueryClientProvider`:
-
-```jsx
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const queryClient = new QueryClient();
-
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <YourApp />
-    </QueryClientProvider>
-  );
-}
-```
+| Concept          | Purpose                                                 |
+| ---------------- | ------------------------------------------------------- |
+| **Query**        | Fetches **server data** (e.g., `GET` requests)          |
+| **Mutation**     | **Changes** server data (e.g., `POST`, `PUT`, `DELETE`) |
+| **Query Key**    | A unique identifier for the data in the cache           |
+| **Query Client** | Central cache manager for React Query                   |
+| **Stale Time**   | Determines how long data is considered “fresh”          |
+| **Cache Time**   | How long unused data stays in memory                    |
 
 ---
 
-## **Fetching Data With `useQuery`**
+## 🟦 Query Functions (`useQuery`)
 
-React Query replaces the manual fetch logic with the **useQuery** hook:
+Used for **fetching data** from the server.
 
-```jsx
+```js
 import { useQuery } from '@tanstack/react-query';
 
-function Users() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => fetch('/api/users').then(res => res.json()),
-  });
-
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Something went wrong.</p>;
-
-  return (
-    <ul>
-      {data.map(user => <li key={user.id}>{user.name}</li>)}
-    </ul>
-  );
-}
+const { data, isLoading, isError, refetch } = useQuery({
+  queryKey: ['todos'],
+  queryFn: fetchTodos,
+});
 ```
 
-No need for `useEffect`, `loading`, or `error` states — React Query manages everything.
+| Property    | Description                      |
+| ----------- | -------------------------------- |
+| `data`      | The returned data from your API  |
+| `isLoading` | True while the query is fetching |
+| `isError`   | True if the query failed         |
+| `error`     | Error message if failed          |
+| `refetch()` | Manually re-fetch the query      |
+
+### Useful Options
+
+| Option                 | Meaning                                              |
+| ---------------------- | ---------------------------------------------------- |
+| `staleTime`            | How long data stays “fresh”                          |
+| `cacheTime`            | How long to keep unused data in cache                |
+| `enabled`              | If `false`, the query does **not** run automatically |
+| `refetchOnWindowFocus` | Re-fetch when browser tab refocuses                  |
+
+Example:
+
+```js
+useQuery({
+  queryKey: ['pokemon'],
+  queryFn: fetchPokemon,
+  staleTime: 1000 * 60 * 5, // 5 minutes
+  refetchOnWindowFocus: false,
+});
+```
 
 ---
 
-## **Updating Data With `useMutation`**
+## 🟥 Mutation Functions (`useMutation`)
 
-When you need to modify server data (POST, PUT, DELETE), use `useMutation`:
+Used to **modify** data — create, update, delete.
 
-```jsx
+```js
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-function AddUser() {
-  const queryClient = useQueryClient();
+const queryClient = useQueryClient();
 
-  const mutation = useMutation({
-    mutationFn: (newUser) =>
-      fetch('/api/users', {
-        method: 'POST',
-        body: JSON.stringify(newUser),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users']); // refresh data
-    },
-  });
-
-  return (
-    <button onClick={() => mutation.mutate({ name: 'Alice' })}>
-      Add User
-    </button>
-  );
-}
+const mutation = useMutation({
+  mutationFn: addTodo,
+  onSuccess: () => {
+    queryClient.invalidateQueries(['todos']); // refresh list
+  },
+});
 ```
 
-React Query automatically refreshes the UI when data changes.
+| Method                | Description                  |
+| --------------------- | ---------------------------- |
+| `mutation.mutate()`   | Execute the mutation         |
+| `onSuccess`           | Called when request succeeds |
+| `onError`             | Called when request fails    |
+| `invalidateQueries()` | Re-fetch affected queries    |
 
 ---
 
-## **React Query vs Redux / Zustand / Context API**
+## 🟩 Query Client API
 
-| Feature                      | React Query            | Redux / Zustand / Context      |
-| ---------------------------- | ---------------------- | ------------------------------ |
-| Manages Server State         | ✅                      | ❌ (unless manually handled)    |
-| Manages UI/Local State       | ❌                      | ✅                              |
-| Caching & Background Refetch | ✅                      | ❌                              |
-| Boilerplate                  | Very Low               | Moderate / High                |
-| Good For                     | API Calls, Remote Data | UI state, theme, toggles, etc. |
+React Query stores all server state in a **central cache** using a Query Client.
 
-**React Query doesn’t replace Redux** — it solves a different problem.
-You should use React Query for **server data**, and use Redux/Zustand/Context for **local UI state**.
+```js
+import { QueryClient } from '@tanstack/react-query';
 
----
+const queryClient = new QueryClient();
+```
 
-## **When Should You Use React Query?**
+### Useful Query Client Methods
 
-Use it if your app:
+| Method                            | Purpose                     |
+| --------------------------------- | --------------------------- |
+| `invalidateQueries(queryKey)`     | Re-fetch queries now stale  |
+| `setQueryData(queryKey, newData)` | Update cached data manually |
+| `getQueryData(queryKey)`          | Read cached data            |
 
-✅ Fetches remote data
-✅ Displays API results frequently
-✅ Needs caching and request deduplication
-✅ Requires smooth UIs without loading flicker
-✅ Needs to sync with server in real-time
+Example (Optimistic UI update):
 
-Not necessary for:
-
-❌ Static content
-❌ Very small apps with one or two fetch calls
+```js
+queryClient.setQueryData(['todos'], (old) => [...old, newItem]);
+```
 
 ---
 
-## **Conclusion**
+## 🟨 Infinite Queries (`useInfiniteQuery`)
 
-React Query makes server state management simpler, predictable, and more powerful. Instead of manually managing loading and error states or writing repetitive boilerplate, React Query lets you focus on building your UI — while it handles data consistency, caching, background refetching, and updates.
+Used for pagination or infinite scroll.
 
-If your React app deals with APIs frequently, **React Query is a game changer**.
+```js
+import { useInfiniteQuery } from '@tanstack/react-query';
+
+const query = useInfiniteQuery({
+  queryKey: ['pokemon'],
+  queryFn: fetchPokemonPage,
+  getNextPageParam: (lastPage) => lastPage.nextPageCursor,
+});
+```
 
 ---
+
+## 🟪 DevTools (Highly Recommended)
+
+```bash
+npm install @tanstack/react-query-devtools
+```
+
+```jsx
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+<QueryClientProvider client={queryClient}>
+  <App />
+  <ReactQueryDevtools initialIsOpen={false} />
+</QueryClientProvider>
+```
+
+This allows you to:
+
+* See queries in cache
+* Inspect stale vs fresh status
+* Debug fetching and mutations visually
+
+---
+
+## 🧠 Quick Summary
+
+| Feature         | Hook                 | Purpose                      |
+| --------------- | -------------------- | ---------------------------- |
+| Fetch data      | `useQuery`           | GET requests                 |
+| Load more pages | `useInfiniteQuery`   | Paginated data               |
+| Modify data     | `useMutation`        | POST / PUT / DELETE          |
+| Access cache    | `useQueryClient`     | Invalidate or update queries |
+| Inspect cache   | `ReactQueryDevtools` | Debug UI                     |
+
+---
+
+## 🎯 Final Thoughts
+
+React Query **replaces manual API handling** with a predictable, maintainable pattern.
+Once you understand `useQuery`, `useMutation`, and cache operations, you can build complex, scalable data flows easily.
+
+---
+
+If you'd like, I can now provide:
+
+✅ Visual diagrams
+✅ Example for Mutations (Create / Update / Delete Pokémon)
+✅ Infinite Scroll Pokémon List
+✅ Detail Page with `useQuery` + dynamic params
+
+Just say:
+**“Continue with Pokémon mutation example”** 🧩
