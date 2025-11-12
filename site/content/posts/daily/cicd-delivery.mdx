@@ -1,0 +1,93 @@
+---
+title: "🚀 CI/CD: The Engine Behind Modern Software Delivery"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-12-13
+thumbnailText: Redux Toolkit
+---
+
+In today’s fast-paced development world, software teams need to deliver updates faster, with fewer bugs, and with confidence. That’s where **CI/CD** — short for **Continuous Integration** and **Continuous Delivery (or Deployment)** — comes in. It’s not just a buzzword; it’s the foundation of modern DevOps practices.
+
+---
+
+## 🔧 What is CI/CD?
+
+At its core, **CI/CD** is about **automation** and **continuous improvement**.
+
+* **Continuous Integration (CI):**
+  Developers frequently merge their code changes into a shared repository (like GitHub or GitLab). Each commit triggers an **automated build and test process**, ensuring that the new code doesn’t break existing functionality.
+
+* **Continuous Delivery (CD):**
+  Once the code passes CI, it’s automatically prepared for release. This means your software can be deployed to production at any time — safely and reliably.
+
+* **Continuous Deployment:**
+  The next step after delivery — every change that passes automated tests is **deployed automatically** to production, with zero manual steps.
+
+---
+
+## ⚙️ Why CI/CD Matters
+
+Without CI/CD, teams often struggle with:
+
+* **Integration Hell** — long-lived feature branches that break when merged.
+* **Manual Deployment** — risky, time-consuming release processes.
+* **Slow Feedback** — developers don’t know their code failed until days later.
+
+CI/CD solves this by:
+✅ Detecting bugs early
+✅ Automating repetitive tasks
+✅ Improving release speed
+✅ Increasing confidence in every deployment
+
+---
+
+## 🧩 CI/CD Workflow Example
+
+Here’s a simple flow you might see in a project:
+
+1. **Developer pushes code** → triggers CI pipeline
+2. **Build stage** → compiles app, installs dependencies
+3. **Test stage** → runs unit/integration tests
+4. **Deploy stage** → automatically deploys to staging or production
+
+A common CI/CD tool setup might look like:
+
+* **GitHub Actions** or **GitLab CI** for automation
+* **Docker** for consistent environments
+* **Jenkins** for enterprise CI/CD pipelines
+* **AWS / Vercel / Netlify** for deployment
+
+---
+
+## 🚦 CI/CD in the Context of *Your Project (Example: TNC Automation Test)*
+
+In my own project, **TNC Automation Test**, CI/CD plays a key role.
+We use Python + Selenium for automation scripts and ReactJS for the dashboard UI.
+Whenever a new test case or feature is added:
+
+* The CI pipeline automatically runs all automation tests.
+* The CD pipeline deploys the latest test results to the web dashboard.
+
+This ensures that every update is **tested, validated, and deployed** without manual effort — keeping the project stable and improving delivery speed.
+
+---
+
+## 💡 Best Practices for CI/CD
+
+1. **Keep builds fast** — use caching and parallel jobs.
+2. **Automate tests** — unit, integration, and end-to-end.
+3. **Use environment isolation** — Docker containers or virtual environments.
+4. **Monitor everything** — logs, metrics, alerts after deployment.
+5. **Fail fast** — detect errors early and stop the pipeline immediately.
+
+---
+
+## 🚀 Final Thoughts
+
+CI/CD isn’t just about automation — it’s about **culture**.
+It encourages collaboration, quality, and continuous improvement.
+With the right CI/CD setup, your team can move faster, deploy confidently, and spend more time building value rather than fixing broken releases.
+
+---
+
