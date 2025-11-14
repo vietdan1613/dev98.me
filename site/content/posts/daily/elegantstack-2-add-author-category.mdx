@@ -1,0 +1,73 @@
+---
+title: "🗒️ FlexiBlog: How to add Authors, Categories"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-22
+thumbnailText: 🗒️ FlexiBlog
+---
+
+## ✅ **1. Adding an Author**
+
+Each author is stored as a **JSON file** + optional **portrait image** inside:
+
+```
+site/content/authors/
+```
+
+### Example structure:
+
+```
+site/content/authors/
+│── john-doe.json
+└── john-doe.png
+```
+
+### Example `john-doe.json`:
+
+```json
+{
+  "name": "John Doe",
+  "title": "Web Developer",
+  "description": "This is a short bio of the author.",
+  "thumbnail": "john-doe.png",
+  "social": [
+    { "name": "Github", "url": "https://github.com/johndoe" },
+    { "name": "Twitter", "url": "https://twitter.com/johndoe" },
+    { "name": "Website", "url": "https://johndoe.com" }
+  ],
+  "skills": ["React", "Javascript", "Gatsby"]
+}
+```
+
+---
+
+## ✅ **2. Adding a Category**
+
+Each category is stored as a **JSON file** + **icon (SVG)** inside:
+
+```
+site/content/categories/
+```
+
+### Example structure:
+
+```
+site/content/categories/
+│── advertising.json
+└── advertising.svg
+```
+
+### Example `advertising.json`:
+
+```json
+{
+  "name": "Advertising",
+  "icon": "advertising.svg",
+  "color": "#c6f6d5",
+  "description": "Short description of the category"
+}
+```
+
+---
+

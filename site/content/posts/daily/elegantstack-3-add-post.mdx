@@ -1,0 +1,144 @@
+---
+title: "🗒️ FlexiBlog: How to add Post, Images, and Videos"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-23
+thumbnailText: 🗒️ FlexiBlog
+---
+
+## ✅ **1. Adding a Post**
+
+Each post has its own folder inside:
+
+```
+site/content/posts/
+```
+
+### Folder name recommendation
+
+Use a date prefix to keep things organized:
+
+```
+site/content/posts/2025-11-13-my-first-post/
+```
+
+Inside each post folder, add:
+
+### Required files:
+
+* **index.mdx** ← your article
+* **image.jpg** ← thumbnail + cover image
+
+### Example folder:
+
+```
+site/content/posts/why-gatsby-is-our-favorite-site-generator/
+│── index.mdx
+└── image.jpg
+```
+
+### Example `index.mdx`:
+
+```mdx
+---
+title: Why Gatsby is Our Favorite Site Generator
+author: John Doe
+category: Technology
+tags: ['#tutorial', '#technology']
+date: 2020-02-16
+thumbnail: image.jpg
+---
+
+## Hello World! Blogging with Gatsby is fun.
+
+This is your post content — you can add **headings**, **images**, **code blocks**, etc.
+```
+
+✔ `author` must match an author JSON
+✔ `category` must match a category JSON
+✔ `thumbnail` must be in the same folder
+
+---
+
+Below is a **clear, beginner-friendly English explanation** of how to embed **images and videos** in FlexiBlog posts using Markdown.
+You can use this as part of your documentation or video script.
+
+---
+
+FlexiBlog uses **Markdown (.md or .mdx)** files for creating posts.
+This makes adding images and videos extremely simple.
+
+---
+
+## 🖼️ **1. Adding Images to Posts**
+
+### ✔ **1.1 Inline Image**
+
+This method puts the image and link in the same line.
+
+```
+![Photo by Mads Schmidt Rasmussen](./image-markdown.jpg "Photo by Mads Schmidt Rasmussen on Unsplash")
+```
+
+### 📌 How it works:
+
+* `![]` → tells Markdown to display an image
+* inside the brackets: alt text
+* inside parentheses: image path + optional title
+* `./image-markdown.jpg` means the image is stored in the **same folder as your Markdown file**
+
+### Example folder:
+
+```
+/content/posts/my-post
+   index.md
+   image-markdown.jpg
+```
+
+This keeps everything organized.
+
+---
+
+### ✔ **1.2 Reference-Style Image**
+
+Cleaner and easier for long posts:
+
+```
+![Photo by Mads Schmidt Rasmussen][photo]
+
+[photo]: ./image-markdown.jpg "Photo by Mads Schmidt Rasmussen on Unsplash"
+```
+
+This splits the image reference and the link.
+
+---
+
+## 🎥 **2. Embedding Videos in Posts**
+
+FlexiBlog includes **gatsby-remark-embed-video**, allowing you to embed videos from:
+
+✔ YouTube
+✔ Vimeo
+✔ Twitch
+✔ And many more
+
+You simply paste a special embed line inside your Markdown file.
+
+---
+
+### ✔ **2.1 Embed a YouTube Video**
+
+```
+youtube: https://www.youtube.com/watch?v=v88snd6EUaY
+```
+
+---
+
+### ✔ **2.2 Embed a Vimeo Video**
+
+```
+vimeo: https://vimeo.com/5299404
+```
+
+---

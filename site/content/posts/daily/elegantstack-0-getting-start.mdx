@@ -1,0 +1,144 @@
+---
+title: "🗒️ FlexiBlog: Getting Started"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-20
+thumbnailText: 🗒️ FlexiBlog
+---
+
+
+This guide will help you install FlexiBlog, set up your tools, and run your blog locally — even if you have zero coding experience.
+
+---
+
+## 🧩 **1. Install the Required Tools**
+
+Before installing the FlexiBlog theme, you need 3 things:
+
+---
+
+### ✔ 1.1 **Install Visual Studio Code (VS Code)**
+
+VS Code is the text editor you will use to open and edit your blog files.
+
+Download it here:
+👉 [https://code.visualstudio.com/](https://code.visualstudio.com/)
+
+Install it like any normal application.
+
+**Recommended extensions for beginners:**
+
+* Prettier — Code Formatter
+* ESLint
+* GitLens
+* Markdown Preview Enhanced
+
+> You don’t need to understand coding to use VS Code. Think of it like “Microsoft Word but for websites.”
+
+---
+
+### ✔ 1.2 **Install Node.js**
+
+Download here:
+👉 [https://nodejs.org](https://nodejs.org)
+
+After installation, check if it works:
+
+```
+node -v
+npm -v
+```
+
+You should see version numbers.
+
+---
+
+### ✔ 1.3 **Install Gatsby CLI**
+
+Gatsby is the framework used by FlexiBlog.
+
+Install globally:
+
+```
+npm install -g gatsby-cli
+```
+
+---
+
+## 🗂️ **2. Unzip the FlexiBlog Theme**
+
+1. Download the ZIP file from ThemeForest
+2. Unzip it
+3. Open your Terminal / Command Prompt
+4. Navigate into the extracted folder:
+
+```
+cd @elegantstack
+```
+
+(Your folder name may vary.)
+
+---
+
+## 🎨 **3. Create a New Gatsby Site Using a FlexiBlog Starter**
+
+Each starter is a different design. Choose one you like.
+
+#### Example: Create a **Personal Blog** starter
+
+```
+gatsby new site ./starters/gatsby-starter-flexiblog-personal
+```
+
+#### Other available starters:
+
+| Starter    | Command                                                        |
+| ---------- | -------------------------------------------------------------- |
+| Agency     | gatsby new site ./starters/gatsby-starter-flexiblog-agency     |
+| Beauty     | gatsby new site ./starters/gatsby-starter-flexiblog-beauty     |
+| Education  | gatsby new site ./starters/gatsby-starter-flexiblog-education  |
+| Medical    | gatsby new site ./starters/gatsby-starter-flexiblog-medical    |
+| Minimal    | gatsby new site ./starters/gatsby-starter-flexiblog-minimal    |
+| Minimal-v2 | gatsby new site ./starters/gatsby-starter-flexiblog-minimal-v2 |
+| News       | gatsby new site ./starters/gatsby-starter-flexiblog-news       |
+| Personal   | gatsby new site ./starters/gatsby-starter-flexiblog-personal   |
+| Science    | gatsby new site ./starters/gatsby-starter-flexiblog-science    |
+
+> Tip: You only need ONE starter. Choose the one closest to the style you want.
+
+---
+
+## ⚙️ **4. Open the Project in VS Code**
+
+After the starter is created:
+
+```
+cd site
+```
+
+Now open it in VS Code:
+
+```
+code .
+```
+
+VS Code will open the whole blog project.
+
+---
+
+## 🚀 **5. Run the Development Server**
+
+Start the live preview of your site:
+
+```
+npm run develop
+```
+
+Open your browser and visit:
+
+👉 **[http://localhost:8000](http://localhost:8000)**
+
+You will now see your blog running!
+
+---
