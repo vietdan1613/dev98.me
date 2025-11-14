@@ -1,0 +1,217 @@
+---
+title: "Next.js: Project Structure"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-05
+thumbnailText: Crash Course
+---
+
+Now that your Next.js project is set up, you'll notice a number of files and folders inside your workspace. At first glance, it can look overwhelming — but once you understand the purpose of each file, everything becomes much easier to navigate.
+
+Let’s break it down from the bottom to the top.
+
+---
+
+## **1. `tsconfig.json` — TypeScript Configuration**
+
+This file controls how TypeScript behaves in your project.
+It defines:
+
+* What should be type-checked
+* What should be ignored
+* Which TypeScript rules and compiler options to follow
+
+You’ll rarely modify this heavily, but it’s essential for proper type safety.
+
+---
+
+## **2. `README.md` — Project Documentation**
+
+A simple Markdown file that explains:
+
+* How to run the project
+* Available commands
+* Any relevant notes for contributors
+
+This is especially important when others collaborate with you.
+
+---
+
+## **3. `postcss.config.mjs` — PostCSS Configuration**
+
+Next.js uses **PostCSS** under the hood, and this config file tells it which plugins to apply.
+
+You’ll likely see:
+
+```js
+plugins: {
+  tailwindcss: {},
+  autoprefixer: {},
+}
+```
+
+This is how Tailwind CSS gets integrated into your project.
+
+---
+
+## **4. `package-lock.json` — Dependency Lock File**
+
+This file ensures every team member — and every deployment environment — uses the **exact same dependency versions**.
+
+It locks:
+
+* Dependencies
+* Sub-dependencies
+* Nested versions
+
+This prevents “but it works on my machine” problems.
+
+---
+
+## **5. `package.json` — Core Project Manifest**
+
+This is one of the most important files in any JavaScript project. It defines:
+
+### ✔ Project metadata
+
+* Name
+* Version
+* Private/public status
+
+### ✔ Scripts
+
+For example:
+
+```json
+"scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint"
+}
+```
+
+### ✔ Dependencies
+
+Everything your app needs to run, including:
+
+* `next`
+* `react`
+* `react-dom`
+* Tailwind CSS (if used)
+* TypeScript typings
+
+### ✔ Dev dependencies
+
+Used only during development.
+
+---
+
+## **6. `next-env.d.ts` — Next.js TypeScript Declarations**
+
+This file should **not be edited**.
+
+It simply enables TypeScript support for Next.js features behind the scenes.
+
+---
+
+## **7. `next.config.ts` — Next.js Configuration**
+
+One of the most important configuration files in a Next.js 16 project.
+
+You can configure:
+
+* Experimental features (like the new TurboPack FS cache)
+* Image optimization settings
+* Build options
+* Routing behavior
+* Environment variables
+
+This is where you enable features like:
+
+```ts
+experimental: {
+  turbo: {
+    dev: {
+      filesystemCache: true
+    }
+  }
+}
+```
+
+---
+
+## **8. `.eslintrc.json` (or similar) — ESLint Configuration**
+
+Contains rules that help maintain clean, consistent, error-free code.
+
+---
+
+## **9. `.gitignore` — Ignore Certain Files in Git**
+
+Prevents unnecessary or heavy files from being pushed to GitHub, such as:
+
+* `node_modules/`
+* `.next/`
+* environment files
+* build artifacts
+
+This keeps your repository clean and fast.
+
+---
+
+## **10. `public/` — Static Assets Folder**
+
+Everything inside this folder is publicly accessible at runtime.
+
+Use it for:
+
+* Images
+* Fonts
+* Icons
+* Static files
+
+For example:
+
+`public/logo.png` → accessed via `/logo.png`
+
+---
+
+## **11. `node_modules/` — Installed Dependencies**
+
+Often called:
+
+> **The heaviest object in the universe.**
+
+It contains all the packages your project depends on.
+You almost never need to open it — and it’s usually hidden in editors.
+
+---
+
+## **12. `app/` — The Heart of a Next.js App**
+
+This is where your actual application lives.
+
+Inside the `app` folder, you’ll define:
+
+* Routes
+* Layouts
+* Pages
+* Server components
+* API endpoints (in the new App Router structure)
+
+This folder replaces the older `pages/` folder from previous versions of Next.js.
+
+We’ll explore this folder in detail next.
+
+---
+
+## **Conclusion**
+
+The Next.js project structure may seem overwhelming at first, but each file has a clear purpose. Understanding these core pieces helps you feel confident navigating and customizing your app as it grows.
+
+Next up:
+👉 We’ll dive deep into the **`app` folder structure** and how routing works in Next.js 16.
+
+---

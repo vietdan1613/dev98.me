@@ -1,0 +1,165 @@
+---
+title: "Next.js: How to Install"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-04
+thumbnailText: Crash Course
+---
+
+In this guide, we’ll walk through installing **Next.js 16**—the modern React framework used by some of the world’s largest companies to build fast, high-quality web applications.
+
+We’ll also take a quick look at WebStorm and a new Next.js 16 feature that can speed up your development workflow.
+
+Let’s get started.
+
+---
+
+## **1. Tools You Can Use (Optional but Recommended)**
+
+### **WebStorm IDE**
+
+Throughout this demo, WebStorm is used as the main editor. It's a powerful JavaScript & TypeScript IDE and is now **free for non-commercial use**, making it an excellent option for everyday developers.
+
+If you'd like to use it, download it using the link provided with your course or documentation.
+
+### **Juni – Smart Coding Agent**
+
+WebStorm also supports **Juni**, an AI-powered coding assistant.
+Juni can:
+
+* Answer your coding questions
+* Help with code generation
+* Boost your productivity
+
+You’ll see examples of this throughout the project, but it's entirely optional.
+
+---
+
+## **2. Create a New Project Folder**
+
+To keep everything clean, start by creating an empty project.
+
+If you’re using WebStorm:
+
+* Create a new project
+* Name it **Next.js Demo**
+* Select **TypeScript**
+* Click **Create**
+
+WebStorm also allows you to auto-generate a Next.js project, but for consistency, we’ll use the official CLI command so everyone can follow the same steps.
+
+---
+
+## **3. Install Next.js Using the CLI**
+
+Open your terminal inside the project folder.
+
+Run:
+
+```bash
+npx create-next-app@latest ./
+```
+
+(That `./` tells the installer to generate the project in your current folder.)
+
+Before running this, you may need to delete the boilerplate files or the default `src` folder that WebStorm creates so you start with a completely empty directory.
+
+Once you execute the command, the installer may download a few required packages for the scaffolding process.
+
+---
+
+## **4. Choose Installation Options**
+
+You will see the message:
+
+> **Would you like to use the recommended Next.js defaults?**
+
+For this demo, choose:
+
+### ✔ **Recommended Defaults**
+
+This includes:
+
+* TypeScript
+* ESLint
+* Tailwind CSS
+* App Router
+* TurboPack (the new default bundler)
+
+You *can* customize these choices, but the defaults are perfectly optimized for most projects—and exactly what we’ll be using.
+
+---
+
+## **5. What Gets Installed?**
+
+Next.js installs only a few core dependencies:
+
+### **Dependencies**
+
+* `next`
+* `react`
+* `react-dom`
+
+### **Dev Dependencies**
+
+* TypeScript + type definitions
+* ESLint
+* Tailwind CSS + config files
+
+Within a few seconds, your project structure will appear in your editor.
+
+---
+
+## **6. (Optional but Recommended) Enable TurboPack File System Caching**
+
+Next.js 16 introduces **TurboPack file system caching**, which dramatically speeds up:
+
+* cold starts
+* rebuild time after restarting dev server
+* compilation for large projects
+
+Vercel uses this internally, and you can easily enable it too.
+
+Open **next.config.ts** or **next.config.js** and add:
+
+```js
+experimental: {
+  turbo: {
+    dev: {
+      filesystemCache: true
+    }
+  }
+}
+```
+
+This simple change can noticeably improve your development flow.
+(Some editors may not recognize the word “TurboPack” yet—just add it to your dictionary if needed.)
+
+---
+
+## **7. You’re Ready to Run Your App**
+
+From here, you can start the development server:
+
+```bash
+npm run dev
+```
+
+Your Next.js 16 app is now installed, configured, and ready for coding.
+
+---
+
+## **What’s Next?**
+
+In the upcoming lessons, you’ll learn:
+
+* How file routing works in the App Router
+* How to use layouts, pages, and server components
+* How to render content (SSR, SSG, CSR)
+* How TurboPack improves performance
+* How caching works in Next.js 16
+
+We’re finally ready to dive into real code—so get your fingers warmed up!
+
+---

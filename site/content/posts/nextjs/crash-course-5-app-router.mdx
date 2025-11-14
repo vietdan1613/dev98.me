@@ -1,0 +1,253 @@
+---
+title: "Next.js: React Client & Server Components"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-06
+thumbnailText: Crash Course
+---
+
+One of the biggest shifts in modern React and Next.js development is the introduction of **Server Components** and **Client Components**. These two types of components behave differently, are rendered differently, and serve different purposes.
+
+In this guide, you'll learn:
+
+* What Server Components are
+* What Client Components are
+* Why both exist
+* How Next.js handles rendering
+* Why console logs appear in strange places
+* How hydration works
+* When to choose server vs client
+* What’s new in Next.js 16 with the React Compiler
+
+Let’s break it all down.
+
+---
+
+## **Are Components Really Server Components by Default?**
+
+At the start of the crash course, you probably heard this statement:
+
+> "React components in Next.js are server components by default."
+
+That’s mostly true — but it can be confusing.
+
+Let’s test it.
+
+Open `app/page.tsx` and add:
+
+```tsx
+console.log("What type of component am I?");
+```
+
+Now run your app and check the browser console.
+
+Surprisingly…
+You’ll see the log in the **browser console**, not just the server terminal.
+
+But this does **not** mean your component is running in the browser.
+Instead, Next.js mirrors server logs in the browser console **for convenience**.
+
+### So remember:
+
+✔ The component is still rendered on the server
+✔ The logs just *appear* in the browser
+✘ The component is NOT running on the client
+
+This is a display trick — not behavior change.
+
+---
+
+## **What Are React Server Components (RSC)?**
+
+React Server Components (RSC) are components rendered **exclusively on the server**.
+
+### They can:
+
+✔ Access server-only resources (files, databases, backend APIs)
+✔ Keep sensitive data secure
+✔ Reduce JavaScript sent to the browser
+✔ Improve performance and time-to-render
+
+### They **cannot**:
+
+✘ Use browser APIs (`window`, `document`, etc.)
+✘ Handle interactivity directly (click events, forms, routing)
+✘ Use React hooks that rely on the browser (`useState`, `useEffect`)
+
+### Key idea:
+
+Server Components output **HTML**, which is then sent to the browser.
+
+They are great for:
+
+* Fetching data from databases
+* Rendering static or cacheable content
+* Keeping your bundle small
+* Securing secrets on the server
+
+---
+
+## **Why Not Make Everything a Server Component?**
+
+Good question.
+
+If your UI requires any kind of **interactivity**, such as:
+
+* Button clicks
+* Form submissions
+* State (e.g., counters, toggles)
+* Browser APIs (localStorage, scroll events)
+
+…then you need a **Client Component**.
+
+That brings us to the next part.
+
+---
+
+## **React Client Components**
+
+Client Components are rendered in the **browser**.
+
+To create one in Next.js, you must add the directive:
+
+```tsx
+"use client";
+```
+
+Example:
+
+```tsx
+"use client";
+
+const Hello = () => {
+  console.log("I am a client component");
+  return <div>Hello from the client!</div>;
+};
+
+export default Hello;
+```
+
+Add this component inside a new `components/` folder and render it in `page.tsx`.
+
+You’ll now see two logs:
+
+* The **server component log**
+* The **client component log**
+
+But here’s something strange…
+
+You’ll also see the client component log **in the server terminal**.
+
+Why?
+
+---
+
+## **Why Do Client Component Logs Appear on the Server Too?**
+
+*(This is the part that confuses everyone!)*
+
+Client Components undergo two phases:
+
+1. **Server-side prerendering (SSR / SSG)**
+
+   * A static HTML “shell” is generated
+   * Logs inside the component run on the server
+
+2. **Client-side hydration**
+
+   * The browser attaches interactivity
+   * The same component runs again in the browser
+   * Logs run again in the client console
+
+So a Client Component’s code runs:
+
+✔ Once on the server (for pre-render)
+✔ Once in the browser (for hydration)
+
+This is normal and expected.
+
+---
+
+## **What Is Hydration?**
+
+Hydration = taking existing server-rendered HTML and attaching:
+
+* Event handlers
+* State
+* Browser-only logic
+
+If the server HTML doesn’t match what the client expects, you’ll get a **hydration error**.
+
+Hydration allows:
+
+* Faster first paint
+* Seamless interactivity
+* Better perceived performance
+
+This is a key feature of Next.js.
+
+---
+
+## **When Should You Use Server vs Client Components?**
+
+Here’s the simple rule:
+
+### ✔ Use **Server Components** by default
+
+✔ Only switch to **Client Components** when needed
+✔ You’ll usually know you need a Client Component because:
+
+* You need interactivity
+* You need browser APIs
+* You get an error telling you so
+
+Server Components = performance, security, minimal JavaScript
+Client Components = interactivity, state, dynamic behavior
+
+This hybrid model is what makes Next.js powerful.
+
+---
+
+## **Next.js 16 Update: React Compiler Support**
+
+Next.js 16 includes **built-in support for the new React Compiler**, which:
+
+* Automatically memoizes components
+* Removes the need for `useMemo` or `useCallback`
+* Reduces unnecessary re-renders
+* Improves performance automatically
+
+To enable it:
+
+### 1. Install the compiler plugin:
+
+```bash
+npm install babel-plugin-react-compiler@latest
+```
+
+### 2. Enable it in `next.config.ts`:
+
+```ts
+reactCompiler: true,
+```
+
+That’s it — cleaner code, better performance, fewer hooks to manage.
+
+---
+
+## **Conclusion**
+
+You now understand:
+
+* What Server Components really are
+* What Client Components are
+* Why both exist
+* Why logs appear everywhere
+* How hydration works
+* When to use each component type
+* How the new React Compiler improves performance
+
+This foundation is essential before building anything serious with Next.js.
+
+In the next lesson, you’ll apply this knowledge and begin using both component types together to build real features.
