@@ -50,9 +50,9 @@ Instead, Next.js mirrors server logs in the browser console **for convenience**.
 
 ### So remember:
 
-✔ The component is still rendered on the server
-✔ The logs just *appear* in the browser
-✘ The component is NOT running on the client
+✔ The component is still rendered on the server.      
+✔ The logs just *appear* in the browser.    
+✘ The component is NOT running on the client.    
 
 This is a display trick — not behavior change.
 
@@ -64,16 +64,16 @@ React Server Components (RSC) are components rendered **exclusively on the serve
 
 ### They can:
 
-✔ Access server-only resources (files, databases, backend APIs)
-✔ Keep sensitive data secure
-✔ Reduce JavaScript sent to the browser
-✔ Improve performance and time-to-render
+✔ Access server-only resources (files, databases, backend APIs).   
+✔ Keep sensitive data secure.   
+✔ Reduce JavaScript sent to the browser.   
+✔ Improve performance and time-to-render.    
 
 ### They **cannot**:
 
-✘ Use browser APIs (`window`, `document`, etc.)
-✘ Handle interactivity directly (click events, forms, routing)
-✘ Use React hooks that rely on the browser (`useState`, `useEffect`)
+✘ Use browser APIs (`window`, `document`, etc.).   
+✘ Handle interactivity directly (click events, forms, routing).   
+✘ Use React hooks that rely on the browser (`useState`, `useEffect`).   
 
 ### Key idea:
 
@@ -81,10 +81,10 @@ Server Components output **HTML**, which is then sent to the browser.
 
 They are great for:
 
-* Fetching data from databases
-* Rendering static or cacheable content
-* Keeping your bundle small
-* Securing secrets on the server
+* Fetching data from databases.   
+* Rendering static or cacheable content.    
+* Keeping your bundle small.   
+* Securing secrets on the server.    
 
 ---
 
@@ -94,10 +94,10 @@ Good question.
 
 If your UI requires any kind of **interactivity**, such as:
 
-* Button clicks
-* Form submissions
-* State (e.g., counters, toggles)
-* Browser APIs (localStorage, scroll events)
+* Button clicks.   
+* Form submissions.   
+* State (e.g., counters, toggles).   
+* Browser APIs (localStorage, scroll events).   
 
 …then you need a **Client Component**.
 
@@ -132,9 +132,9 @@ Add this component inside a new `components/` folder and render it in `page.tsx`
 
 You’ll now see two logs:
 
-* The **server component log**
-* The **client component log**
-
+* The **server component log**.   
+* The **client component log**.   
+ 
 But here’s something strange…
 
 You’ll also see the client component log **in the server terminal**.
