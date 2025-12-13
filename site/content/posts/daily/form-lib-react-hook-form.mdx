@@ -1,0 +1,96 @@
+---
+title: "React Hook Form + Zod v4: Type-Safe Forms Made Simple 🚀"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-14
+thumbnailText: Forms
+---
+
+Building forms in React doesn’t have to be slow or messy.
+**React Hook Form (RHF)** handles performance, while **Zod v4** guarantees type-safe validation — together, they’re a perfect match.
+
+---
+
+## Why Use Them Together?
+
+* ⚡ **Minimal re-renders** (uncontrolled inputs)
+* 🧠 **Single source of truth** for validation
+* 🛠️ **End-to-end type safety**
+* 📦 Clean, scalable form logic
+
+---
+
+## Installation
+
+```bash
+npm install react-hook-form zod @hookform/resolvers
+```
+
+---
+
+## Zod v4 Schema 
+
+Zod v4 moves format validators out of `string()`.
+
+```ts
+import { z } from "zod";
+
+const schema = z
+  .object({
+    email: z.email({ message: "Invalid email" }),
+    password: z.string().min(6),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+```
+
+---
+
+## React Hook Form Setup
+
+```ts
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const form = useForm({
+  resolver: zodResolver(schema),
+  mode: "onChange",
+});
+```
+
+✔️ Instant validation.    
+✔️ Typed form values.   
+✔️ No duplicate interfaces.    
+
+---
+
+## Using the Form
+
+```tsx
+<form onSubmit={form.handleSubmit(console.log)}>
+  <input {...form.register("email")} />
+  {form.formState.errors.email?.message}
+
+  <input type="password" {...form.register("password")} />
+  <input type="password" {...form.register("confirmPassword")} />
+
+  <button disabled={!form.formState.isValid}>
+    Submit
+  </button>
+</form>
+```
+
+---
+
+## Why This Pattern Scales
+
+* Reusable schemas (frontend & backend).   
+* Easy refactoring.   
+* Cleaner components.    
+* Production-ready validation.   
+
+---

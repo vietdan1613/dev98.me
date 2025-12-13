@@ -1,0 +1,94 @@
+---
+title: "Handling Forms in React 19 with `useActionState()`"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-13
+thumbnailText: Forms
+---
+
+**React 19 introduces `useActionState()`**, a new Hook that simplifies form logic by tightly integrating **server actions** with **client state**.
+
+## Why We Needed `useActionState()`
+
+Before React 19, handling forms usually involved:
+
+* `useState` for form state
+* `useState` for loading
+* `try/catch` for errors
+* Manual syncing with server responses
+
+This often led to **boilerplate-heavy code** and fragile state handling.
+
+`useActionState()` solves this by:
+
+* Binding state directly to an **action**
+* Automatically tracking **pending state**
+* Returning **server results or errors** cleanly
+
+---
+
+## What Is `useActionState()`?
+
+```ts
+const [state, formAction, isPending] = useActionState(
+  action,
+  initialState
+);
+```
+
+It accepts:
+
+* **`action`** → an async function (usually a server action)
+* **`initialState`** → initial form state
+
+And returns:
+
+* **`state`** → latest result from the action
+* **`formAction`** → function to attach to `<form action={...}>`
+* **`isPending`** → loading state (true while submitting)
+
+---
+
+## Basic Example: Login Form
+
+```tsx
+import { useActionState } from "react";
+import { loginAction } from "./actions/login";
+
+const initialState = { error: null, success: false };
+
+export default function LoginForm() {
+  const [state, formAction, isPending] = useActionState(
+    loginAction,
+    initialState
+  );
+
+  return (
+    <form action={formAction}>
+      <input name="email" placeholder="Email" />
+      <input name="password" type="password" placeholder="Password" />
+
+      <button disabled={isPending}>
+        {isPending ? "Logging in..." : "Login"}
+      </button>
+
+      {state.error && <p>{state.error}</p>}
+      {state.success && <p>Login successful!</p>}
+    </form>
+  );
+}
+```
+
+---
+
+## `useActionState()` vs `useState()`
+
+| Feature             | useState | useActionState |
+| ------------------- | -------- | -------------- |
+| Async form handling | ❌        | ✅              |
+| Server integration  | ❌        | ✅              |
+| Pending state       | Manual   | Built-in       |
+| Boilerplate         | High     | Low            |
+
+---

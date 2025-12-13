@@ -1,0 +1,152 @@
+---
+title: "Zod v4: Common APIs (Quick Guide)"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-13
+thumbnailText: Forms
+---
+
+**Zod v4** improves clarity and type safety by making validation APIs more **explicit** and **future-proof**.
+
+---
+
+## Installation
+
+```bash
+npm install zod
+```
+
+```ts
+import { z } from "zod";
+```
+
+---
+
+## Key Change in v4 (Important ⚠️)
+
+### ❌ Deprecated
+
+```ts
+z.string().email();
+z.string().url();
+```
+
+### ✅ Zod v4 way
+
+```ts
+z.email();
+z.url();
+z.uuid();
+```
+
+---
+
+## Common APIs
+
+### Object & Type Inference
+
+```ts
+const schema = z.object({
+  name: z.string(),
+  age: z.number(),
+});
+
+type Schema = z.infer<typeof schema>;
+```
+
+---
+
+### String
+
+```ts
+z.string().min(2).max(50);
+z.string().regex(/^[a-z]+$/i);
+```
+
+---
+
+### Number
+
+```ts
+z.number().int().min(0);
+```
+
+---
+
+### Optional & Nullable
+
+```ts
+z.string().optional();
+z.string().nullable();
+```
+
+---
+
+### Arrays
+
+```ts
+z.array(z.string()).min(1);
+```
+
+---
+
+### Enums
+
+```ts
+z.enum(["admin", "user", "guest"]);
+```
+
+---
+
+### Cross-field Validation
+
+```ts
+z
+  .object({
+    password: z.string().min(6),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+```
+
+---
+
+### Safe Parsing
+
+```ts
+const result = schema.safeParse(data);
+if (!result.success) console.log(result.error.format());
+```
+
+---
+
+### Transform
+
+```ts
+z.email().transform((v) => v.toLowerCase());
+```
+
+---
+
+## Zod + React Hook Form
+
+```ts
+useForm({
+  resolver: zodResolver(schema),
+  mode: "onChange",
+});
+```
+
+---
+
+## Migration Tip (v3 → v4)
+
+| v3                   | v4          |
+| -------------------- | ----------- |
+| `z.string().email()` | `z.email()` |
+
+---

@@ -1,0 +1,129 @@
+---
+title: "Building a Real-Time Voice AI App with Next.js & OpenAI Realtime API"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-12-10
+thumbnailText: AI
+---
+
+Real-time voice AI is no longer futuristic. With the **Realtime API from OpenAI**, you can now build **live, low-latency, speech-to-speech AI applications** that feel like real human conversations.
+
+In this guide, you’ll learn **the complete production-ready architecture** to build a secure **Real-Time Voice AI App using Next.js**, including:
+
+* ✅ API Key vs Ephemeral Key (what most people get wrong)
+* ✅ Adding a **System Prompt (AI personality)**
+* ✅ Using **Function Calling (Tools)** in Realtime
+
+
+## 1. What Is the OpenAI Realtime API?
+
+The Realtime API allows you to build:
+
+* 🎧 **Live audio streaming**
+* 🗣️ **Speech-to-speech conversation**
+* ⚡ **Sub-second latency**
+* 🔄 **Persistent sessions via WebRTC**
+* 🛠️ **Function calling during live voice chat**
+
+### API Key (`sk-`) vs Ephemeral Key (`ek-`) — The Core Security Concept
+
+### Authentication Flow
+
+```txt
+Browser (Next.js Client)
+        ↓
+Next.js API Route (Server)
+        ↓
+OpenAI generates ek-...
+        ↓
+Browser connects with ek-...
+```
+
+✅ **A new ephemeral key must be generated for every Realtime session.**
+
+Understanding this difference is **mandatory for production apps**.
+
+#### 🔐 API Key (`sk-...`)
+
+* Long-lived
+* Full access to OpenAI APIs
+* ✅ Used only on **servers**
+* ❌ Never expose in React or browsers
+
+#### ⏳ Ephemeral Key (`ek-...`)
+
+* Short-lived (30–600 seconds)
+* WebRTC-only authentication
+* ✅ Safe for browsers
+* ❌ Cannot call normal REST APIs
+
+## 2. Back-end
+
+### ✅ Install OpenAI SDK
+
+```bash
+npm install openai
+```
+
+---
+
+### ✅ `app/api/realtime-token/route.ts`
+
+```ts
+import { NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function GET() {
+  const result = await openai.realtime.clientSessions.create({
+    session: {
+      type: "realtime",
+      model: "gpt-realtime",
+    },
+    ttl: 600, // 10 minutes
+  });
+
+  return NextResponse.json({
+    client_secret: result.client_secret.value,
+  });
+}
+```
+
+---
+
+### ✅ `.env.local`
+
+```env
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxx
+```
+
+⚠️ **Your real API key must never appear in frontend code.**
+
+---
+
+## 3. Front-end
+
+```ts
+const res = await fetch("/api/realtime-token");
+const { client_secret } = await res.json();
+
+await session.connect({
+  apiKey: client_secret, // ek-...
+});
+```
+
+✅ Secure
+✅ WebRTC-ready
+✅ Production-safe
+
+This also prevents the infamous WebRTC error:
+
+> ❌ `Failed to parse SessionDescription. Expect line: v=`
+
+Which happens when you use **expired `ek-` tokens**.
+
+---
