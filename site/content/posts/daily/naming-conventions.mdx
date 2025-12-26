@@ -1,0 +1,228 @@
+---
+title: "React Naming Conventions"
+category: Daily
+author: Daniel Nguyen
+tags: ['#FlexiBlog']
+date: 2025-12-25
+thumbnailText: ReactJS
+---
+
+Good naming is not about style — it’s about **clarity, scalability, and long-term maintainability**. Senior developers optimize for *reading code six months later*, not typing speed.
+
+---
+
+## 1. Components: **PascalCase**
+
+**Why:** Distinguishes components from HTML elements.
+
+```tsx
+UserProfile.tsx
+SettingsSidebar.tsx
+ModalConfirm.tsx
+```
+
+✅ **Rule**
+
+* One component per file
+* File name = component name
+
+❌ Avoid
+
+```tsx
+userprofile.tsx
+settings_sidebar.tsx
+```
+
+---
+
+## 2. Hooks: **camelCase + `use` prefix**
+
+**Why:** React relies on this convention for rules of hooks.
+
+```ts
+useAuth.ts
+useUserSettings.ts
+useConnectionsTable.ts
+```
+
+Inside hook:
+
+```ts
+const [isLoading, setIsLoading] = useState(false);
+```
+
+❌ Avoid
+
+```ts
+authHook()
+UseAuth()
+```
+
+---
+
+## 3. Variables & Functions: **camelCase**
+
+**Why:** Consistency with JavaScript ecosystem.
+
+```ts
+const isAuthenticated = true;
+const fetchUserData = async () => {};
+```
+
+Boolean variables should sound like **questions**:
+
+```ts
+isOpen
+hasPermission
+canEdit
+```
+
+❌ Avoid
+
+```ts
+open
+permission
+flag1
+```
+
+---
+
+## 4. Constants & Enums: **SCREAMING_SNAKE_CASE**
+
+**Why:** Signals immutability instantly.
+
+```ts
+const MAX_RETRY_COUNT = 3;
+
+export const ROUTES = {
+  HOME: "/",
+  SETTINGS: "/settings",
+};
+```
+
+---
+
+## 5. Types & Interfaces: **PascalCase**
+
+**No `I` prefix** (modern TypeScript best practice).
+
+```ts
+interface User {
+  id: string;
+  name: string;
+}
+
+type SortOrder = "asc" | "desc";
+```
+
+❌ Avoid
+
+```ts
+IUser
+TUser
+```
+
+---
+
+## 6. Props Interfaces: **`ComponentNameProps`**
+
+**Why:** Improves searchability and readability.
+
+```ts
+interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+```
+
+---
+
+## 7. Event Handlers: **`handle` prefix**
+
+**Why:** Makes intent explicit.
+
+```ts
+const handleSubmit = () => {};
+const handleCloseModal = () => {};
+```
+
+JSX:
+
+```tsx
+<button onClick={handleSubmit} />
+```
+
+---
+
+## 8. Files & Folders: **kebab-case**
+
+**Why:** Works best across OS, Git, and URLs.
+
+```txt
+features/
+  user-profile/
+    user-profile.page.tsx
+    user-profile.hook.ts
+    user-profile.types.ts
+```
+
+❌ Avoid mixing styles:
+
+```txt
+userProfile/
+User_Profile/
+```
+
+---
+
+## 9. Page, Layout, Component Suffixes (Optional but Senior-Friendly)
+
+```txt
+home.page.tsx
+auth.layout.tsx
+user-card.component.tsx
+```
+
+**Rule:**
+
+* Use suffixes only when project grows
+* Be consistent across the codebase
+
+---
+
+## 10. Absolute Imports & Aliases
+
+**Why:** Cleaner imports, fewer refactors.
+
+```ts
+import MainLayout from "@/shared/layouts/main.layout";
+import UserCard from "@/features/users/components/user-card.component";
+```
+
+---
+
+## Golden Rule (Senior Mindset)
+
+> If the name needs a comment — rename it.
+
+Good names:
+
+* Reduce documentation
+* Reduce bugs
+* Reduce onboarding time
+
+---
+
+### TL;DR
+
+| Item             | Convention           |
+| ---------------- | -------------------- |
+| Component        | PascalCase           |
+| Hook             | use + camelCase      |
+| Variable         | camelCase            |
+| Boolean          | is / has / can       |
+| Constant         | SCREAMING_SNAKE_CASE |
+| Type / Interface | PascalCase           |
+| Files            | kebab-case           |
+
+---
