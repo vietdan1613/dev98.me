@@ -1,0 +1,149 @@
+---
+title: "React Micro-Frontends with Vite & Module Federation"
+category: Daily
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2025-12-29
+thumbnailText: Vitest
+---
+
+**Micro Frontends** split a large frontend into **independently developed and deployed apps**. Combined with **Vite** and **Module Federation**, this approach enables fast builds, team autonomy, and scalable frontend architecture.
+
+![example](./imgs/vitest-1.png 'example')
+
+
+## What is a Micro Frontend?
+
+A **Micro Frontend** is an architectural pattern where each UI domain is built, tested, and deployed separately, then composed at runtime by a **host application**.
+This helps teams:
+
+* Move faster
+* Reduce coupling
+* Scale independently
+
+---
+
+## Module Federation (in short)
+
+**Module Federation** allows one app to **dynamically load modules from another app at runtime**, while **sharing dependencies** like React to avoid duplication.
+
+With Vite, this is enabled via:
+
+```
+@originjs/vite-plugin-federation
+```
+
+---
+
+## Why Vite?
+
+* ⚡ Extremely fast dev server
+* 🧩 Simple configuration
+* 🚀 Ideal for micro-frontend workflows
+* 🛠 Works well with modern React setups
+
+---
+
+## Architecture Overview
+
+* **Host App**: Main container users interact with
+* **Remote App**: Exposes reusable components (micro frontend)
+
+```
+Host App
+ └── loads → Remote Components (via remoteEntry.js)
+```
+
+---
+
+## Implementation Steps (High Level)
+
+### 1. Create Apps
+
+```bash
+npm create vite@latest host-app -- --template react
+npm create vite@latest todo-components -- --template react
+npm install
+```
+
+---
+
+### 2. Build Remote Components
+
+Expose reusable UI from the remote app:
+
+* `Input.jsx`
+* `List.jsx`
+
+---
+
+### 3. Add Module Federation (Remote)
+
+```js
+federation({
+  name: "todo-components",
+  filename: "remoteEntry.js",
+  exposes: {
+    "./List": "./src/components/List.jsx",
+    "./Input": "./src/components/Input.jsx",
+  },
+  shared: ["react"],
+})
+```
+
+Build and serve:
+
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+### 4. Add Module Federation (Host)
+
+```js
+federation({
+  name: "host-app",
+  remotes: {
+    todo_components: "http://localhost:4173/assets/remoteEntry.js",
+  },
+  shared: ["react"],
+})
+```
+
+---
+
+### 5. Use Remote Components
+
+```js
+import Input from "todo_components/Input";
+import List from "todo_components/List";
+```
+
+Remote components now behave like **local imports**.
+
+---
+
+## Key Benefits
+
+* ✅ Independent deployments
+* ✅ Faster team velocity
+* ✅ Shared dependencies
+* ✅ Clean separation of concerns
+
+---
+
+## When to Use (and When Not)
+
+**Good fit when:**
+
+* Multiple teams
+* Large, evolving frontend
+* Independent release cycles
+
+**Avoid when:**
+
+* Small apps
+* Tight coupling required
+* Overhead outweighs benefits
