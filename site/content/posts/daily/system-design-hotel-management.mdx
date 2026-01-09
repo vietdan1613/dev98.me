@@ -1,0 +1,217 @@
+---
+title: "Frontend System Design: Hotel Reservation"
+category: Daily
+author: Daniel Nguyen
+tags: ['#Daily']
+date: 2026-01-09
+thumbnailText: Daily
+---
+
+## 🏨 Problem
+
+**Design a scalable hotel reservation frontend using Next.js (like Booking.com / Agoda).**
+
+---
+
+## 1️⃣ Clarify requirements (say this first)
+
+💬 Interview opening:
+
+> “Before designing the solution, I’d like to clarify the requirements.”
+
+### Functional
+
+* Search hotels by location & date
+* Filters (price, rating, amenities)
+* Hotel detail page
+* Room selection
+* Booking & payment
+* Booking confirmation
+
+### Non-functional
+
+* SEO-friendly
+* Fast initial load
+* Handles high traffic
+* Reliable booking flow
+
+---
+
+## 2️⃣ Why Next.js? (VERY IMPORTANT)
+
+💬 Say this clearly:
+
+> “Next.js is a good choice because it supports SSR, SSG, and ISR, which are critical for SEO and performance in travel platforms.”
+
+### Benefits
+
+* **SSR** → SEO-friendly search pages
+* **SSG + ISR** → Fast hotel detail pages
+* **Code splitting by route**
+* **Image optimization**
+* **Built-in caching**
+
+---
+
+## 3️⃣ High-Level Architecture (Next.js)
+
+![Image](https://www.nexsoftsys.com/articles/images/high-level-system-design.jpg)
+
+![Image](https://images-www.contentful.com/fo9twyrwpveg/27W0C3pjjbpf94O1lp60rI/7b6ee04275fedbbfb4cb5ac04fd8ff74/image2.png)
+
+![Image](https://raw.githubusercontent.com/OthmaneNissoukin/nextjs-hotel-booking/main/screenshots/rooms.png)
+
+### Architecture
+
+* Next.js App Router
+* CDN (Vercel / CloudFront)
+* Backend APIs (Search, Booking)
+* Payment Provider SDK
+* Client-side cache (React Query)
+
+💬 Interview line:
+
+> “Static assets and pages are served from CDN, while dynamic pages are rendered on demand.”
+
+---
+
+## 4️⃣ Routing & Rendering Strategy (KEY SECTION)
+
+### App Router structure
+
+```
+/app
+  /search
+    page.tsx        // SSR
+  /hotel/[id]
+    page.tsx        // SSG + ISR
+  /booking
+    page.tsx        // CSR
+  /confirmation
+    page.tsx
+```
+
+### Rendering choice
+
+| Page         | Strategy  | Why                    |
+| ------------ | --------- | ---------------------- |
+| Search       | SSR       | SEO + fresh data       |
+| Hotel detail | SSG + ISR | Fast + scalable        |
+| Booking      | CSR       | Secure & user-specific |
+| Payment      | CSR       | Sensitive data         |
+
+💬 Interview gold:
+
+> “I use the right rendering strategy per page instead of forcing SSR everywhere.”
+
+---
+
+## 5️⃣ Search Page Design (SSR)
+
+![Image](https://uizard.io/static/469554dee870a1c6284aa6ecc643b26e/a8e47/88a2f3704ea10322547c8efd715ce7659f3d6db7-1440x835.png)
+
+![Image](https://cdn.dribbble.com/userupload/41970345/file/original-8af80b78b46d45c908d837809b05f967.jpg?resize=400x300)
+
+![Image](https://miro.medium.com/v2/resize%3Afit%3A1400/1%2A7aETWQvDUtdi9jS7UyT7sQ.jpeg)
+
+### Flow
+
+1. User opens `/search?location=Hanoi`
+2. Server fetches hotel list
+3. Page rendered on server
+4. Hydrated on client
+5. Filters update client-side
+
+💬 Strong line:
+
+> “Search parameters are stored in the URL to allow sharing and refresh.”
+
+---
+
+## 6️⃣ State Management Strategy
+
+| Data             | Solution         |
+| ---------------- | ---------------- |
+| Search params    | URL              |
+| Search results   | React Query      |
+| Filters          | Local state      |
+| Selected room    | Global store     |
+| Booking progress | Session / memory |
+
+💬 Interview sentence:
+
+> “Server state is managed with React Query to avoid overusing global stores.”
+
+---
+
+## 7️⃣ Hotel Detail Page (SSG + ISR)
+
+![Image](https://cdn.dribbble.com/userupload/12056809/file/original-3fdef2a58c10d620a18a3f440daf2ab9.png)
+
+![Image](https://cdn.dribbble.com/userupload/10904385/file/original-1a2b5c810cd119306d581b21354c4eda.png?format=webp\&resize=400x300\&vertical=center)
+
+![Image](https://cloud.netlifyusercontent.com/assets/344dbf88-fdf9-42bb-adb4-46f01eedd629/a9d6ec1f-b714-4102-b845-0986bfc65417/regeneration-regeneration-nextjs.png)
+
+### Why ISR?
+
+* Hotels don’t change every second
+* Fast load time
+* Scales to millions of users
+
+💬 Say this:
+
+> “ISR allows us to rebuild hotel pages periodically without redeploying.”
+
+---
+
+## 8️⃣ Booking Flow (Client-side)
+
+![Image](https://cdn.dribbble.com/userupload/12057914/file/original-046039ba8df34af49f41b96879ee5355.png)
+
+![Image](https://www.altexsoft.com/static/blog-post/2023/11/eebed8be-db31-438f-9ee7-d7c476b37c04.jpg)
+
+![Image](https://cdn.dribbble.com/userupload/22339136/file/original-298f7498dc28f060ba64330065a8a769.png?resize=400x0)
+
+### Steps
+
+1. Select room
+2. Lock availability (API call)
+3. Enter guest info
+4. Payment
+5. Confirmation
+
+💬 Important line:
+
+> “Availability is always rechecked before payment to prevent double booking.”
+
+---
+
+## 9️⃣ Performance Optimization (Next.js-specific)
+
+* `next/image` for optimized images
+* Route-level code splitting
+* Prefetch hotel detail on hover
+* Skeleton loading
+* Edge caching for SSR pages
+
+💬 Interview phrase:
+
+> “Images are the biggest performance bottleneck in travel apps, so optimization is critical.”
+
+---
+
+## 🔐 10️⃣ Security (Frontend)
+
+* HTTPS only
+* Payment handled via SDK
+* No card data stored
+* CSRF & XSS protection
+* Secure cookies for auth
+
+---
+
+## 🧠 1-Minute Final Summary (MEMORIZE THIS)
+
+> “I design the hotel reservation frontend using Next.js to leverage SSR for SEO-heavy search pages, SSG with ISR for scalable hotel detail pages, and CSR for secure booking flows. The app is structured by routes and features, server state is managed efficiently, and performance, reliability, and security are prioritized throughout the booking journey.”
+
+---

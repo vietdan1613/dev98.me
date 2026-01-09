@@ -1,0 +1,126 @@
+---
+title: "Frontend System Design Interview-ready Guide"
+category: Daily
+author: Daniel Nguyen
+tags: ['#Daily']
+date: 2026-01-09
+thumbnailText: Daily
+---
+
+* Design a **scalable frontend architecture**
+* Handle **performance**, **state**, and **UX**
+* Think in **trade-offs**
+
+> **“Design a scalable frontend for a large web application (e.g. dashboard, e-commerce, chat app)”**
+
+## 1️⃣ Clarify requirements
+
+Start by:
+
+* Who are the users?
+* Core features?
+* Real-time? Offline?
+* Desktop / mobile / both?
+* Scale? (10k users vs millions)
+
+💬 Interview phrase:
+
+> “Before jumping into the design, I’d like to clarify the requirements.”
+
+---
+
+### 2️⃣ High-level architecture
+
+Explain something like:
+
+* **SPA** (React / Vue)
+* **CDN** for static assets
+* **API layer** (REST / GraphQL)
+* **Client-side caching**
+* **State management**
+
+💬 Example:
+
+> “The app is a SPA served via CDN. It communicates with backend services through APIs, and we cache data on the client to reduce unnecessary requests.”
+
+---
+
+### 3️⃣ App structure
+
+Explain how you organize code:
+
+**Feature-based structure**
+
+```
+/features
+  /auth
+  /dashboard
+  /settings
+/shared
+  /components
+  /hooks
+```
+
+💬 Interview line:
+
+> “I prefer feature-based architecture because it scales better and reduces coupling.”
+
+---
+
+### 4️⃣ State management strategy
+
+Explain **when to use what**:
+
+| Type         | Solution          |
+| ------------ | ----------------- |
+| UI state     | Local state       |
+| Global state | Redux / Zustand   |
+| Server data  | React Query / SWR |
+| Auth         | Context + storage |
+
+💬 Strong answer:
+
+> “I separate server state from UI state to avoid overusing global stores.”
+
+---
+
+### 5️⃣ Performance optimization
+
+Mention:
+
+* Code splitting
+* Lazy loading
+* Memoization
+* Virtualization (large lists)
+* Image optimization
+
+💬 Interview sentence:
+
+> “Initial load is optimized using code splitting and lazy loading, while frequently used data is cached.”
+
+---
+
+### 6️⃣ Security considerations 
+
+* XSS protection
+* CSRF tokens
+* HTTPS
+* Secure storage (no sensitive data in localStorage)
+* Content Security Policy (CSP)
+
+💬 Example:
+
+> “Sensitive tokens are stored securely and never exposed directly to JavaScript.”
+
+---
+
+### 7️⃣ Error handling & UX
+
+* Global error boundary
+* Loading skeletons
+* Retry logic
+* Graceful degradation
+
+💬 Good line:
+
+> “Even when APIs fail, the UI should fail gracefully and guide the user.”
