@@ -7,169 +7,595 @@ date: 2020-01-02
 thumbnailText: Daily
 ---
 
+# HR Questions
 
-# HR Interview Questions
+### 1. **Can you introduce yourself?**
 
-1. **Can you introduce yourself?**
-2. **What do you know about our company?**
-3. **What interests you about this position?**
-4. **When you get stuck and can’t solve a problem, how do you proceed?**
-5. **How do you learn and improve your skills?**
-6. **How do you handle working on a challenging feature?**
-7. **What tools do you use to manage your work?**
-8. **When starting a project, how do you plan and organize your work to ensure completion?**
-9. **Can you describe a recent project you’ve been working on?**
-10. **How do you handle stress and pressure at work?**
-11. **What are your strengths?**
-12. **What are your weaknesses?**
-13. **What is your preferred working or management style?**
-14. **Have you ever mentored a junior team member? What is your leadership style?**
-15. **Where do you see yourself in five years?**
-16. **What are your salary expectations?**
+> Who you are, your role, and your core skills
 
-# Techinical Questions
+### 2. **What do you know about our company?**
 
-## Base
+> Company product/domain + why it interests you
 
-1. **Can you explain the React component lifecycle?**
-2. **What are Higher-Order Components (HOCs)?**
-3. **What is the difference between `useEffect()` and `useLayoutEffect()`?**
+### 3. **Can you describe a recent project you’ve been working on?**
 
-## React Performance Questions
+> Your role, tech stack, and impact
 
-1. **How do you optimize React performance?**
-2. **How would you optimize rendering a list with thousands of items?**
-3. **When would you use `useDeferredValue()` or `useTransition()`? Can you give an example?**
-4. **Why can using `Context` lead to performance bottlenecks, and how can you optimize it?**
-5. **How do you detect and diagnose unnecessary re-renders in a React application?**
-6. **When should you use `React.memo()` and when should you avoid it?**
+### 4. **What interests you about this position?**
 
-## Store
+> Alignment between the role, your skills, and growth goals
+
+### 5. **When you get stuck and can’t solve a problem, how do you proceed?**
+
+> Break down the problem → research → ask for help clearly
+
+### 6. **How do you learn and improve your skills?**
+
+> Practice, documentation, feedback, and continuous learning
+
+### 7. **How do you handle working on a challenging feature?**
+
+> Understand requirements → split into small tasks → iterate
+
+### 8. **What tools do you use to manage your work?**
+
+> Task tracking, version control, and communication tools
+
+### 9. **When starting a project, how do you plan and organize your work to ensure completion?**
+
+> Clarify requirements → plan tasks → set priorities and milestones
+
+### 10. **How do you handle stress and pressure at work?**
+
+> Prioritization, communication, and staying organized
+
+### 11. **What are your strengths?**
+
+> Problem-solving, responsibility, and willingness to learn
+
+### 12. **What are your weaknesses?**
+
+> A real but manageable weakness + improvement effort
+
+### 13. **What is your preferred working or management style?**
+
+> Clear goals, open communication, and collaboration
+
+### 14. **Have you ever mentored a junior team member? What is your leadership style?**
+
+> Supportive, knowledge-sharing, and collaborative
+
+### 15. **Where do you see yourself in five years?**
+
+> Growth into a stronger, more impactful engineer
+
+### 16. **What are your salary expectations?**
+
+> Market-based range + openness to discussion
+
+#  Tech - React Fundamentals
+
+### 1. What is JSX in React? 
+
+> how does it differ from writing UI using plain JavaScript (React.createElement)?
+
+### 2. Can you explain the React component lifecycle?
+
+> What are the main phases and lifecycle methods/hooks?
+
+### 4. **What are Higher-Order Components (HOCs)?**
+
+> How do they enhance component functionality?
+
+### 5. **What is the difference between `useEffect()` and `useLayoutEffect()`?**
+
+> * `useEffect` → runs after paint (non-blocking)
+> * `useLayoutEffect` → runs before paint (blocking)
+
+### 6. How does React handle **event handling**?
+
+> * Synthetic Events
+> * Event delegation
+
+### 7. What are **controlled vs uncontrolled components** in React?
+
+> * Controlled → React state manages form data
+> * Uncontrolled → DOM manages form data
+
+### 8. How does **React’s reconciliation algorithm** work?
+
+> * Virtual DOM diffing
+> * Key props for list items
+
+### 9. What are **fragments** in React, and when would you use them?
+
+> * Group multiple elements without extra DOM nodes
+
+### 10. How do you handle **error boundaries** in React?
+
+> * Class components with `componentDidCatch`
+> * Catch rendering errors
+
+### 11. What is the purpose of **keys** in React lists?
+
+> * Identify items for efficient updates
+> * Stable identity across renders
+
+### 12. How does **React’s Context API** work?
+
+> * Share state globally without prop drilling
+> * `Provider` and `Consumer` components or `useContext` hook
+
+# Tech - React Performance
+
+### 1. How do you optimize **React performance**?
+
+> **Reduce unnecessary re-renders and expensive computations**
+>
+> * Memoization (`React.memo`, `useMemo`, `useCallback`)
+> * Split components & state
+> * Avoid inline objects/functions
+> * Virtualize large lists
+> * Optimize Context usage
+
+### 2. How would you optimize **rendering a list with thousands of items**?
+
+> **Render only what the user sees**
+>
+> * List virtualization (`react-window`, `react-virtualized`)
+> * Stable `key` props
+> * Memoized row components
+> * Avoid heavy logic inside render
+
+### 3. When would you use `useDeferredValue()` or `useTransition()`?
+
+> **To keep the UI responsive during expensive updates**
+>
+> * **`useDeferredValue`** → delay rendering non-urgent derived values    
+>  *Example:* filtering a large list while typing
+> * **`useTransition`** → mark updates as low-priority    
+>   *Example:* switching tabs while fetching/rendering data
+
+### 4. Why can using **Context** cause performance issues?
+
+> **All consumers re-render when context value changes**
+>
+> How to optimize:
+>
+> * Split context into smaller ones
+> * Memoize context value
+> * Use context selectors
+> * Avoid frequently changing values in Context
+
+### 5. How do you detect and diagnose **unnecessary re-renders**?
+
+> **Measure first, then optimize**
+>
+> * React DevTools Profiler
+> * `why-did-you-render`
+> * Console logging renders
+> * Check props reference equality
+
+### 6. When should you use `React.memo()` and when should you avoid it?
+
+> **Use it when re-renders are expensive and props are stable**
+>
+> Use when:
+>
+> * Pure components
+> * Large lists
+> * Frequent parent re-renders
+>
+> Avoid when:
+>
+> * Cheap renders
+> * Props change every render
+> * Over-optimization hurts readability
+
+# Tech - React Testing
+
+### 1. What are the drawbacks of **manual ReactDOM testing**, and how does RTL address them?
+
+> Manual testing couples tests to implementation details; **RTL tests behavior via the DOM**, making tests more reliable and maintainable.
+
+### 2. Why should React tests resemble **real user interactions**?
+
+> Because **users don’t care about component internals**, testing behavior ensures refactor-safe, meaningful tests.
+
+### 3. What is the problem of the **“Test User”**, and how does RTL reduce it?
+
+> The “Test User” interacts unrealistically; **RTL enforces realistic queries and interactions**, reducing false confidence.
+
+### 4. What RTL queries best reflect how users find elements?
+
+> **Accessible queries**:
+>
+> * `getByRole`
+> * `getByLabelText`
+> * `getByText`
+> * `getByPlaceholderText`
+>
+> (avoid `getByTestId` unless necessary)
+
+### 5. When testing forms, what user behaviors should be simulated?
+
+> **Typing, clicking, focusing, submitting, and validation feedback**, not direct state manipulation.
+
+### 6. Why mock HTTP requests, and how does **MSW** improve mocking?
+
+> To avoid real network calls; **MSW mocks at the network layer**, making tests realistic and reusable across unit/integration tests.
+
+### 7. Which browser APIs are missing or incomplete in **JSDOM**?
+
+> APIs like:
+>
+> * `IntersectionObserver`
+> * `ResizeObserver`
+> * `matchMedia`
+> * `Clipboard`
+> * `Canvas`
+>  often need manual mocks.
+
+### 8. Why is mocking browser APIs called **“poking a hole in reality”**?
+
+> Mocks reduce realism; **integration/e2e tests should minimize mocking** to better reflect real user environments.
+
+### 9. Why test custom hooks via a **test component**?
+
+> Hooks depend on React’s lifecycle; **wrapping them ensures correct execution context** and realistic behavior.
+
+### 10. What problem does a **custom render function** solve when testing Context?
+
+> It **automatically wraps components with required providers**, reducing duplication and setup complexity.
+
+# Tech - React Pattern
+
+### 1. How does the **composition pattern** help reduce prop drilling?
+
+> **It lets components receive behavior and UI via children instead of passing props deeply**, improving flexibility and reuse.
+
+### 2. Why store the **latest value in `useRef` instead of state** for async logic?
+
+> **Refs update without triggering re-renders**, making them ideal for async callbacks that need the latest value.
+
+### 3️⃣ What does **React Context enable in the compound components pattern**?
+
+> **It allows shared state and behavior between related components without prop drilling**, enabling clean and flexible APIs.
+
+### 4️⃣ What problem does the **slot pattern** solve?
+
+> **It allows parents to inject content into specific child “slots” even when the structure is deeply nested or indirect.**
+
+### 5️⃣ What is the advantage of a **prop getter** over prop collection?
+
+> **Prop getters give consumers full control while still applying required logic**, preventing accidental overrides.
+
+### 6️⃣ Why does the **state initializer pattern** store initial value in `useRef`?
+
+> **To compute expensive initial state only once**, avoiding unnecessary recalculation on every render.
+
+### 7️⃣ How does the **state reducer pattern** customize behavior?
+
+> **It lets consumers intercept and modify state transitions without changing internal component logic.**
+
+### 8️⃣ How does a component decide if it is **controlled or uncontrolled**?
+
+> **If a value prop is provided → controlled; otherwise → uncontrolled with internal state.**
+
+### 9️⃣ Which pattern lets you **block or modify specific state changes**?
+
+> **The state reducer pattern**, because it centralizes and controls how state updates are applied.
+
+# Tech - Redux/Redux Saga/React Query
 
 1. **What is the difference between `React Query` and `Redux`?**
 2. **When would you use `Redux Thunk` and when would you use `Redux Saga`?**
 3. **How does `React Query` improve application performance?**
 
-## Testing
 
-1. **What are the drawbacks of manual ReactDOM testing, and how does React Testing Library (RTL) address them?**
-2. **Why is it important for React tests to resemble real user interactions instead of testing implementation details?**
-3. **What is the problem of avoiding the “Test User,” and how does RTL help reduce this issue?**
-4. **RTL promotes testing an app “the way users interact with it.” What are some query examples that best reflect how users find elements?**
-5. **When testing forms, what essential user behaviors should your tests simulate to match real-world usage?**
-6. **Why is mocking HTTP requests necessary in unit/integration tests, and how does MSW improve the mocking process compared to manual Jest mocks?**
-7. **Jest runs tests in a Node.js environment using JSDOM. Which browser APIs are not fully supported and often need to be mocked manually?**
-8. **Why is mocking browser APIs considered “poking a hole in reality”? Which types of tests should minimize mocking when possible?**
-9. **Why is the recommended way to test custom React hooks to wrap them in a test component instead of calling the hook directly?**
-10. **When testing components that rely on React Context, what problem does a custom `render` function solve?**
+# Tech - JavaScript
 
-## JavaScript
+### 1. What is a `closure` in JavaScript?
 
-1. **What is a closure in JavaScript, and how is it used in real-world applications?**
-2. **What is debouncing, and how does it work internally using closures?**
-3. **What is the JavaScript event loop, and how does it schedule synchronous code, microtasks (Promises), and macrotasks (setTimeout)?**
-4. **What are common asynchronous patterns in JavaScript, and when should you use callbacks, Promises, or `async/await`?**
-5. **What is hoisting in JavaScript?**
+> How does it help with data encapsulation and state preservation?
 
-## TypeScript
+### 2. What is `hoisting`?
 
-1. **What are the main differences between TypeScript and JavaScript?**
-2. **What are interfaces and types in TypeScript, and when should you use each?**
-3. **How does TypeScript improve code safety at compile time?**
-4. **What are generic types in TypeScript?**
+> How does it behave differently for:
+> 
+> * `var`
+> * `let`
+> * `const`
+> * function declarations vs function expressions?
 
-## Patterns
+### 3. How does `this` work in JavaScript?
 
-1. **How does the composition pattern help reduce prop drilling, and what is its main benefit for component flexibility?**
-2. **Why would you store the “latest value” in `useRef` instead of state when dealing with async logic or callbacks?**
-3. **What does React Context enable in the compound components pattern, and why is this pattern useful?**
-4. **What problem does the slot pattern solve when a child component is not a direct descendant of its parent?**
-5. **What is the advantage of a prop getter over prop collection when exposing a custom hook API?**
-6. **Why does the state initializer pattern store the initial value in `useRef` instead of recomputing it on every render?**
-7. **How does the state reducer pattern allow consumers to customize state transitions without modifying internal logic?**
-8. **How should a component determine whether it is controlled or uncontrolled based on its props?**
-9. **Which pattern would you use to block or modify specific state changes, and why?**
+> How is it determined in:
+> 
+> * normal functions
+> * arrow functions
+> * event handlers
+> * class methods?
 
-## CSS
+### 4. What is the **JavaScript `event loop`**?
 
-1. **What is responsive web design, and why is it important?**
-2. **How do you optimize a website for accessibility (a11y)?**
-3. **What are CSS pre-processors, and how do features like variables, nesting, and mixins (e.g., in Sass or Less) improve maintainability and scalability in large applications?**
+> Explain the execution order of:
+>
+> * synchronous code
+> * microtasks (`Promise.then`, `queueMicrotask`)
+> * macrotasks (`setTimeout`, `setInterval`)
 
-## Others
+### 5. What are **`microtasks vs macrotasks`**?
 
-1. **Can you describe your CI/CD experience?**
-2. **How do you structure a scalable frontend project?**
-3. **How do you work within an Agile team?**
-4. **What are Single Page Applications (SPAs), and what are their advantages?**
-5. **Why is version control (e.g., Git) important for frontend developers?**
+> Why do Promises run before `setTimeout`?
 
-## NextJS
+### 6. What are common **`asynchronous patterns`** in JavaScript?
 
-1. **What is Next.js and how does it differ from React?**
-2. **Explain the different rendering strategies in Next.js (SSR, SSG, ISR, CSR)**
-3. **What are React Server Components (RSCs)?**
-4. **Explain the App Router vs. Pages Router.**
-5. **How do you fetch data in a Next.js application?**
-6. **What is getStaticProps and when would you use it?**
-7. **What is the purpose of getStaticPaths?**
-8. **How does dynamic routing work?**
-9. **How does Next.js optimize images?**
-10. **What is the next/link component used for?**
-11. **How do you manage environment variables?**
-12. **What is Middleware in Next.js?**
-13. **How do you handle SEO and metadata?**
+> When should you use:
+> 
+> * callbacks
+> * Promises
+> * `async/await`?
+
+### 7. What is **`debouncing`** and **`throttling`**?
+
+> What problem do they solve, and what is the difference?
+
+### 8. What is the difference between **`==` and `===`**?
+
+> Explain type coercion with examples.
+
+### 9. What is **`prototype inheritance`**?
+
+> How does the prototype chain work in JavaScript?
+
+### 10. What is the difference between **`null` and `undefined`**?
+
+### 11. What is a **`shallow copy` vs `deep copy`**?
+
+> How can you create them in JavaScript?
+
+### 12. What is **`immutability`**?
+
+> Why is it important in modern frameworks like React?
+
+### 13. How does **`scope`** work in JavaScript?
+
+> Explain:
+>
+> * global scope
+> * function scope
+> * block scope
+
+### 14. What happens when you use `new` with a function?
+
+> Explain constructor behavior step by step.
+
+### 15. What is **`memory leak`** in JavaScript?
+
+> What are common causes and how can you prevent them?
+
+# Tech - TypeScript
+
+### 1. What are the **main differences between TypeScript and JavaScript**?
+
+> * What problems does TypeScript solve?
+> * Is TypeScript required at runtime?
+
+### 2. How does **TypeScript improve code safety at compile time**?
+
+> * What kinds of errors can it catch before runtime?
+> * How does static typing help large codebases?
+
+### 3. What are **interfaces** in TypeScript?
+
+> * How do interfaces work?
+> * Can interfaces be extended or merged?
+
+### 4. What are **type aliases (`type`)** in TypeScript?
+
+> * What can `type` represent that `interface` cannot?
+
+### 5. When should you use **`interface` vs `type`**?
+
+> * Which one is better for public APIs?
+> * Which one works better with unions?
+
+### 6. What are **generic types** in TypeScript?
+
+> * Why are generics important?
+> * How do generics improve reusability and type safety?
+
+### 7. What is **type inference** in TypeScript?
+
+> * When does TypeScript infer types automatically?
+> * When should you explicitly define types?
+
+### 8. What are **union and intersection types**?
+
+> * How do they differ?
+> * Give real-world examples.
+
+### 9. What is **`any` vs `unknown`**?
+
+> * Why is `unknown` safer?
+> * When should `any` be avoided?
+
+### 10. What is **`never`** in TypeScript?
+
+> * When does TypeScript infer `never`?
+> * Why is it useful?
+
+### 11. What are **optional properties** and **readonly**?
+### 12. What is **strict mode** (`strict: true`)?
+### 13. How does TypeScript work with **third-party JS libraries**?
+### 14. What are **utility types** (`Partial`, `Pick`, `Omit`)?
+
+# CSS/SCSS/Tailwind
+
+### 1. What are CSS pre-processors?
+
+> how do features like variables, nesting, and mixins (e.g., in Sass or Less) improve maintainability and scalability in large applications?
+
+### 2. What is Tailwind CSS, and how is it different from traditional CSS or SCSS?
+
+> Why is it called a utility-first framework?
+
+### 3. What are the advantages and disadvantages of Tailwind CSS?
+
+> When would you choose Tailwind over SCSS or CSS Modules?
+
+### 4. How does Tailwind CSS handle responsive design?
+
+> Explain breakpoints and mobile-first styling.
+
+### 5. How does dark mode work in Tailwind CSS?
+
+> Explain media vs class strategies.
+
+### 6. What is @apply, and when should (or shouldn’t) you use it?
+
+> What problems can misuse of @apply cause?
+
+### 7. How do you manage reusable components and consistency in Tailwind?
+
+> Compare:
+> 
+> * utility composition
+> * component abstraction
+> * design tokens
+
+### 8. How do you optimize Tailwind CSS for production?
+
+> Explain tree-shaking and purging unused styles.
+
+### 9. How do you ensure accessibility (a11y)?
+
+> Focus on color contrast, focus states, and semantic HTML.
+
+# CI/CD
+
+### 1. Can you describe your **CI/CD experience**?
+
+> * What CI/CD tools have you used (GitHub Actions, GitLab CI, Jenkins, Bitbucket)?   
+> * What stages were included (lint, test, build, deploy)?
+
+### 2. How do you **design and maintain a CI/CD pipeline** for a frontend application?
+
+> How do you handle:
+>
+>  * environment variables
+>  * build optimization
+>  * caching dependencies
+>  * multiple environments (dev, staging, production)?
+
+### 3. How do you ensure **code quality and stability** in CI/CD?
+
+> * What checks do you add before deployment?
+> * How do you prevent broken builds from reaching production?
+
+### 4. How does CI/CD integrate with **Agile development workflows**?
+
+> * How do pull requests, code reviews, and CI checks work together?
+> * How do you support frequent releases?
+
+### 5. Why is **version control (Git)** essential in CI/CD pipelines?
+
+> * How do branching strategies (Git Flow, trunk-based development) affect CI/CD?
 
 # React Live Codinng
 
-## 📝 Problem 1: Todo List
-
-### 📌 Interviewer Prompt
-
+### 1. Todo List
+ 
 > Build a simple **Todo List** using React.
+> 
+> ### ✅ Requirements
+>
+> * Display an input field and an **Add** button
+> * Users can add a todo item
+> * Display the list of todos
+> * Each todo should have a **Delete** button
+> * Do not allow empty todos
+> * Mark a todo as completed
+> * Persist todos after page refresh
+> * Clear all todos
 
-### ✅ Requirements
-
-* Display an input field and an **Add** button
-* Users can add a todo item
-* Display the list of todos
-* Each todo should have a **Delete** button
-* Do not allow empty todos
-
-### 🔥 Bonus (If Time Allows)
-
-* Mark a todo as completed
-* Persist todos after page refresh
-* Clear all todos
-
-## 🌐 Problem 2: Fetch Users from API 
-
-### 📌 Interviewer Prompt
+### 2. Fetch Users from API 
 
 > Fetch and display a list of users from an API.
+> 
+> ### ✅ Requirements
+>
+> * Fetch users from this endpoint: `https://jsonplaceholder.typicode.com/users`
+> * Fetch data when the component mounts
+> * Show a **loading indicator**
+> * Show an **error message** if the request fails
+> * Display user **name** and **email**
 
-### ✅ Requirements
+### 3. Create a React component that manages an array of values.
 
-* Fetch users from this endpoint:
-  `https://jsonplaceholder.typicode.com/users`
-* Fetch data when the component mounts
-* Show a **loading indicator**
-* Show an **error message** if the request fails
-* Display user **name** and **email**
+> Requirements:
+>
+> * Use React functional components and hooks
+> * Store the values in component state
+> * Each input must be a controlled component
+> * Updating one input should not affect others
+> * Update state immutably
+> * Add a button to append a new value
+> * Add a button to remove a value by index
 
-# Algorithm Live Coding
+# Algorithm
 
-1. 
-2. 
-3. 
-4. 
-5. 
-6. 
-7. 
-8. 
-9. 
-10. 
-11. 
-12. 
-13. 
-14. 
+### 1. **70. Climbing Stairs** 
+### 2. **121. Best Time to Buy and Sell Stock** 
+### 3. **53. Maximum Subarray** 
+### 4. **268. Missing Number** 
+### 5. **283. Move Zeroes** 
+### 6. **26. Remove Duplicates from Sorted Array**
+### 7. **88. Merge Sorted Array** 
+### 8. **414. Third Maximum Number** 
+### 9. **189. Rotate Array**
+### 10. **55. Jump Game**
+### 11. **11. Container With Most Water** 
+### 12. **238. Product of Array Except Self** 
+### 13. **198. House Robber**
+### 14. **213. House Robber II**
+### 15. **153. Find Minimum in Rotated Sorted Array** 
+### 16. **33. Search in Rotated Sorted Array**
+### 17. **36. Valid Sudoku**
+### 18. **56. Merge Intervals**
+### 19. **15. 3Sum**
+### 20. **54. Spiral Matrix**
+
+# System Design
+
+### 1. **How would you design a scalable, performant dashboard web application?**
+
+> Focus areas interviewers expect:
+
+> * Component architecture
+> * State management
+> * Data fetching & caching
+> * Performance optimization
+> * Accessibility and responsiveness
+
+### 2. **How would you design a real-time chat application for the web?**
+
+> Focus areas interviewers expect:
+>
+> * UI architecture
+> * Real-time data handling (WebSockets)
+> * Message state & synchronization
+> * Performance for large message lists
+> * Error handling and offline support
+
+
+### 3. **How would you design a reusable, accessible, and scalable modal component for a large frontend application?**
+
+> **Focus areas interviewers expect you to cover:**
+> 
+> * API design (props, controlled vs uncontrolled)
+> * Accessibility (focus trap, ARIA roles, keyboard handling)
+> * Portal usage (`createPortal`)
+> * Styling and theming support
+> * Performance and stacking multiple modals
