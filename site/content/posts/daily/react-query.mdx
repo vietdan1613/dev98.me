@@ -1,0 +1,216 @@
+---
+title: "React Query"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2026-01-17
+thumbnailText: State Management
+---
+
+# What?
+
+**TanStack Query** is a library for managing **server state** in React applications.
+
+It helps with:
+
+* Data fetching
+* Caching
+* Background refetching
+* Synchronizing server data with UI
+* Pagination & infinite scroll
+
+
+### Installation
+
+```bash
+npm install @tanstack/react-query
+npm install @tanstack/react-query-devtools
+```
+
+### Setup QueryClient
+
+```tsx
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+const queryClient = new QueryClient();
+
+export function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <App />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
+}
+```
+
+# useQuery 
+
+> Basic Data Fetching
+
+```tsx
+import { useQuery } from "@tanstack/react-query";
+
+const fetchPokemon = async (name: string) => {
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
+  return res.json();
+};
+
+function PokemonDetail({ name }: { name: string }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["pokemon", name],
+    queryFn: () => fetchPokemon(name),
+    enabled: !!name,
+  });
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error</p>;
+
+  return <div>{data.name}</div>;
+}
+```
+
+### Query Keys
+
+```ts
+["pokemon", name]
+["users", { page, limit }]
+```
+
+Rules:
+
+* Must be **stable**
+* Must fully describe the data being fetched
+
+### Caching & Query Lifecycle
+
+| Option                 | Meaning                           |
+| ---------------------- | --------------------------------- |
+| `staleTime`            | How long data is considered fresh |
+| `gcTime`               | (v5) Replaces `cacheTime`         |
+| `enabled`              | Conditional fetching              |
+| `refetchOnWindowFocus` | Auto refetch on focus             |
+
+# useMutation
+
+> POST / PUT / DELETE
+
+```tsx
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+const createTodo = (todo) =>
+  fetch("/api/todos", {
+    method: "POST",
+    body: JSON.stringify(todo),
+  });
+
+function AddTodo() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createTodo,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+
+  return (
+    <button onClick={() => mutation.mutate({ title: "New todo" })}>
+      Add Todo
+    </button>
+  );
+}
+```
+
+### invalidateQueries vs refetchQueries
+
+```ts
+queryClient.invalidateQueries({ queryKey: ["todos"] });
+// Marks data as stale (recommended)
+
+queryClient.refetchQueries({ queryKey: ["todos"] });
+// Immediately refetches
+```
+
+✅ **Best practice**: use `invalidateQueries`
+
+# useInfiniteQuery
+
+> Infinite Scrolling / Pagination
+
+```tsx
+import { useInfiniteQuery } from "@tanstack/react-query";
+
+const fetchPokemons = ({ pageParam = 0 }) =>
+  fetch(
+    `https://pokeapi.co/api/v2/pokemon?offset=${pageParam}&limit=20`
+  ).then(res => res.json());
+
+const {
+  data,
+  fetchNextPage,
+  hasNextPage,
+} = useInfiniteQuery({
+  queryKey: ["pokemon-list"],
+  queryFn: fetchPokemons,
+  getNextPageParam: (lastPage) =>
+    lastPage.next ? lastPage.offset + 20 : undefined,
+});
+```
+
+# More
+
+### placeholderData
+
+> Show previous data while fetching new data
+
+```ts
+useQuery({
+  queryKey: ["pokemon", name],
+  queryFn: () => fetchPokemon(name),
+  placeholderData: (previousData) => previousData,
+});
+```
+
+### initialData
+
+> Set initial data on first load
+
+```ts
+useQuery({
+  queryKey: ["todos"],
+  queryFn: fetchTodos,
+  initialData: [],
+});
+```
+
+---
+
+### Error Handling
+
+> Customize retry logic
+
+```ts
+useQuery({
+  queryKey: ["data"],
+  queryFn: fetchData,
+  retry: (failureCount, error) => {
+    if (error.status === 404) return false;
+    return failureCount < 2;
+  },
+});
+```
+
+### QueryFunctionContext
+
+> Access query key and page param in query function
+
+```ts
+useInfiniteQuery({
+  queryKey: ["pokemon-list"],
+  queryFn: ({ pageParam = 0 }) => fetchPokemons(pageParam),
+  getNextPageParam: (lastPage) =>
+    lastPage.next ? lastPage.offset + 20 : undefined,
+});
+```

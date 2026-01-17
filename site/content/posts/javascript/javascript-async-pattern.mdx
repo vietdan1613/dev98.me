@@ -1,0 +1,79 @@
+---
+title: "Asynchronous Patterns in JavaScript"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#Javascript']
+date: 2024-04-11
+thumbnailText: JavaScript
+---
+
+JavaScript handles asynchronous operations using several patterns that have evolved over time. Each pattern solves the same problem—**non-blocking execution**—but with different trade-offs.
+
+## 1. Callbacks
+
+A **callback** is a function passed as an argument and executed later.
+
+```js
+function fetchData(callback) {
+  setTimeout(() => {
+    callback(null, "data");
+  }, 1000);
+}
+
+fetchData((err, result) => {
+  if (err) return;
+  console.log(result);
+});
+```
+
+### When to Use Callbacks
+
+* Simple, one-off async operations
+* Event listeners (`addEventListener`)
+
+## 2. Promises
+
+A **Promise** represents a value that will be available **now, later, or never**.
+
+```js
+fetch("/api/data")
+  .then(res => res.json())
+  .then(data => console.log(data))
+  .catch(err => console.error(err));
+```
+
+### When to Use Promises
+
+* Parallel execution (`Promise.all`)
+* Cleaner error handling
+* Most APIs (Fetch, React Query internals)
+
+## 3. `async / await`
+
+`async/await` is **syntactic sugar** built on top of Promises, making async code look synchronous.
+
+```js
+async function loadData() {
+  try {
+    const res = await fetch("/api/data");
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+```
+
+### When to Use `async/await`
+
+* Sequential async logic
+* Complex control flow
+* Readable, maintainable code
+* Modern applications (React, Node.js)
+
+## Best Practices
+
+* ❌ Avoid callbacks for complex logic
+* ✅ Prefer `async/await` for most code
+* ✅ Use Promises when concurrency or composition is needed
+* ✅ Understand callbacks—they still power the event system

@@ -1,5 +1,5 @@
 ---
-title: "JavaScript Hoisting Explained: How It Affects Variables and Functions"
+title: "JavaScript Hoisting"
 category: JavaScript
 author: Daniel Nguyen
 tags: ['#Javascript']
@@ -7,107 +7,101 @@ date: 2024-04-11
 thumbnailText: JavaScript
 ---
 
-Hoisting is one of those JavaScript concepts that can cause surprising behavior if you're not aware of how it works. Yet, once you understand it, you’ll write more predictable and bug-free code. In this blog post, we'll demystify what hoisting is, how it affects variables and functions, and the differences between `var`, `let`, `const`, and function expressions.
+**Hoisting** is JavaScript’s behavior of moving **declarations** to the top of their scope during the compile phase. This doesn’t mean code is physically moved—JavaScript just *knows* about certain variables and functions before execution starts.
 
----
+## Variable Hoisting
 
-### 🏗️ What Is Hoisting?
+### `var`
 
-**Hoisting** is JavaScript's behavior of moving declarations to the top of their scope before code is executed.
+* **Hoisted and initialized to `undefined`**
+* Accessible before declaration (but value is `undefined`)
+* Function-scoped (not block-scoped)
 
-For example:
-```javascript
-console.log(x); // undefined
-var x = 10;
-```
-Behind the scenes, JavaScript interprets this as:
-```javascript
-var x;
-console.log(x); // undefined
-x = 10;
-```
-Only the **declaration** is hoisted, not the initialization.
-
----
-
-### 📦 Variable Hoisting: `var` vs `let` / `const`
-
-#### `var` — Hoisted and Initialized as `undefined`
-```javascript
+```js
 console.log(a); // undefined
-var a = 5;
+var a = 10;
 ```
-`var` variables are hoisted to the top of their function scope and initialized to `undefined`.
 
-#### `let` / `const` — Hoisted but in the Temporal Dead Zone (TDZ)
-```javascript
+⚠️ This can cause subtle bugs because accessing `a` before assignment doesn’t throw an error.
+
+### `let`
+
+* **Hoisted but NOT initialized**
+* Exists in the **Temporal Dead Zone (TDZ)** until declared
+* Block-scoped
+
+```js
 console.log(b); // ❌ ReferenceError
 let b = 10;
 ```
 
-```javascript
+### `const`
+
+* Same hoisting behavior as `let`
+* Must be initialized at declaration
+* Block-scoped and cannot be reassigned
+
+```js
 console.log(c); // ❌ ReferenceError
-const c = 20;
+const c = 10;
 ```
-Although `let` and `const` are hoisted, they are not initialized. Accessing them before declaration results in a **ReferenceError** due to the **temporal dead zone** (TDZ).
 
----
+✅ `let` and `const` are safer than `var` because they prevent early access.
 
-### 🧠 Function Hoisting: Declarations vs Expressions
+## Function Hoisting
 
-#### ✅ Function Declarations Are Fully Hoisted
-```javascript
-sayHello(); // "Hello"
+### Function Declarations
+
+* **Fully hoisted (name + implementation)**
+* Can be called before they appear in code
+
+```js
+sayHello();
 
 function sayHello() {
-  console.log("Hello");
+  console.log("Hello!");
 }
 ```
-Function declarations are hoisted **with their definitions**, so you can safely call them before they appear in your code.
 
-#### ❌ Function Expressions Are Not Fully Hoisted
-```javascript
-greet(); // ❌ TypeError: greet is not a function
+✔️ This works because the entire function is hoisted.
 
-var greet = function () {
+### Function Expressions
+
+* Hoisting depends on how they’re declared
+
+#### With `var`
+
+```js
+sayHi(); // ❌ TypeError: sayHi is not a function
+
+var sayHi = function () {
   console.log("Hi");
 };
 ```
-Here, only the `var greet` declaration is hoisted and initialized as `undefined`. Trying to call `greet()` before the assignment causes a **TypeError**.
 
-#### 🔼 Arrow Functions Work the Same Way
-```javascript
-shout(); // ❌ TypeError
+* Variable is hoisted as `undefined`
+* Function body is not hoisted
 
-const shout = () => console.log("Shout!");
+#### With `let` / `const`
+
+```js
+sayHey(); // ❌ ReferenceError
+
+const sayHey = function () {
+  console.log("Hey");
+};
 ```
-With `const` and arrow functions, the variable is hoisted but uninitialized (TDZ), so accessing it early throws a **ReferenceError**.
 
----
+* In TDZ until declaration
+* Safer and more predictable
 
-### 📌 Summary Table
+## Quick Comparison
 
-| Declaration Type       | Hoisted? | Initialized?     | Usable Before Declaration? |
-|------------------------|----------|------------------|-----------------------------|
-| `var`                  | ✅ Yes   | ✅ As `undefined`| ⚠️ Yes, but risky            |
-| `let` / `const`        | ✅ Yes   | ❌ No (TDZ)       | ❌ No                        |
-| Function Declaration   | ✅ Yes   | ✅ Yes            | ✅ Yes                       |
-| Function Expression    | ✅ (var) | ❌ No             | ❌ No                        |
-| Arrow Function         | ✅ (var) | ❌ No             | ❌ No                        |
+| Declaration          | Hoisted | Initialized | Scope    | Safe to Access Early |
+| -------------------- | ------- | ----------- | -------- | -------------------- |
+| `var`                | ✅       | `undefined` | Function | ⚠️ Yes (but risky)   |
+| `let`                | ✅       | ❌           | Block    | ❌                    |
+| `const`              | ✅       | ❌           | Block    | ❌                    |
+| Function Declaration | ✅       | ✅           | Function | ✅                    |
+| Function Expression  | Partial | ❌           | Depends  | ❌                    |
 
----
-
-### 💡 Best Practices
-
-- Prefer `let` and `const` over `var` to avoid unexpected hoisting behavior.
-- Use `const` by default, and `let` when reassignment is necessary.
-- Always declare variables at the top of their scope for clarity.
-- Define functions before using them, especially if you're using expressions or arrow functions.
-
----
-
-### 🚀 Conclusion
-
-Hoisting is a foundational concept in JavaScript that influences how your code is parsed and executed. Understanding how variable and function declarations are treated helps you write cleaner, more reliable code. By steering clear of `var` and being mindful of declaration order, you can avoid many common JavaScript pitfalls.
-
-Stay tuned for our next post, where we’ll explore how closures interact with hoisting and function scopes!

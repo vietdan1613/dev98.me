@@ -1,5 +1,5 @@
 ---
-title: "Debounce in JavaScript"
+title: "Debouncing vs Throttling"
 category: JavaScript
 author: Daniel Nguyen
 tags: ['#Javascript']
@@ -7,134 +7,62 @@ date: 2025-08-30
 thumbnailText: JavaScript
 ---
 
-🚀 Understanding Debounce in JavaScript: A Simple Guide with Examples
+> **Prevent expensive functions from running too often and hurting performance.**
 
-When working with JavaScript—especially in the browser—it's common to run into performance issues when certain functions are called **too frequently**. Think of scrolling, resizing a window, or typing into an input field. If you’re not careful, this can lead to laggy UIs and a bad user experience.
+## What Is Debouncing?
 
-That’s where **debounce** comes to the rescue.
-
----
-
-## 🤔 What Is Debounce?
-
-**Debounce** is a programming technique used to **limit how often a function is executed**. It ensures that the function only runs **after a specified amount of time has passed** since the last time it was invoked.
-
-### Real-world Analogy:
-
-Imagine you’re typing a search query. You don’t want to send a network request to the server **every time** you press a key. Instead, you want to wait until the user pauses typing for, say, 500ms—**then** send the request. That’s debounce.
-
----
-
-## 🧠 Why Use Debounce?
-
-Without debounce, functions tied to events like:
-
-* `scroll`
-* `resize`
-* `keyup`
-* `mousemove`
-
-...can fire **dozens or hundreds of times per second**, causing:
-
-* Performance bottlenecks
-* UI stutter
-* Excessive API calls
-
----
-
-## 🧪 A Basic Debounce Function
-
-Let’s build a simple debounce utility:
+**Debouncing** ensures a function runs **only after a specified delay has passed since the last event**.
 
 ```js
 function debounce(fn, delay) {
-  let timerId;
-
-  return function (...args) {
-    clearTimeout(timerId); // cancel previous timer
-    timerId = setTimeout(() => {
-      fn.apply(this, args);
-    }, delay);
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
   };
 }
 ```
 
-### Parameters:
+### When to Use Debouncing
 
-* `fn`: the function to debounce
-* `delay`: the amount of time (in milliseconds) to wait after the last call
-
----
-
-## ✍️ Example: Debounced Input Search
-
-Let’s say you’re building a search bar:
-
-```html
-<input type="text" id="search" placeholder="Search..." />
-```
-
-And here’s how to debounce the input handler:
+* Search input (API call after user stops typing)
+* Auto-save
 
 ```js
-const input = document.getElementById("search");
+input.addEventListener("input", debounce(handleSearch, 300));
+```
 
-function handleSearch(event) {
-  console.log("Searching for:", event.target.value);
+## What Is Throttling?
+
+**Throttling** ensures a function runs **at most once every fixed interval**, no matter how often the event fires.
+
+```js
+function throttle(fn, interval) {
+  let lastTime = 0;
+  return (...args) => {
+    const now = Date.now();
+    if (now - lastTime >= interval) {
+      lastTime = now;
+      fn(...args);
+    }
+  };
 }
-
-const debouncedSearch = debounce(handleSearch, 500);
-
-input.addEventListener("input", debouncedSearch);
 ```
 
-Now, `handleSearch` will only run **after the user stops typing for 500ms**.
+### When to Use Throttling
 
----
-
-## ⚙️ When Should You Use Debounce?
-
-Use debounce when:
-
-* You want to delay a function call until the user **stops performing** a high-frequency action.
-* You’re handling user input, like in **autocomplete** or **search bars**.
-* You’re dealing with **expensive operations** like API calls, layout recalculations, or DOM updates.
-
----
-
-## ❓ Debounce vs Throttle: What’s the Difference?
-
-| Technique    | Purpose                          | Execution Frequency       |
-| ------------ | -------------------------------- | ------------------------- |
-| **Debounce** | Waits until a pause in activity  | Once after the last event |
-| **Throttle** | Limits how often a function runs | At regular intervals      |
-
-Use **debounce** when you care about the **final result**, and **throttle** when you want to **sample regularly** (e.g., on scroll).
-
----
-
-## 🧰 Debounce in Utility Libraries
-
-If you don’t want to write your own, libraries like [Lodash](https://lodash.com/) provide a reliable debounce method:
+* Scroll events
+* Window resizing
 
 ```js
-import debounce from 'lodash.debounce';
-
-const optimizedFn = debounce(() => {
-  console.log("Optimized!");
-}, 300);
+window.addEventListener("scroll", throttle(handleScroll, 200));
 ```
 
----
+🧠 **Key idea:** *Run regularly, but not too often.*
 
-## ✅ Conclusion
+## Best Practices
 
-Debounce is an essential tool for crafting performant, responsive front-end experiences. By waiting until a burst of events stops before running a function, you can:
-
-* Prevent performance issues
-* Reduce unnecessary operations
-* Improve UX
-
-Next time you’re working with a scroll event or search box, reach for **debounce** and keep your app snappy! ⚡
-
----
+* ✅ Use **debounce** for user input and API calls
+* ✅ Use **throttle** for continuous UI events
+* ❌ Avoid unthrottled scroll/resize handlers
+* ✅ Prefer built-in helpers (`lodash.debounce`, `lodash.throttle`) in production

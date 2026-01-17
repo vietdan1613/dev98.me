@@ -1,5 +1,5 @@
 ---
-title: "Closures and Scope in JavaScript"
+title: "Closures in JavaScript"
 category: JavaScript
 author: Daniel Nguyen
 tags: ['#Javascript']
@@ -7,87 +7,60 @@ date: 2024-04-11
 thumbnailText: JavaScript
 ---
 
-## Scope
+A **closure** in JavaScript occurs when a function **retains access to variables from its lexical (outer) scope**, even after the outer function has finished executing. In short:
 
-### What is Scope?
+### How Closures Work
 
-**Scope** defines **where a variable can be accessed** in your code.
-
-JavaScript has:
-
-* **Global scope** – variables available everywhere
-* **Function scope** – variables inside a function
-* **Block scope** – variables inside `{}` when using `let` or `const`
-
-```js
-function example() {
-  let x = 10; // function scope
-}
-```
-
----
-
-### Lexical Scope
-
-JavaScript uses **lexical scoping**, meaning scope is determined by **where code is written**, not where it’s executed.
+JavaScript uses **lexical scoping**, meaning a function can access variables defined where it was created.
 
 ```js
 function outer() {
-  let value = 42;
+  let count = 0;
 
-  function inner() {
-    console.log(value); // accessible
-  }
+  return function inner() {
+    count++;
+    return count;
+  };
 }
+
+const increment = outer();
+increment(); // 1
+increment(); // 2
 ```
 
----
+Even though `outer()` has completed, `inner()` still has access to `count`. That preserved variable is the closure.
 
-## closure
+### Data Encapsulation with Closures
 
-A **closure** happens when a function **remembers variables from its outer scope**, even after that outer function has finished running.
+Closures enable **data encapsulation** by keeping variables private and exposing only controlled APIs.
 
 ```js
 function createCounter() {
-  let count = 0;
-  return function () {
-    return ++count;
+  let count = 0; // private
+
+  return {
+    increment() {
+      count++;
+    },
+    getValue() {
+      return count;
+    }
   };
 }
 
 const counter = createCounter();
-counter(); // 1
-counter(); // 2
+counter.increment();
+counter.getValue(); // 1
+counter.count; // undefined
 ```
 
-👉 The inner function still has access to `count` — that’s a closure.
-
----
+Here, `count` cannot be accessed or modified directly, ensuring safer and cleaner code.
 
 ### Why Closures Matter
 
-Closures are powerful because they enable:
+Closures are essential for:
 
-* **Data encapsulation** (private variables)
-* **State preservation**
-* **Callbacks & event handlers**
-* **React hooks and components**
-
-Example of data privacy:
-
-```js
-function createUser() {
-  let password = "secret";
-  return input => input === password;
-}
-```
-
----
-
-### Scope vs Closure (Quick Recap)
-
-| Concept       | Description                    |
-| ------------- | ------------------------------ |
-| Scope         | Where variables are accessible |
-| Lexical Scope | Scope based on code structure  |
-| Closure       | Function + remembered scope    |
+* **Private state** (module pattern)
+* **Callbacks and event handlers**
+* **Stateful logic** (timers, counters, toggles)
+* **Modern frameworks** (React hooks rely heavily on closures)

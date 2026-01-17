@@ -288,10 +288,44 @@ thumbnailText: Daily
 
 # Tech - Redux/Redux Saga/React Query
 
-1. **What is the difference between `React Query` and `Redux`?**
-2. **When would you use `Redux Thunk` and when would you use `Redux Saga`?**
-3. **How does `React Query` improve application performance?**
+### 1. **When would you choose Redux over React Query, and when would React Query be a better fit?**
 
+> Expected to discuss *server state vs client/UI state*, caching, synchronization, and complexity.
+
+### 2. **How do you decide whether a piece of state belongs in Redux, React Query, or local component state?**
+
+> * Server state (API data)
+> * Client/global UI state
+> * Derived state
+
+### 3. **Why would you use Redux Saga instead of Redux Thunk in a large-scale application?**
+
+> * Complex async flows
+> * Cancellation
+> * Concurrency
+> * Testability
+
+### 4. **Explain `call`, `put`, `takeLatest`, and `takeEvery`. When would you use each?**
+
+> 👉 Expect concrete examples (search input, form submit, polling).
+
+### 5. **How do Redux Saga and React Query handle race conditions differently?**
+
+> * Saga cancellation (`takeLatest`, `cancel`)
+> * React Query request deduping & stale handling
+
+### 6. **How does React Query caching work, and how would you tune it for performance?**
+
+> * `staleTime`
+> * `cacheTime`
+> * Background refetching
+> * Query keys
+
+### 7. **How do you design global error handling in Redux Saga vs React Query?**
+
+> * Saga try/catch + error actions
+> * React Query `onError`, error boundaries
+> * Retry strategies
 
 # Tech - JavaScript
 

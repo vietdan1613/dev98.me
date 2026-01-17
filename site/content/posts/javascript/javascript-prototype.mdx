@@ -1,0 +1,98 @@
+---
+title: "Prototype Inheritance"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#Javascript']
+date: 2025-08-30
+thumbnailText: JavaScript
+---
+
+> *Prototype inheritance is JavaScript’s mechanism where objects delegate property access to other objects through a prototype chain.*
+
+## What Is Prototype Inheritance?
+
+Every JavaScript object has an internal property called `[[Prototype]]` (accessible via `__proto__` or `Object.getPrototypeOf()`).
+
+When you access a property:
+
+1. JavaScript looks on the object itself
+2. If not found, it looks on the object’s **prototype**
+3. This continues up the chain until `null`
+
+This delegation mechanism is **prototype inheritance**.
+
+## The Prototype Chain Explained
+
+```js
+const person = {
+  greet() {
+    console.log("Hello");
+  }
+};
+
+const user = {
+  name: "Alice"
+};
+
+Object.setPrototypeOf(user, person);
+
+user.greet(); // "Hello"
+```
+
+### What happens here?
+
+* `user` does not have `greet`
+* JavaScript checks `user.__proto__` → `person`
+* Finds `greet` and executes it
+
+That lookup path is the **prototype chain**.
+
+## Constructor Functions & Prototypes
+
+When using constructor functions, JavaScript automatically links objects to a prototype.
+
+```js
+function User(name) {
+  this.name = name;
+}
+
+User.prototype.sayHi = function () {
+  console.log(`Hi, I'm ${this.name}`);
+};
+
+const u1 = new User("Bob");
+u1.sayHi();
+```
+
+Prototype chain:
+
+```
+u1 → User.prototype → Object.prototype → null
+```
+
+✔️ Methods are shared
+✔️ Memory efficient
+✔️ Dynamic inheritance
+
+---
+
+## `Object.prototype` (The Root)
+
+Almost all objects eventually inherit from `Object.prototype`.
+
+```js
+u1.toString(); // from Object.prototype
+```
+
+This is why methods like `toString`, `hasOwnProperty`, and `valueOf` are available everywhere.
+
+---
+
+## Why Prototype Inheritance Matters
+
+Prototype inheritance enables:
+
+* Method sharing (better performance)
+* Behavior reuse
+* Dynamic extension of objects
+* Framework patterns (React, Node.js internals)

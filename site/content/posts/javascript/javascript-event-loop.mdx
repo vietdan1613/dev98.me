@@ -1,0 +1,89 @@
+---
+title: "JavaScript Event Loop"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#Javascript']
+date: 2024-04-11
+thumbnailText: JavaScript
+---
+
+JavaScript is **single-threaded**, meaning it can execute only one task at a time. The **event loop** is the mechanism that allows JavaScript to handle asynchronous operations without blocking the main thread.
+
+### Execution In Order
+
+#### 1. Synchronous Code
+
+* Runs **first**
+* Executed immediately on the **call stack**
+* Blocks everything else until completed
+
+```js
+console.log("A");
+console.log("B");
+```
+
+Output:
+
+```
+A
+B
+```
+
+---
+
+#### 2. Microtasks
+
+* Executed **after synchronous code**
+* Run **before any macrotasks**
+* Queue is fully drained before moving on
+
+Examples:
+
+* `Promise.then`
+* `queueMicrotask`
+* `MutationObserver`
+
+```js
+Promise.resolve().then(() => console.log("Microtask"));
+```
+
+#### 3. Macrotasks
+
+* Executed **after microtasks**
+* Run one per event loop cycle
+
+Examples:
+
+* `setTimeout`
+* `setInterval`
+* `setImmediate` (Node.js)
+
+```js
+setTimeout(() => console.log("Macrotask"), 0);
+```
+
+---
+
+### Full Execution Example
+
+```js
+console.log("Start");
+
+setTimeout(() => console.log("Timeout"), 0);
+
+Promise.resolve().then(() => console.log("Promise"));
+
+queueMicrotask(() => console.log("Microtask"));
+
+console.log("End");
+```
+
+**Output:**
+
+```
+Start
+End
+Promise
+Microtask
+Timeout
+```
