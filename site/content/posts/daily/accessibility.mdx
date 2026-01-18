@@ -1,5 +1,5 @@
 ---
-title: "A Practical Guide to WCAG Accessibility (Level AA)"
+title: "Web Accessibility"
 category: Daily
 author: Daniel Nguyen
 tags: ['#Daily']
@@ -7,139 +7,63 @@ date: 2026-01-08
 thumbnailText: Daily
 ---
 
-Web accessibility is no longer optional—it’s a fundamental part of building modern, inclusive web applications. While becoming an accessibility expert takes time, frontend developers are often expected to have an **intermediate understanding of WCAG 2.0 Level AA** and apply accessibility best practices in everyday development.
+Frontend developers are expected to have an **intermediate understanding of WCAG 2.0 Level AA** and apply accessibility best practices in daily development.
 
-This article covers the **core accessibility concepts** every frontend developer should be comfortable with.
+## Semantic HTML
 
----
-
-## 1. Semantic HTML: The Foundation of Accessibility
-
-Semantic HTML provides meaning to web content, not just structure. Elements like `<button>`, `<nav>`, `<header>`, `<main>`, `<section>`, and `<label>` communicate intent to assistive technologies such as screen readers.
+Use semantic elements like `<button>`, `<nav>`, `<header>`, `<main>`, `<section>`, and `<label>`.
 
 **Why it matters:**
 
-* Screen readers rely on semantic elements to announce content correctly.
-* Native elements come with built-in keyboard and accessibility support.
-* Reduces the need for extra ARIA attributes.
+* Screen readers rely on semantics
+* Built-in keyboard & accessibility support
+* Reduces ARIA usage
 
-**Best practice:**
-Always prefer semantic HTML over generic `<div>` and `<span>` elements.
+**Rule:** Prefer semantic HTML over `<div>` and `<span>`.
 
----
+## Keyboard Accessibility
 
-## 2. Keyboard Accessibility: Designing Beyond the Mouse
+Ensure your app works **without a mouse**.
 
-Not all users navigate with a mouse. Some rely entirely on keyboards or assistive devices.
+**Checklist:**
 
-**Key things to ensure:**
+* All interactive elements are tabbable
+* Logical focus order
+* Visible focus styles
+* No keyboard traps
 
-* All interactive elements are reachable via the `Tab` key
-* Logical and predictable focus order
-* Clear and visible focus indicators
-* No keyboard traps (users can always tab away)
+**Tip:** Test using only the keyboard.
 
-**Tip:**
-Test your application by navigating it using only the keyboard—no mouse allowed.
+## Color Contrast
 
----
+WCAG Level AA contrast requirements:
 
-## 3. Color Contrast: Readability for Everyone
+* **4.5:1** – normal text
+* **3:1** – large text & UI elements
 
-WCAG Level AA defines minimum contrast ratios to ensure text is readable for users with visual impairments.
+**Tools:** DevTools, Lighthouse, contrast checkers
+Good contrast improves usability for everyone.
 
-**Contrast requirements:**
+## ARIA Basics
 
-* **4.5:1** for normal text
-* **3:1** for large text and UI elements
-
-**Tools you can use:**
-
-* Browser DevTools
-* Lighthouse
-* Online contrast checkers
-
-Good contrast improves usability not just for accessibility users, but for everyone.
-
----
-
-## 4. Accessible Forms: Clear, Usable, and Error-Friendly
-
-Forms are one of the most common interaction points—and one of the easiest places to introduce accessibility issues.
-
-**Accessibility essentials for forms:**
-
-* Every input must have a visible and associated `<label>`
-* Error messages should be descriptive and easy to understand
-* Errors should be announced to screen readers
-* Required fields should be clearly indicated
-
-**Avoid:**
-Using placeholders as replacements for labels.
-
----
-
-## 5. ARIA Basics: Use It Carefully
-
-ARIA (Accessible Rich Internet Applications) helps when native HTML isn’t enough—but it should not replace semantic HTML.
+ARIA enhances accessibility **only when HTML isn’t enough**.
 
 **Golden rule:**
 
-> Use native HTML first. Use ARIA only when necessary.
+> Use native HTML first. ARIA second.
 
-**Common ARIA use cases:**
+**Common uses:**
 
-* Custom components (e.g., custom dropdowns or modals)
-* Dynamic content updates
-* Managing accessibility states (`aria-expanded`, `aria-disabled`)
+* Custom components
+* Dynamic state (`aria-expanded`, `aria-disabled`)
+* Live updates
 
-Incorrect ARIA usage can make accessibility worse, not better.
+## Alt Text for Images
 
----
-
-## 6. Alt Text for Images: Meaning Over Description
-
-Alternative text (`alt`) allows screen reader users to understand the purpose of images.
+Alt text explains **purpose**, not appearance.
 
 **Guidelines:**
 
-* Informative images need meaningful alt text
-* Decorative images should have empty alt text (`alt=""`)
-* Avoid phrases like “image of” or “picture of”
-
-Alt text should describe **why the image is there**, not just what it looks like.
-
----
-
-## 7. Focus Management: Especially for Modals and Dropdowns
-
-Dynamic UI elements can easily break accessibility if focus isn’t managed properly.
-
-**Good focus management includes:**
-
-* Moving focus into a modal when it opens
-* Trapping focus inside the modal
-* Returning focus to the trigger element when closed
-* Supporting keyboard shortcuts like `Esc`
-
-This is especially important in React applications with custom UI components.
-
----
-
-## Conclusion
-
-You don’t need to memorize every WCAG rule to build accessible applications. An intermediate understanding—applied consistently—is enough to make a real impact.
-
-By focusing on:
-
-* Semantic HTML
-* Keyboard navigation
-* Visual contrast
-* Accessible forms
-* Careful ARIA usage
-* Meaningful alt text
-* Proper focus management
-
-you’ll be building interfaces that are **more inclusive, more usable, and more professional**.
-
-Accessibility is not just about compliance—it’s about building better software for everyone.
+* Meaningful images → descriptive alt text
+* Decorative images → `alt=""`
+* Avoid “image of” or “picture of”
