@@ -1,0 +1,78 @@
+---
+title: "Redux Toolkit"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-11-02
+thumbnailText: Redux
+---
+
+> Redux Toolkit (RTK) is the **official, recommended way** to write Redux logic. It keeps Redux’s core ideas while removing unnecessary boilerplate and enforcing best practices.
+
+![Image](./imgs/redux-toolkit.gif)
+
+### Why Redux Toolkit?
+
+Classic Redux was powerful but verbose:
+
+* Too many files
+* Manual immutability
+* Complex store setup
+
+Redux Toolkit fixes this by providing **opinionated defaults** and **simpler APIs**.
+
+## `createSlice`
+
+Defines **state + reducers + actions** in one place.
+
+```ts
+const slice = createSlice({
+  name: 'counter',
+  initialState: { value: 0 },
+  reducers: {
+    increment(state) {
+      state.value++
+    },
+  },
+})
+```
+
+✔ No action types
+✔ No switch statements
+
+### Safe Mutations
+
+RTK lets you “mutate” state in reducers.
+Behind the scenes, **Immer** converts it to immutable updates.
+
+## `configureStore`
+
+Replaces `createStore` and gives you:
+
+* Redux DevTools enabled
+* Default middleware
+* Safer configuration
+
+```ts
+const store = configureStore({
+  reducer: { counter: slice.reducer },
+})
+```
+
+## `createAsyncThunk`
+
+Best for **simple async flows** (CRUD, single API calls).
+
+```ts
+export const fetchData = createAsyncThunk(
+  'data/fetch',
+  async () => fetch('/api').then(r => r.json())
+)
+```
+
+## Best Practices
+
+* Organize Redux by **feature**, not by type
+* Keep components thin
+* Use RTK for state, Saga for side effects
+* Don’t store everything in Redux

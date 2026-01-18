@@ -288,44 +288,92 @@ thumbnailText: Daily
 
 # Tech - Redux/Redux Saga/React Query
 
-### 1. **When would you choose Redux over React Query, and when would React Query be a better fit?**
+### 1. **How do you decide whether a piece of state belongs in Redux, React Query, or local component state?**
 
-> Expected to discuss *server state vs client/UI state*, caching, synchronization, and complexity.
+> * UI state -> Local state
+> * Global state -> Redux 
+> * Server data ->	React Query
+> * Auth -> Context + storage
 
-### 2. **How do you decide whether a piece of state belongs in Redux, React Query, or local component state?**
+### 2. What is Redux Toolkit?
 
-> * Server state (API data)
-> * Client/global UI state
-> * Derived state
+> * UI → Action → Middleware → Reducer → Store → UI
+> * Redux Toolkit is recommended way to write Redux that reduces boilerplate and enforces best practices.
+> 
+> * What does createSlice do?
+>  - Combines state, reducers, and actions in one place
+> * How can RTK allow “mutating” state?
+>  - Uses Immer to convert mutations to immutable updates
+> * What is configureStore?
+>  - Sets up the Redux store with good defaults (DevTools, middleware)
+> * How you use middleware in RTK?
+>  - Use with libraries redux-logger
+> * What is createAsyncThunk?
+>  - Simplifies async logic (CRUD, single API calls)
+> * Can one slice respond to actions from another slice?
+>  - Yes, using extraReducers
+> * extraReducers vs reducers?
+>  - reducers handle this slice’s actions; extraReducers handle external actions
 
-### 3. **Why would you use Redux Saga instead of Redux Thunk in a large-scale application?**
+### 3. What is Redux Saga?
 
-> * Complex async flows
-> * Cancellation
-> * Concurrency
-> * Testability
+> * Middleware for handling complex async side effects in Redux applications.
+>
+> * Why does Redux-Saga use generator functions?
+>   - Generators allow pausing and resuming async logic.
+> * What is a saga?
+>   - A saga is a generator function that handles side effects.
+> * Difference between call and put and fork?
+>   - call runs a function, put dispatches an action.
+>   - call is blocking—the saga waits for the function to complete. 
+>    - fork is non-blocking and runs the task in the background, allowing concurrent execution.
+> * What does takeLatest do?
+>   - Runs only the latest action, cancels previous ones.
+> * Difference between takeEvery, takeLatest, and takeLeading?
+>  - takeEvery runs for every action.
+>  - takeLatest runs only the latest action, cancelling previous ones.
+>  - takeLeading runs only the first action, ignoring subsequent ones until it completes.
+> * How do you run multiple API calls in parallel?
+>  - Use yield all([...]) to run effects concurrently.
+> * How do you handle errors in Redux-Saga?
+>  - Use try/catch blocks inside sagas.
+> * How do you cancel a running saga?
+>  - Using takeLatest or cancel.
+> * What is race and when would you use it?
+>  - race runs multiple effects and completes when the first one finishes.
+> * Why should reducers remain pure when using Redux-Saga?
+>  - To ensure predictable state updates and maintainability.
 
-### 4. **Explain `call`, `put`, `takeLatest`, and `takeEvery`. When would you use each?**
+### 4. **What is React Query?**
 
-> 👉 Expect concrete examples (search input, form submit, polling).
-
-### 5. **How do Redux Saga and React Query handle race conditions differently?**
-
-> * Saga cancellation (`takeLatest`, `cancel`)
-> * React Query request deduping & stale handling
-
-### 6. **How does React Query caching work, and how would you tune it for performance?**
-
-> * `staleTime`
-> * `cacheTime`
-> * Background refetching
-> * Query keys
-
-### 7. **How do you design global error handling in Redux Saga vs React Query?**
-
-> * Saga try/catch + error actions
-> * React Query `onError`, error boundaries
-> * Retry strategies
+> * Data-fetching library for React that simplifies server state management.
+>   - React Query manages server state—fetching, caching, and syncing data with the server.
+> * What is a mutation?
+>   - A mutation is an operation that modifies server data (POST, PUT, DELETE).
+> * What are query keys and why are they important?
+>   - Query keys uniquely identify queries for caching and refetching.
+> * How does React Query handle caching?
+>   - Caches data based on query keys and provides stale-while-revalidate behavior.
+> * What is staleTime?
+>   - Duration data is considered fresh before being marked stale.
+> * What is cacheTime / gcTime?
+>   - Duration unused data remains in cache before garbage collection.
+> * When does React Query refetch automatically?
+>   - On window focus, network reconnect, or interval-based refetching.
+> * What does enabled do?
+>   - Controls whether a query should automatically run.
+> * Difference between isLoading and isFetching?
+>   - isLoading is true on the initial fetch; isFetching is true on any fetch (initial or subsequent).
+> * How do you invalidate queries?
+>   - Use queryClient.invalidateQueries(queryKey) to refetch data.
+> * How do you perform optimistic updates?
+>   - Update the UI immediately, then roll back if the mutation fails.
+> * How do you handle pagination and infinite scrolling?
+>   - Use useInfiniteQuery for fetching paginated data.
+> * How do you handle mutation errors?
+>   - Use onError callback in useMutation to handle errors.
+> * signal
+>   - signal allows aborting requests; useful for cancelling fetches when components unmount.
 
 # Tech - JavaScript
 
