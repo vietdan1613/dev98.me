@@ -73,220 +73,195 @@ thumbnailText: Daily
 
 > Market-based range + openness to discussion
 
-#  Tech - React Fundamentals
+#  React Technical
 
-### 1. What is JSX in React? 
+### 1. Can you explain the React component lifecycle?
 
-> how does it differ from writing UI using plain JavaScript (React.createElement)?
+> Mounting      
+> Updating      
+> Unmounting        
 
-### 2. Can you explain the React component lifecycle?
+> * What causes a component to re-render?     
+> State changes, prop changes, or parent re-renders
 
-> What are the main phases and lifecycle methods/hooks?
+> * What is reconciliation in React?     
+> React’s process of diffing the virtual DOM and updating the real DOM efficiently.
 
-### 4. **What are Higher-Order Components (HOCs)?**
+> * What is the difference between `useEffect()` and `useLayoutEffect()`?       
+> `useEffect` → runs after paint (non-blocking)     
+> `useLayoutEffect` → runs before paint (blocking)
 
-> How do they enhance component functionality?
+> * Why is useLayoutEffect considered dangerous if misused?     
+> It can block rendering and cause performance issues if it contains heavy computations.
 
-### 5. **What is the difference between `useEffect()` and `useLayoutEffect()`?**
+> * Give a real-world use case for useLayoutEffect     
+> Measuring DOM elements before paint (e.g., calculating sizes for animations)
 
-> * `useEffect` → runs after paint (non-blocking)
-> * `useLayoutEffect` → runs before paint (blocking)
+> * How does Concurrent Rendering affect lifecycle behavior?     
+> It allows React to interrupt rendering, which can change when effects run and improve responsiveness.
 
-### 6. How does React handle **event handling**?
+### What is your error-handling strategy in production apps?
 
-> * Synthetic Events
-> * Event delegation
+> Use Error Boundaries to catch rendering errors.   
+> try/catch in async code.      
 
-### 7. What are **controlled vs uncontrolled components** in React?
+> * What are Error Boundaries?      
+> React components that catch JavaScript errors in their child component tree.      
 
-> * Controlled → React state manages form data
-> * Uncontrolled → DOM manages form data
+> * What errors do Error Boundaries NOT catch?      
+> Event handlers, async code, server-side rendering.        
 
-### 8. How does **React’s reconciliation algorithm** work?
+> * How do you handle errors in event handlers?     
+> Use try/catch blocks within the event handler functions.      
 
-> * Virtual DOM diffing
-> * Key props for list items
+> * How do you handle errors with React Query?      
+> Use onError callbacks and error states provided by React Query hooks.     
 
-### 9. What are **fragments** in React, and when would you use them?
+> * Different between isError, error?   
+> isError is a boolean flag;    
+> error contains the actual error object/details.   
 
-> * Group multiple elements without extra DOM nodes
+### 3. How do you render a list in React?
 
-### 10. How do you handle **error boundaries** in React?
+> Use `Array.map()` to create elements from data arrays.        
+> Use unique `key` props for each item.
 
-> * Class components with `componentDidCatch`
-> * Catch rendering errors
+> * Why are keys important in React lists?        
+> Keys help React identify which items have changed, added, or removed for efficient updates.
 
-### 11. What is the purpose of **keys** in React lists?
+> * What makes a good key?        
+> Unique, stable identifiers (e.g., IDs). Avoid using indexes if the list can change
 
-> * Identify items for efficient updates
-> * Stable identity across renders
+> * Can you use array index as a key?        
+> Only if the list is static and won’t change order or have items added/removed.
 
-### 12. How does **React’s Context API** work?
+> * What happens if you don’t provide keys?        
+> React will use indexes by default, which can lead to inefficient updates and bugs.
 
-> * Share state globally without prop drilling
-> * `Provider` and `Consumer` components or `useContext` hook
+> * How do you optimize large lists?        
+> Use virtualization libraries (e.g., react-window) to render only visible items.
 
-# Tech - React Performance
+### 4. What is the Context API?
 
-### 1. How do you optimize **React performance**?
+> A way to share state globally without prop drilling.        
+> Use `React.createContext()`, `Provider`, and `useContext()`.
 
-> **Reduce unnecessary re-renders and expensive computations**
->
-> * Memoization (`React.memo`, `useMemo`, `useCallback`)
-> * Split components & state
-> * Avoid inline objects/functions
-> * Virtualize large lists
-> * Optimize Context usage
+> * When should you use Context?        
+> For global state like themes, auth, or settings.
 
-### 2. How would you optimize **rendering a list with thousands of items**?
+> * How Context Works        
+> Create a context with `React.createContext()`. Wrap components with `Provider` to supply values. Use `useContext()` to consume values.
 
-> **Render only what the user sees**
->
-> * List virtualization (`react-window`, `react-virtualized`)
-> * Stable `key` props
-> * Memoized row components
-> * Avoid heavy logic inside render
+> * Performance Considerations        
+> Context updates re-render all consumers. Optimize by splitting contexts or memoizing values.        
 
-### 3. When would you use `useDeferredValue()` or `useTransition()`?
+### 5. What causes performance issues in React apps?
 
-> **To keep the UI responsive during expensive updates**
->
-> * **`useDeferredValue`** → delay rendering non-urgent derived values    
->  *Example:* filtering a large list while typing
-> * **`useTransition`** → mark updates as low-priority    
->   *Example:* switching tabs while fetching/rendering data
+> Unnecessary re-renders, large component trees, heavy computations in render.
 
-### 4. Why can using **Context** cause performance issues?
+> * How do you optimize it?
+> Memoization (`React.memo`, `useMemo`, `useCallback`)    
+> Split components & state    
+> Virtualize large lists    
+> Optimize Context usage    
 
-> **All consumers re-render when context value changes**
->
-> How to optimize:
->
-> * Split context into smaller ones
-> * Memoize context value
-> * Use context selectors
-> * Avoid frequently changing values in Context
+> * How do you detect and diagnose **unnecessary re-renders**?        
+> React DevTools Profiler        
+> Console logging renders        
 
-### 5. How do you detect and diagnose **unnecessary re-renders**?
+> * The different between `React.memo()`, `useMemo()`, and `useCallback()`?        
+> `React.memo` → memoizes entire components        
+> `useMemo` → memoizes computed values        
+> `useCallback` → memoizes functions        
 
-> **Measure first, then optimize**
->
-> * React DevTools Profiler
-> * `why-did-you-render`
-> * Console logging renders
-> * Check props reference equality
+> * When should you use `React.memo()` and when should you avoid it?        
+> Use it when re-renders are expensive and props are stable        
+> Avoid when renders are cheap or props change frequently        
 
-### 6. When should you use `React.memo()` and when should you avoid it?
+> * How would you optimize **rendering a list with thousands of items**?        
+> List virtualization (`react-window`)        
+> Memoized row components        
 
-> **Use it when re-renders are expensive and props are stable**
->
-> Use when:
->
-> * Pure components
-> * Large lists
-> * Frequent parent re-renders
->
-> Avoid when:
->
-> * Cheap renders
-> * Props change every render
-> * Over-optimization hurts readability
+> * When would you use `useDeferredValue()` or `useTransition()`?       
+> For deferring non-urgent updates to keep the UI responsive during heavy rendering.        
+> `useDeferredValue` delay rendering non-urgent derived values. Example: filtering a large list while typing.   
+> `useTransition` mark updates as low-priority. Example: switching tabs while fetching/rendering data.    
 
-# Tech - React Testing
+### 6. What is React Testing Library (RTL)?
 
-### 1. What are the drawbacks of **manual ReactDOM testing**, and how does RTL address them?
+> A testing library focused on testing React components via the DOM, simulating real user interactions.
 
-> Manual testing couples tests to implementation details; **RTL tests behavior via the DOM**, making tests more reliable and maintainable.
+> * How do you find elements in RTL?
+> Use accessible queries like `getByRole`, `getByLabelText`, `getByText`.
 
-### 2. Why should React tests resemble **real user interactions**?
+> * Why is getByRole preferred?
+> It reflects how users interact with the app and improves test reliability.
 
-> Because **users don’t care about component internals**, testing behavior ensures refactor-safe, meaningful tests.
+> * What’s the difference between getBy, queryBy, and findBy?
+> `getBy` throws an error if not found (synchronous)    
+> `queryBy` returns null if not found (synchronous)    
+> `findBy` returns a promise and waits for the element (asynchronous)
 
-### 3. What is the problem of the **“Test User”**, and how does RTL reduce it?
+> * Why prefer userEvent over fireEvent?
+> `userEvent` simulates real user interactions more accurately (e.g., typing, clicking).
 
-> The “Test User” interacts unrealistically; **RTL enforces realistic queries and interactions**, reducing false confidence.
+> * Why do we avoid testing implementation details?
+> Tests should focus on user-visible behavior, not internal component structure.
 
-### 4. What RTL queries best reflect how users find elements?
+> * When should you mock and when not?
+> Mock external dependencies (APIs, timers) but avoid mocking DOM/browser APIs unless necessary.
 
-> **Accessible queries**:
->
-> * `getByRole`
-> * `getByLabelText`
-> * `getByText`
-> * `getByPlaceholderText`
->
-> (avoid `getByTestId` unless necessary)
+> * Why use MSW instead of mocking fetch?
+> MSW mocks at the network level, providing realistic responses and reusable mocks across tests.
 
-### 5. When testing forms, what user behaviors should be simulated?
+> * What’s the biggest mistake people make with RTL?
+> Testing implementation details instead of user behavior.
+> Manual ReactDOM testing
 
-> **Typing, clicking, focusing, submitting, and validation feedback**, not direct state manipulation.
+> * What is JSDOM?
+> JSDOM is a JavaScript implementation of the DOM and HTML standards, used for testing React components in a Node.js environment without a real browser.
 
-### 6. Why mock HTTP requests, and how does **MSW** improve mocking?
+> * Which browser APIs are missing or incomplete in **JSDOM**?
+> `ResizeObserver`, `matchMedia`, `Clipboard`
 
-> To avoid real network calls; **MSW mocks at the network layer**, making tests realistic and reusable across unit/integration tests.
-
-### 7. Which browser APIs are missing or incomplete in **JSDOM**?
-
-> APIs like:
->
-> * `IntersectionObserver`
-> * `ResizeObserver`
-> * `matchMedia`
-> * `Clipboard`
-> * `Canvas`
->  often need manual mocks.
-
-### 8. Why is mocking browser APIs called **“poking a hole in reality”**?
-
+> * Why is mocking browser APIs called **“poking a hole in reality”**?
 > Mocks reduce realism; **integration/e2e tests should minimize mocking** to better reflect real user environments.
 
-### 9. Why test custom hooks via a **test component**?
+> * When testing forms, what user behaviors should be simulated?
+> Typing, clicking, focusing, submitting, and validation feedback, not direct state manipulation.
 
-> Hooks depend on React’s lifecycle; **wrapping them ensures correct execution context** and realistic behavior.
+> * Which matcher do you use?
+> `toBeInTheDocument()` to check presence in the DOM.
+> `toHaveTextContent()` to verify text content.
+> `toHaveAttribute()` to check element attributes.
+> `toBeVisible()` to ensure element visibility.
 
-### 10. What problem does a **custom render function** solve when testing Context?
+### 7. What patterns do you apply in your React project?
 
-> It **automatically wraps components with required providers**, reducing duplication and setup complexity.
+> Composition -> avoid prop drilling
+> Latest ref -> store the latest value
+> Compound components -> shared state
+> Prop collection -> full control
 
-# Tech - React Pattern
+> * Why use Component Composition instead of inheritance?
+> It lets components receive behavior and UI via children instead of passing props deeply, improving flexibility and reuse.
+> Example use cases: tabs, layouts, dropdowns.
 
-### 1. How does the **composition pattern** help reduce prop drilling?
+> * Why store the latest value in useRef instead of state for async logic?
+> Refs update without triggering re-renders, making them ideal for async callbacks that need the latest value.
+> Example use cases: timers, debounce, async callbacks.
 
-> **It lets components receive behavior and UI via children instead of passing props deeply**, improving flexibility and reuse.
-
-### 2. Why store the **latest value in `useRef` instead of state** for async logic?
-
-> **Refs update without triggering re-renders**, making them ideal for async callbacks that need the latest value.
-
-### 3️⃣ What does **React Context enable in the compound components pattern**?
-
-> **It allows shared state and behavior between related components without prop drilling**, enabling clean and flexible APIs.
-
-### 4️⃣ What problem does the **slot pattern** solve?
-
-> **It allows parents to inject content into specific child “slots” even when the structure is deeply nested or indirect.**
-
-### 5️⃣ What is the advantage of a **prop getter** over prop collection?
-
-> **Prop getters give consumers full control while still applying required logic**, preventing accidental overrides.
-
-### 6️⃣ Why does the **state initializer pattern** store initial value in `useRef`?
-
-> **To compute expensive initial state only once**, avoiding unnecessary recalculation on every render.
-
-### 7️⃣ How does the **state reducer pattern** customize behavior?
-
+> * What are Compound Components in React?
+> A pattern where related components share state via Context, allowing flexible APIs without prop drilling.
+> Example use cases: tabs, accordions, dropdowns.
+> * How does the **state reducer pattern** customize behavior?
 > **It lets consumers intercept and modify state transitions without changing internal component logic.**
 
-### 8️⃣ How does a component decide if it is **controlled or uncontrolled**?
+> * Advantage of a Prop Getter over prop collection?
+> Prop getters give consumers full control while still applying required logic, preventing accidental overrides.
+> Example use cases: custom inputs, dropdowns, modals.
 
-> **If a value prop is provided → controlled; otherwise → uncontrolled with internal state.**
-
-### 9️⃣ Which pattern lets you **block or modify specific state changes**?
-
-> **The state reducer pattern**, because it centralizes and controls how state updates are applied.
-
-# Tech - State Management
+#  State Management
 
 ### 1. **How do you decide whether a piece of state belongs in Redux, React Query, or local component state?**
 
@@ -400,7 +375,7 @@ thumbnailText: Daily
 > * How do you handle mutation errors?      
 > Use onError callback in useMutation to handle errors.
 
-# Tech - JavaScript
+#  JavaScript
 
 ### 1. What is a `closure` in JavaScript?
 
@@ -482,7 +457,7 @@ thumbnailText: Daily
 
 > What are common causes and how can you prevent them?
 
-# Tech - TypeScript
+#  TypeScript
 
 ### 1. What are the **main differences between TypeScript and JavaScript**?
 
