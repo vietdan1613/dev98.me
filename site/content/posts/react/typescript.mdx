@@ -1,0 +1,123 @@
+---
+title: "TypeScript"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-28
+thumbnailText: React Fundamentals
+---
+
+
+> **"TypeScript is not making your life terrible. It's just showing you how terrible your life already is."**
+
+### Why?
+
+TypeScript catches errors before your users do.
+
+```ts
+function greet(user) {
+  return user.name.toUpperCase()
+}
+
+greet({ age: 25 }) // ❌ runtime error
+```
+
+> With TypeScript, this mistake is caught at compile time — not in production.
+
+## Type
+
+```ts
+type MessageProps = { children: React.ReactNode }
+
+function Message({ children }: MessageProps) {
+  return <div>{children}</div>
+}
+```
+
+> Types make function contracts explicit and easier to reason about.
+
+## Narrowing Types
+
+```ts
+type Operator = "+" | "-" | "*" | "/"
+
+type CalculatorProps = {
+  left: number
+  right: number
+  operator: Operator
+}
+```
+
+> Now invalid operators are rejected at compile time.
+
+## Deriving Types
+
+```ts
+const operations = {
+  "+": (a: number, b: number) => a + b,
+  "-": (a: number, b: number) => a - b,
+  "*": (a: number, b: number) => a * b,
+  "/": (a: number, b: number) => a / b,
+}
+
+type Operator = keyof typeof operations
+```
+
+> Types now automatically update when the object changes.
+
+## Interface
+
+```ts
+interface CalculatorProps {
+  left: number
+  right: number
+  operator: Operator
+}
+```
+
+> Interfaces are extendable and work well with object-oriented patterns.
+
+## `Record`
+
+```ts
+type Operator = "+" | "-" | "*" | "/"
+type OperationFn = (a: number, b: number) => number
+
+const operations: Record<Operator, OperationFn> = {
+  "+": (a, b) => a + b,
+  "-": (a, b) => a - b,
+  "*": (a, b) => a * b,
+  "/": (a, b) => a / b,
+}
+```
+
+> This enforces structure and consistency.
+
+## `satisfies`
+
+```ts
+const operations = {
+  "+": (a, b) => a + b,
+  "-": (a, b) => a - b,
+  "*": (a, b) => a * b,
+  "/": (a, b) => a / b,
+} satisfies Record<Operator, OperationFn>
+```
+
+✔ Ensures correct shape.   
+✔ Preserves precise types.   
+✔ Prevents missing or invalid keys.   
+
+## Default Props with Types
+
+```tsx
+function Calculator({
+  left = 0,
+  right = 0,
+  operator = "+",
+}: Partial<CalculatorProps>) {
+  return operations[operator](left, right)
+}
+```
+
+This allows flexibility while staying type-safe.

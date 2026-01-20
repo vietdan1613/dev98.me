@@ -1,0 +1,78 @@
+---
+title: "useImperativeHandle() for Imperative Handles"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-29
+thumbnailText: React Fundamentals
+---
+
+Sometimes you need to step outside and interact with components **imperatively**, for example:
+
+* Focusing an input
+* Scrolling a container
+
+This is where **imperative handles** come in.
+
+### Core Idea
+
+React provides `useImperativeHandle` to expose imperative APIs safely.
+
+In **React 19**, you can access `ref` directly from props — no more `forwardRef`.
+
+```tsx
+type InputAPI = { focusInput: () => void }
+
+function MyInput({
+  ref,
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  ref: React.RefObject<InputAPI>
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      focusInput: () => inputRef.current?.focus(),
+    }),
+    []
+  )
+
+  return <input ref={inputRef} {...props} />
+}
+```
+
+### Example Usage
+
+```tsx
+function App() {
+  const myInputRef = useRef<InputAPI>(null)
+
+  return (
+    <div>
+      <MyInput ref={myInputRef} placeholder="Enter your name" />
+      <button onClick={() => myInputRef.current?.focusInput()}>
+        Focus input
+      </button>
+    </div>
+  )
+}
+```
+
+### Dependencies
+
+Even though we’re using `inputRef` inside the callback, we don’t need to add it to the dependency array.
+
+Why?
+
+* React refs are stable
+* They don’t change across renders
+* Including them is unnecessary
+
+### 🧠 Summary
+
+* `useImperativeHandle` lets child components expose custom APIs to parents
+* React 19 allows direct access to `ref` via props (no `forwardRef`)
+* It is safe, future-proof, and concurrent-friendly
+* Prefer declarative patterns — use imperative handles only when needed

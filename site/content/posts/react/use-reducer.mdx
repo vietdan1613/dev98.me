@@ -1,0 +1,101 @@
+---
+title: "useReducer() for State Management"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-27
+thumbnailText: React Fundamentals
+---
+
+`useReducer` helps you:
+
+✅ Separate state logic from UI.    
+✅ Manage related state values together.    
+✅ Make state updates more predictable.    
+✅ Improve testability and maintainability.    
+
+It follows the same concept as Redux — but locally, inside a component.
+
+# Idea
+
+Instead of directly setting state, you:
+
+1. Dispatch an action
+2. Let a reducer function decide how state changes
+
+### Signature
+
+```tsx
+const [state, dispatch] = useReducer(reducer, initialState)
+```
+
+Where:
+
+* `state` → current value
+* `dispatch` → function to trigger updates
+* `reducer` → pure function describing how state changes
+
+---
+
+### Example
+
+```tsx
+function counterReducer(state, action) {
+  switch (action.type) {
+    case "increment":
+      return state + 1
+    case "decrement":
+      return state - 1
+    case "reset":
+      return 0
+    default:
+      return state
+  }
+}
+
+function Counter() {
+  const [count, dispatch] = React.useReducer(counterReducer, 0)
+
+  return (
+    <>
+      <p>Count: {count}</p>
+      <button onClick={() => dispatch({ type: "increment" })}>+</button>
+      <button onClick={() => dispatch({ type: "decrement" })}>-</button>
+      <button onClick={() => dispatch({ type: "reset" })}>Reset</button>
+    </>
+  )
+}
+```
+
+# Where `useReducer` Really Shines
+
+You’ll benefit most from `useReducer` when:
+
+### 1. State Has Multiple Related Fields
+
+```tsx
+const initialState = {
+  loading: false,
+  data: null,
+  error: null
+}
+```
+
+Managing this with multiple `useState` calls becomes messy.
+
+### 2. State Transitions Are Complex
+
+For example:
+
+* Loading → Success
+* Loading → Error
+* Reset → Idle
+
+# useState vs useReducer
+
+| Use `useState` when… | Use `useReducer` when… |
+| -------------------- | ---------------------- |
+| Simple values        | State is complex       |
+| Independent fields   | Fields change together |
+| Few transitions      | Many transitions       |
+| UI-driven logic      | Business logic heavy   |

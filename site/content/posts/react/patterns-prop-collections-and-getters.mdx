@@ -1,0 +1,91 @@
+---
+title: "Prop Collections and Getters Pattern"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-07-06
+thumbnailText: Advanced React Patterns
+---
+
+> The **Prop Collections & Getters** pattern helps hooks expose flexible, accessible, and easy-to-use APIs for UI interactions.
+
+### The Problem
+
+When building reusable hooks, users must remember to wire things correctly:
+
+```tsx
+<button aria-pressed={on} onClick={toggle}>On</button>
+```
+
+This becomes error-prone with:
+
+* Accessibility (`aria-*`)
+* Event handling
+* Custom logic
+
+### Prop Collections
+
+A **prop collection** is a ready-made props object returned by a hook.
+
+```tsx
+function useCounter() {
+  const [count, setCount] = useState(0)
+  return {
+    count,
+    counterProps: {
+      children: count,
+      onClick: () => setCount(c => c + 1),
+    },
+  }
+}
+```
+
+Usage:
+
+```tsx
+<button {...counterProps} />
+```
+
+✅ Easy for common cases.    
+❌ Hard to customize safely
+
+### Prop Getters
+
+A **prop getter** is a function that merges user props with internal logic.
+
+```tsx
+function useToggle() {
+  const [on, setOn] = useState(false)
+  const toggle = () => setOn(o => !o)
+
+  const getTogglerProps = ({ onClick, ...props } = {}) => ({
+    'aria-pressed': on,
+    onClick: e => {
+      onClick?.(e)
+      toggle()
+    },
+    ...props,
+  })
+
+  return { on, getTogglerProps }
+}
+```
+
+Usage:
+
+```tsx
+<button {...getTogglerProps({ onClick: () => console.log('custom') })} />
+```
+
+Now:
+
+* Both toggle logic & custom logic run
+* Accessibility is preserved
+
+### When to Use
+
+Use Prop Collections/Getters when:
+
+* Building reusable UI hooks
+* Designing component libraries
+* You want APIs that are **easy to use and hard to misuse**

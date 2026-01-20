@@ -1,0 +1,93 @@
+---
+title: "Element Optimization"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPerformance']
+date: 2025-07-11
+thumbnailText: React Performance
+---
+
+> **If React receives the same element as last render, it skips re-rendering it.**
+
+This means **reusing elements** can significantly improve performance.
+
+# Unnecessary Re-renders
+
+```tsx
+function Message({ greeting }) {
+  console.log('rendering', greeting)
+  return <div>{greeting}</div>
+}
+
+function Counter() {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <button onClick={() => setCount(c => c + 1)}>
+        Count: {count}
+      </button>
+      <Message greeting="Hello!" />
+    </>
+  )
+}
+```
+
+Even though `greeting` never changes, `Message` re-renders on every click.
+
+
+### Solution: Reuse JSX
+
+```tsx
+const message = <Message greeting="Hello!" />
+
+function Counter() {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <button onClick={() => setCount(c => c + 1)}>
+        Count: {count}
+      </button>
+      {message}
+    </>
+  )
+}
+```
+
+Now `Message` renders **only once**.
+
+
+# Static Components: Hoist Them
+
+```tsx
+const footer = <Footer />
+
+function App() {
+  const [count, setCount] = useState(0)
+  return (
+    <>
+      <button onClick={() => setCount(c => c + 1)}>Click</button>
+      {footer}
+    </>
+  )
+}
+```
+
+> Avoid re-rendering components that don’t depend on state.
+
+#  Memoize JSX with `useMemo`
+
+When JSX depends on state:
+
+```tsx
+const memoFooter = useMemo(() => <Footer name={name} />, [name])
+```
+
+Re-renders only when `name` changes.
+
+# Memoize Components with `React.memo`
+
+```tsx
+const Footer = memo(function Footer({ color, name }) {
+  return <footer style={{ color }}>Hello {name}</footer>
+})
+```

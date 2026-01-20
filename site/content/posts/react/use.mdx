@@ -1,0 +1,154 @@
+---
+title: "use() for Suspense"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-29
+thumbnailText: React Fundamentals
+---
+
+> React now provides a declarative model for async rendering through **Suspense**, **Error Boundaries**, and the new **`use()` hook**.
+
+# The Problem
+
+```tsx
+const res = await fetch('/api/data')
+const data = await res.json()
+```
+
+You’re forced to manually manage:
+
+* Loading states
+* Error states
+* Retry logic
+
+> React solves this structurally using **Suspense + Error Boundaries**.
+
+# Suspense
+
+Suspense defines what React should render while async data is pending.
+
+```tsx
+import { Suspense } from 'react'
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading phone details...</div>}>
+      <PhoneDetails />
+    </Suspense>
+  )
+}
+```
+
+When `PhoneDetails` suspends:
+
+* React renders the fallback
+* Automatically retries when data resolves
+
+# Error Boundaries
+
+Errors thrown during rendering are caught by Error Boundaries.
+
+```tsx
+import { ErrorBoundary } from 'react-error-boundary'
+
+function App() {
+  return (
+    <ErrorBoundary fallback={<div>Oops, something went wrong.</div>}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <PhoneDetails />
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
+```
+
+✔ Prevents full app crashes.    
+✔ Localizes failures.    
+✔ Enables recovery UI.    
+
+# `use()` Hook
+
+> React’s new `use()` hook allows components to consume promises synchronously:
+
+```tsx
+import { use } from 'react'
+
+function PhoneDetails() {
+  const details = use(phoneDetailsPromise)
+  return <div>{details.name}</div>
+}
+```
+
+The Problem: Re-fetching on Every Render 
+
+### Caching promise
+
+To fetch different users, cache per key:
+
+```tsx
+const userCache = new Map<string, Promise<User>>()
+
+function fetchUser(id: string) {
+  let promise = userCache.get(id)
+  if (!promise) {
+    promise = fetchUserImpl(id)
+    userCache.set(id, promise)
+  }
+  return promise
+}
+
+async function fetchUserImpl(id: string) {
+  const res = await fetch(`/api/user/${id}`)
+  return res.json()
+}
+```
+
+### Important Rules
+
+* The promise must be created **outside render**
+* `use()` does not fetch — it only consumes
+* Works only with Suspense + Error Boundaries
+
+# Waterfalls
+
+> Suspense pauses rendering as soon as a Promise is used.
+
+If you fetch data like this: 
+
+```tsx
+function ProfileDetails({ username }) {
+  const favorites = use(getFavorites(username))
+  const friends = use(getFriends(username))
+}
+```
+
+Request A --------> Response A
+                     Request B --------> Response B
+                                          Request C ---------> Response C
+
+### Fix: Start Promises Before use()
+
+```tsx
+function ProfileDetails({ username }) {
+  const favoritesPromise = getFavorites(username)
+  const friendsPromise = getFriends(username)
+
+  const favorites = use(favoritesPromise)
+  const friends = use(friendsPromise)
+}
+```
+
+Request A --------> Response A
+Request B --------> Response B
+Request C ---------> Response C
+
+# Summary
+
+| Tool             | Role                            |
+| ---------------- | ------------------------------- |
+| `Suspense`       | Declarative loading UI          |
+| `ErrorBoundary`  | Declarative error handling      |
+| `use()`          | Reads promises synchronously    |
+| Promise throwing | Drives async rendering          |
+| Status tracking  | Prevents inconsistent UI states |

@@ -1,0 +1,65 @@
+---
+title: "Latest Ref Patterns"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-08-03
+thumbnailText: Advanced React Patterns
+---
+
+> The **Latest Ref Pattern** lets you access the newest state/props inside a stable function **without** adding them to a `useEffect` dependency list.
+
+### The Problem: Stale Closures
+
+Hooks capture values at the time a function is created.
+If a callback doesn’t update when state/props change → it may use **old values**.
+
+```tsx
+const feedPet = useCallback(async () => {
+  pet.eat(selectedPetFood)
+}, []) // stale closure
+```
+
+### The Solution: Latest Ref Pattern
+
+Store the latest values in refs and read from them inside stable functions.
+
+```tsx
+const petRef = useRef(pet)
+const foodRef = useRef(selectedPetFood)
+
+useEffect(() => {
+  petRef.current = pet
+  foodRef.current = selectedPetFood
+}, [pet, selectedPetFood])
+
+const feedPet = async () => {
+  petRef.current.eat(foodRef.current)
+}
+```
+
+Now `feedPet` is stable but always uses **fresh values**.
+
+Use it when you need:
+
+* Stable callbacks with **up-to-date values**
+* Long-lived logic: debouncing, throttling, timers, event listeners
+
+### Real Use Case: Debounce
+
+```tsx
+function useDebounce(callback, delay) {
+  const ref = useRef(callback)
+
+  useEffect(() => {
+    ref.current = callback
+  }, [callback])
+
+  return useMemo(
+    () => debounce(() => ref.current(), delay),
+    [delay]
+  )
+}
+```
+
+> Now the debounced function stays stable but always runs the **latest callback**.

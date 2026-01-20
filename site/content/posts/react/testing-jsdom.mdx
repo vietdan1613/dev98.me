@@ -1,0 +1,120 @@
+---
+title: "🎥 React Testing: Mocking Browser APIs and modules"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-26
+thumbnailText: React Testing
+---
+
+> **jsdom** is a JavaScript implementation of the browser environment that runs in Node.js.
+
+It provides:
+
+* `document`, `window`, and DOM APIs
+* Element creation and manipulation
+* Event handling
+* Basic browser behavior
+
+It allows you to test UI logic **without launching a real browser**, making tests:
+
+# jsdom Doesn’t Support
+
+Here are some APIs that are either missing or partially implemented:
+
+| API                     | Why It’s a Problem in jsdom |
+| ----------------------- | --------------------------- |
+| `navigator.geolocation` | Not implemented             |
+| `window.matchMedia`     | Not implemented             |
+| `window.resizeTo`       | Not implemented             |
+| `HTMLCanvasElement`     | Limited / missing           |
+| `IntersectionObserver`  | Not implemented             |
+| `ResizeObserver`        | Not implemented             |
+| Media APIs              | No video/audio rendering    |
+
+When your component depends on these, tests will fail — unless you mock them.
+
+# Example: `matchMedia`
+
+Let’s say you have a hook that uses media queries:
+
+```js
+const isMobile = window.matchMedia('(max-width: 768px)').matches
+```
+
+In jsdom, this throws:
+
+> ❌ `TypeError: window.matchMedia is not a function`
+
+### Fix: Mock `matchMedia`
+
+```js
+beforeAll(() => {
+  window.matchMedia = jest.fn().mockImplementation(query => ({
+    matches: query.includes('768'),
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  }))
+})
+```
+
+Now your tests can safely use media queries.
+
+# Example: Geolocation
+
+```js
+navigator.geolocation.getCurrentPosition(...)
+```
+
+jsdom ❌ doesn’t support this either.
+
+### Mock Geolocation
+
+```js
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import Location from './Location'
+
+describe('Location component', () => {
+  beforeEach(() => {
+    const mockGeolocation = {
+      getCurrentPosition: jest.fn(success =>
+        success({
+          coords: { latitude: 10, longitude: 20 },
+        })
+      ),
+    }
+
+    Object.defineProperty(navigator, 'geolocation', {
+      value: mockGeolocation,
+      configurable: true,
+    })
+  })
+
+  test('displays user location after clicking button', async () => {
+    render(<Location />)
+
+    await userEvent.click(screen.getByRole('button', { name: /get location/i }))
+
+    expect(screen.getByText(/lat: 10/i)).toBeInTheDocument()
+    expect(screen.getByText(/lng: 20/i)).toBeInTheDocument()
+  })
+
+  test('shows error when permission is denied', async () => {
+    navigator.geolocation.getCurrentPosition = jest.fn((_, error) =>
+      error({ message: 'Permission denied' })
+    )
+
+    render(<Location />)
+
+    await userEvent.click(screen.getByRole('button', { name: /get location/i }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/permission denied/i)
+  })
+})
+```

@@ -1,0 +1,107 @@
+---
+title: "useFormStatus() for Form Feedback"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-30
+thumbnailText: React Fundamentals
+---
+
+> `useFormStatus` is a React hook that lets you read the **submission state of a form**.
+
+It works by:
+
+* Treating `<form>` as a context provider
+* Allowing child components to subscribe to its status
+* Eliminating the need to pass loading flags through props
+
+Think of it as:
+
+> “Let every part of the form know when submission is happening — automatically.”
+
+# What Problems Does It Solve?
+
+Without `useFormStatus`, you often write:
+
+```tsx
+const [isSubmitting, setIsSubmitting] = useState(false)
+```
+
+And manually manage:
+
+* Button disabled states
+* Loading labels
+* Race conditions
+* State cleanup
+
+With `useFormStatus`, React handles this for you — declaratively.
+
+# Disable Submit Button
+
+```tsx
+import { useFormStatus } from 'react-dom'
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? 'Submitting...' : 'Submit'}
+    </button>
+  )
+}
+```
+
+✔ No prop drilling.    
+✔ Always in sync with form state.    
+✔ Prevents duplicate submissions
+
+# How It Works
+
+`useFormStatus` reads the status of the **nearest parent `<form>`**.
+
+That means:
+
+* It only works inside a form
+* It automatically updates when the form submits
+* It resets when the submission finishes
+
+# Real Example: Login Form UX
+
+```tsx
+function LoginForm() {
+  return (
+    <form action={login}>
+      <input name="email" />
+      <input name="password" type="password" />
+      <SubmitButton />
+    </form>
+  )
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? 'Logging in...' : 'Login'}
+    </button>
+  )
+}
+```
+
+✔ Clear feedback.   
+✔ Prevents double-clicks.   
+✔ Improves accessibility.   
+
+# Takeaway
+
+`useFormStatus` doesn’t just simplify forms —
+it **standardizes form UX** across your application.
+
+Use it to build forms that feel:
+
+* More responsive
+* More accessible
+* More professional
+

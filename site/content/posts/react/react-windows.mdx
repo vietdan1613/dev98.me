@@ -1,0 +1,73 @@
+---
+title: "React Windowing"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPerformance']
+date: 2025-07-17
+thumbnailText: React Performance
+---
+
+> Rendering large lists in React can seriously hurt performance. Thousands of DOM nodes slow rendering, scrolling, and interactions.
+
+> **`react-window`** solves this with **list virtualization** — rendering only what’s visible on screen.
+
+Without virtualization:
+
+```tsx
+items.map(item => <Row key={item.id} />)
+```
+
+❌ Renders everything
+❌ Heavy DOM
+❌ Slow scroll
+
+With `react-window`:
+
+✔ Only visible rows render.   
+✔ Tiny DOM.   
+✔ Smooth scrolling
+
+### What is `react-window`?
+
+A lightweight library for efficiently rendering large lists and grids by:
+
+* Rendering only visible items
+* Reusing DOM nodes
+* Minimizing memory usage
+
+Smaller and simpler than `react-virtualized`.
+
+### Quick Example
+
+```tsx
+import { FixedSizeList as List } from 'react-window';
+
+const Row = ({ index, style }) => (
+  <div style={style}>Row {index}</div>
+);
+
+function MyList() {
+  return (
+    <List
+      height={400}
+      itemCount={10000}
+      itemSize={35}
+      width="100%"
+    >
+      {Row}
+    </List>
+  );
+}
+```
+
+👉 Only ~10–15 rows are mounted at any time, even for 10,000 items.
+
+### Variable Heights
+
+Use `VariableSizeList` if rows differ in size:
+
+```tsx
+<VariableSizeList itemSize={getSize} />
+```
+
+⚠️ Call `resetAfterIndex()` when sizes change.

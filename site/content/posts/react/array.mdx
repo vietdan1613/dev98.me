@@ -1,0 +1,100 @@
+---
+title: "Hook `useId()` and Arrays"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-27
+thumbnailText: React Fundamentals
+---
+
+Rendering lists is one of the most common tasks in React — whether it's displaying users, products, or messages. While it looks simple on the surface, handling lists correctly is essential for performance, correctness, and avoiding subtle UI bugs.
+
+## How to Render a List in React
+
+In React, lists are typically rendered using `.map()`.
+
+### Basic Example
+
+```tsx
+const items = ["Apple", "Banana", "Orange"];
+
+<ul>
+  {items.map(item => (
+    <li>{item}</li>
+  ))}
+</ul>
+```
+
+This works visually, but React will show a warning — because it needs a `key`.
+
+## The `key` Prop
+
+React uses the `key` prop to identify elements between renders and efficiently update the UI.
+
+Without `key`, React matches elements by **position**, which can cause bugs when:
+
+* Items are added or removed
+* Items contain state (e.g. inputs, animations)
+
+### Correct Usage
+
+```tsx
+<ul>
+  {items.map(item => (
+    <li key={item.id}>{item.name}</li>
+  ))}
+</ul>
+```
+
+### What Makes a Good Key?
+
+A good `key` is:
+
+* ✔ Unique among siblings
+* ✔ Stable across renders
+* ✔ Derived from your data
+
+### Avoid Using Index as Key
+
+```tsx
+key={index} ❌
+```
+
+This leads to incorrect UI behavior when the list changes.
+
+## `useId` 
+
+`useId` is a React hook that generates **unique, stable IDs for DOM elements**, especially useful for accessibility and SSR.
+
+### Example
+
+```tsx
+const id = useId();
+
+<label htmlFor={id}>Email</label>
+<input id={id} />
+```
+
+This ensures:
+
+* No ID collisions
+* Works correctly with server-side rendering
+* Accessibility-safe
+
+## Best Practices
+
+### For Rendering Lists
+
+✔ Always provide a `key`.    
+✔ Prefer IDs from your data (`item.id`).    
+✔ Keep keys stable.    
+❌ Avoid using array indexes.    
+❌ Don’t generate random keys.    
+
+### For `useId`
+
+✔ Use for labels and accessibility.    
+✔ Use for ARIA attributes.    
+✔ Safe for SSR.    
+❌ Do not use as list keys.    
+❌ Do not use for data identity.    

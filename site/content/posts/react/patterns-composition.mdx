@@ -1,0 +1,73 @@
+---
+title: "Composition Patterns"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-08-02
+thumbnailText: Pattern
+---
+
+> Use component composition to avoid passing props through layers that don’t need them. It makes components cleaner, more reusable, and easier to maintain.
+
+### Problem: Prop Drilling
+
+Prop drilling happens when you pass data through components that don’t actually use it — just to reach deeper ones.
+
+Example (problematic):
+
+```tsx
+function App() {
+  const [count, setCount] = useState(0)
+  return <Child count={count} increment={() => setCount(c => c + 1)} />
+}
+
+function Child({ count, increment }) {
+  return <GrandChild count={count} onIncrementClick={increment} />
+}
+```
+
+> Here, `Child` doesn’t use `count` or `increment` — it just forwards them.
+
+### Solution: Composition Pattern
+
+Instead of passing data, pass **elements**.
+
+```tsx
+function App() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <Child
+      grandChild={
+        <GrandChild
+          button={<button onClick={() => setCount(c => c + 1)}>{count}</button>}
+        />
+      }
+    />
+  )
+}
+
+function Child({ grandChild }) {
+  return <div>{grandChild}</div>
+}
+
+function GrandChild({ button }) {
+  return <div>{button}</div>
+}
+```
+
+Now:
+
+* State stays at the top
+* Layout components just arrange UI
+* No unnecessary prop forwarding
+
+### When to Use
+
+Great for:
+
+* Deep component trees
+* Layout/container components
+* UI where only parents manage logic
+
+Avoid overusing it — apply when it improves clarity.

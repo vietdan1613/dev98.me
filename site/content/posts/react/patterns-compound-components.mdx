@@ -1,0 +1,80 @@
+---
+title: "🧩 Advanced React Patterns: Compound Components"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPatterns']
+date: 2025-07-04
+thumbnailText: Advanced React Patterns
+---
+
+> The **Compound Components Pattern** lets related components share state implicitly, giving consumers a powerful and flexible API.
+
+### What Are Compound Components?
+
+A set of components that work together using shared internal state.
+
+Instead of:
+
+```tsx
+<Toggle on={on} toggle={toggle} />
+```
+
+You get a more expressive API:
+
+```tsx
+<Toggle>
+  <ToggleOn>ON</ToggleOn>
+  <ToggleOff>OFF</ToggleOff>
+  <ToggleButton />
+</Toggle>
+```
+
+`<Toggle>` owns the logic, while its children respond to that state.
+
+How Do They Share State?
+
+Via **React Context** — state is managed by the parent and consumed implicitly by children.
+
+### Minimal Implementation
+
+```tsx
+const ToggleContext = React.createContext(undefined)
+
+export function Toggle({ children }) {
+  const [on, setOn] = useState(false)
+  const toggle = () => setOn(o => !o)
+
+  return (
+    <ToggleContext.Provider value={{ on, toggle }}>
+      {children}
+    </ToggleContext.Provider>
+  )
+}
+```
+
+Child components
+
+```tsx
+function useToggle() {
+  const ctx = useContext(ToggleContext)
+  if (!ctx) throw new Error('Must be used within <Toggle>')
+  return ctx
+}
+
+export const ToggleOn = ({ children }) => (useToggle().on ? children : null)
+export const ToggleOff = ({ children }) => (!useToggle().on ? children : null)
+
+export const ToggleButton = () => {
+  const { on, toggle } = useToggle()
+  return <button onClick={toggle}>{on ? 'ON' : 'OFF'}</button>
+}
+```
+
+### When to Use
+
+Use compound components when:
+
+* Multiple components depend on shared state
+* You want a clean, scalable public API
+
+Avoid for simple, single-use components.

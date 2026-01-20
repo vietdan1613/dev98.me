@@ -1,0 +1,74 @@
+---
+title: "🎥 React Testing: Mocking HTTP requests"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-25
+thumbnailText: React Testing
+---
+
+> **How do we test network behavior without calling real servers?**
+
+Perfect for testing:
+
+* Server errors
+* Timeouts
+* Invalid responses
+
+Unlike mocking `fetch` or Axios directly, MSW works at the **network layer**, so your app behaves exactly as it would in production.
+
+### Setup
+
+Example: testing a component that calls `/greeting`
+
+```js
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+import { render, screen, waitForElementToBeRemoved } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import Fetch from '../Fetch'
+
+const server = setupServer(
+  http.post('/greeting', async ({ request }) => {
+    const { username } = await request.json()
+    return HttpResponse.json({ username })
+  })
+)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+test('loads and displays greeting', async () => {
+  render(<Fetch url="/greeting" />)
+
+  await userEvent.click(screen.getByText('Load Greeting'))
+  await waitForElementToBeRemoved(() => screen.getByText('Loading...'))
+
+  expect(screen.getByRole('heading')).toHaveTextContent('hello there')
+})
+```
+
+### Why This Is Better
+
+With MSW you get:
+
+* 🎯 Real request interception (not stubbing functions)
+* 🚀 Faster tests without network calls
+* 🧪 Easy testing of success & error states
+* 🤝 Shared mocks between dev and tests
+
+---
+
+### Test Failure Cases Too
+
+Use `server.use()` to override behavior per test:
+
+```js
+server.use(
+  http.post('/greeting', () => {
+    return HttpResponse.json({ message: 'Error' }, { status: 500 })
+  })
+)
+```
+

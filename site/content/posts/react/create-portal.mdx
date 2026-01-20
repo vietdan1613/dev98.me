@@ -1,0 +1,114 @@
+---
+title: "createPortal"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-28
+thumbnailText: React Fundamentals
+---
+
+> React Portals let you render a component’s subtree **into a different part of the DOM**, while still keeping it logically inside the same React component tree.
+
+React exposes this through:
+
+```tsx
+import { createPortal } from "react-dom";
+```
+
+`createPortal` accepts:
+
+1. **What** to render (JSX)
+2. **Where** to render it (a DOM node, e.g. `document.body`)
+
+# Modal
+
+```tsx
+import { createPortal } from "react-dom";
+
+function Modal({
+  title,
+  content,
+  handleClose,
+}: {
+  title: string;
+  content: string;
+  handleClose: () => void;
+}) {
+  return createPortal(
+    <div className="modal">
+      <h1>{title}</h1>
+      <p>{content}</p>
+      <button onClick={handleClose}>Close</button>
+    </div>,
+    document.body
+  );
+}
+```
+
+Usage:
+
+```tsx
+function App() {
+  const [showModal, setShowModal] = React.useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShowModal(true)}>Show Modal</button>
+      {showModal && (
+        <Modal
+          title="My Modal"
+          content="This is the content of the modal"
+          handleClose={() => setShowModal(false)}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+> Even though the modal renders into `document.body`, it behaves as part of the same React tree — preserving state, context, and event handling.
+
+# Tooltip
+
+Initial implementation:
+
+```tsx
+<div className="card">
+  <button className="icon-button">
+    ❤️
+    <Tooltip text="Add to favorites" />
+  </button>
+</div>
+```
+
+Problem: The tooltip is clipped or misaligned because it lives inside the card’s DOM hierarchy.
+
+### Portal-based Tooltip
+
+```tsx
+import { createPortal } from "react-dom";
+
+function Tooltip({
+  text,
+  position,
+}: {
+  text: string;
+  position: { top: number; left: number };
+}) {
+  return createPortal(
+    <div className="tooltip" style={{ top: position.top, left: position.left }}>
+      {text}
+    </div>,
+    document.body
+  );
+}
+```
+
+You can calculate `position` using `useLayoutEffect` by measuring the trigger element.
+
+# Recap
+
+* React Portals render components outside the normal DOM tree
+* Perfect for modals, tooltips, dropdowns, and overlays
+* Preserve React state, context, and events
+* Created with `createPortal(ui, container)`

@@ -1,0 +1,100 @@
+---
+title: "🎥 React Testing: Simple test with React Testing Library"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-22
+thumbnailText: React Testing
+---
+
+> React Testing Library is built on top of DOM Testing Library and encourages testing the app **the way users interact with it**.
+
+It helps you:
+
+* Avoid manual DOM setup and cleanup
+* Write more readable, user-focused tests
+* Reduce boilerplate
+* Get better error messages and assertions
+
+## The Same Test with React Testing Library
+
+```js
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import MultiStepForm from './MultiStepForm'
+
+test('completes the multi-step form successfully', async () => {
+  const handleSubmit = jest.fn()
+  render(<MultiStepForm onSubmit={handleSubmit} />)
+
+  // Step 1
+  expect(screen.getByText(/step 1/i)).toBeInTheDocument()
+
+  await userEvent.type(screen.getByLabelText(/email/i), 'test@mail.com')
+  await userEvent.click(screen.getByRole('button', { name: /next/i }))
+
+  // Step 2
+  expect(screen.getByText(/step 2/i)).toBeInTheDocument()
+
+  await userEvent.type(screen.getByLabelText(/password/i), '123456')
+  await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+
+  expect(handleSubmit).toHaveBeenCalledWith({
+    email: 'test@mail.com',
+    password: '123456',
+  })
+})
+```
+
+# Query Priority
+
+| Query API                     | When to Use                                     |
+| ----------------------------- | ----------------------------------------------- |
+| `getByRole`                   | Most elements (buttons, inputs, headings, etc.) |
+| `getByLabelText`              | Form fields                                     |
+| `getByPlaceholderText`        | Inputs without labels                           |
+| `getByText`                   | Static text and simple elements                 |
+| `getByDisplayValue`           | Pre-filled form values                          |
+
+
+## Quick Reference
+
+| Assertion              | Use Case                         |
+| ---------------------- | -------------------------------- |
+| `toBeInTheDocument`    | Exists in DOM                    |
+| `toHaveTextContent`    | Text rendering                   |
+| `toBeDisabled/Enabled` | Form and button states           |
+| `toHaveValue`          | Input values                     |
+| `toBeChecked`          | Checkbox / radio                 |
+| `toHaveAttribute`      | Links, aria, images              |
+
+
+## Test a Form
+
+| Use Case                | Why It Matters              |
+| ----------------------- | --------------------------- |
+| Happy path              | Confirms base functionality |
+| Required validation     | Prevents bad submissions    |
+| Invalid formats         | Data correctness            |
+| Field-level errors      | UX clarity                  |
+| Server errors           | Robust failure handling     |
+| Loading states          | Prevents duplicate submits  |
+| Reset behavior          | State consistency           |
+| Keyboard interaction    | Accessibility               |
+
+## Custom render
+
+```js
+import { render as rtlRender } from '@testing-library/react'
+import { ThemeProvider } from '../context/theme'
+
+function render(ui, options) {
+  return rtlRender(ui, {
+    wrapper: ({ children }) => <ThemeProvider>{children}</ThemeProvider>,
+    ...options,
+  })
+}
+
+export * from '@testing-library/react'
+export { render }
+```

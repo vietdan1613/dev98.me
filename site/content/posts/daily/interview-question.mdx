@@ -84,6 +84,16 @@ thumbnailText: Daily
 > * What causes a component to re-render?     
 > State changes, prop changes, or parent re-renders
 
+> * What is controlled vs uncontrolled components
+> Controlled components have their state managed by React (via props/state)
+> Uncontrolled components manage their own state (via refs/DOM)
+
+> * What is a Pure Component?
+> A component that renders the same output for the same props/state.
+
+> * What is a Higher Order Component (HOC)?
+> A function that takes a component and returns a new component with enhanced behavior.
+
 > * What is reconciliation in React?     
 > React’s process of diffing the virtual DOM and updating the real DOM efficiently.
 
@@ -140,6 +150,10 @@ thumbnailText: Daily
 
 > * How do you optimize large lists?        
 > Use virtualization libraries (e.g., react-window) to render only visible items.
+
+> * How useId() differs from key?
+* `useId` generates a new value per render
+* Keys must be stable across renders
 
 ### 4. What is the Context API?
 

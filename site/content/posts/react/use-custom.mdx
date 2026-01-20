@@ -1,0 +1,99 @@
+---
+title: "Custom Hooks"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-28
+thumbnailText: React Fundamentals
+---
+
+# What?
+
+> A custom hook is simply a **function that uses other hooks**.
+
+```tsx
+function useCount() {
+  const [count, setCount] = useState(0)
+  const increment = () => setCount(c => c + 1)
+  return { count, increment }
+}
+```
+
+Use it like any other hook:
+
+```tsx
+function Counter() {
+  const { count, increment } = useCount()
+  return <button onClick={increment}>{count}</button>
+}
+```
+
+# The Issue
+
+Consider using a hook function inside `useEffect`:
+
+```tsx
+useEffect(() => {
+  const id = setInterval(increment, 1000)
+  return () => clearInterval(id)
+}, [increment])
+```
+
+Problem: Even if `increment` does the same thing, its **reference changes every render**, causing:
+
+* Effect cleanup & re-run
+* Performance overhead
+
+### Fix with `useCallback`
+
+`useCallback` preserves the same function reference unless dependencies change:
+
+```tsx
+function useCount() {
+  const [count, setCount] = useState(0)
+  const increment = useCallback(() => setCount(c => c + 1), [])
+  return { count, increment }
+}
+```
+
+> Now `increment` is **stable across renders**.
+
+# Memoization?
+
+Memoization stores results so they can be reused instead of recalculated.
+
+```ts
+const cache = {}
+function addOne(num) {
+  if (!cache[num]) cache[num] = num + 1
+  return cache[num]
+}
+```
+
+In React:
+
+* `useMemo` memoizes values
+* `useCallback` memoizes functions
+
+# `useCallback` vs `useMemo`
+
+| Hook                       | Memoizes |
+| -------------------------- | -------- |
+| useCallback(fn, deps)      | Function |
+| useMemo(() => value, deps) | Value    |
+
+Equivalent:
+
+```tsx
+useCallback(fn, deps)
+useMemo(() => fn, deps)
+```
+
+# Key Takeaways
+
+* Custom hooks encapsulate reusable logic
+* Memoization preserves performance and reference stability
+* `useCallback` stabilizes functions
+* Use it intentionally, not everywhere
+* Reusable hooks should consider referential equality
+

@@ -1,0 +1,106 @@
+---
+title: "useOptimistic() for Fast and Fluid React UIs"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-30
+thumbnailText: React Fundamentals
+---
+
+> Most user actions succeed, so update the UI first and confirm later.
+
+Example: When a user checks a todo item, we mark it as complete instantly and sync with the server in the background.
+
+✔ Faster feedback.   
+✔ Better perceived performance.   
+✔ More responsive apps
+
+# Optimism During Transitions
+
+React provides `useOptimistic` to override UI state **while a transition or form action is in progress**.
+
+It behaves like `useState`, but is scoped to a pending transition — perfect for optimistic updates.
+
+### Example: Optimistic Todo Toggle
+
+```tsx
+function Todo({ todo }) {
+  const [isComplete, setIsComplete] = useOptimistic(todo.isComplete)
+
+  return (
+    <form
+      action={async () => {
+        setIsComplete(!isComplete)           // Optimistic update
+        await updateTodo(todo.id, !isComplete) // Server sync
+      }}
+    >
+      <label>
+        <input type="checkbox" checked={isComplete} />
+        {todo.text}
+      </label>
+    </form>
+  )
+}
+```
+
+✔ UI updates instantly.   
+✔ Rolls back automatically if props change.    
+✔ No manual error handling required for basic cases
+
+# Optimistic Form Submission
+
+Problem: After submitting a form, users wait before seeing the new data — which feels slow.
+
+Solution:
+Render an **optimistic version** of the data instantly.
+
+```tsx
+action={async (formData) => {
+  const optimisticPokemon = createOptimisticPokemon(formData)
+  setOptimisticPokemon(optimisticPokemon)
+
+  const realPokemon = await updatePokemon(formData)
+  setSelectedPokemon(realPokemon.name)
+  setOptimisticPokemon(null)
+}}
+```
+
+✔ Shows immediate feedback.    
+✔ Replaces with real data later.    
+
+# Multi-Step Optimistic
+
+For actions with multiple steps, `useOptimistic` enables progressive feedback:
+
+```tsx
+function CreateForm() {
+  const [message, setMessage] = useOptimistic('Create')
+
+  return (
+    <form
+      action={async (formData) => {
+        setMessage('Creating...')
+        const pokemon = await updatePokemon(formData)
+
+        setMessage('Saving...')
+        await savePokemon(pokemon)
+
+        setMessage('Finalizing...')
+        await notifyFleet(pokemon)
+      }}
+    >
+      <SubmitButton message={message} />
+    </form>
+  )
+}
+```
+
+✔ Clear progress feedback.   
+✔ Keeps users informed.   
+
+# Takeaways
+
+* Use **Optimistic UI** to make apps feel instant
+* `useOptimistic` overrides UI state during transitions
+* Combine both for smooth, professional UX
+* Use placeholders (`"..."`) for fields not yet loaded

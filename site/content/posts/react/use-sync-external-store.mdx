@@ -1,0 +1,110 @@
+---
+title: "useSyncExternalStore() for Syncing External State"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-29
+thumbnailText: React Fundamentals
+---
+
+> It provides a safe and concurrent-friendly way to subscribe to external mutable sources and keep React in sync.
+
+# Why?
+
+Before React 18, we often used:
+
+```tsx
+useEffect + useState
+```
+
+But that approach:
+
+* Is not concurrency-safe
+* Can cause tearing (inconsistent reads)
+
+> `useSyncExternalStore` solves these by ensuring React always reads a consistent snapshot of external state.
+
+# `useSyncExternalStore` API
+
+```tsx
+const value = useSyncExternalStore(
+  subscribe,        // tells React when to update
+  getSnapshot,      // reads the current value
+  getServerSnapshot // optional: for SSR
+)
+```
+
+Use it whenever state:
+
+* Lives outside React
+* Must integrate with React rendering safely
+
+# Example: `geolocation`
+
+```tsx
+import { useSyncExternalStore } from 'react'
+
+let location: GeolocationPosition | null = null
+
+function subscribe(callback: () => void) {
+  const id = navigator.geolocation.watchPosition(pos => {
+    location = pos
+    callback()
+  })
+  return () => navigator.geolocation.clearWatch(id)
+}
+
+function getSnapshot() {
+  return location
+}
+
+function MyLocation() {
+  const location = useSyncExternalStore(subscribe, getSnapshot)
+
+  if (!location) return 'Location unavailable'
+  return `${location.coords.latitude}, ${location.coords.longitude}`
+}
+```
+
+✔ React now re-renders whenever location updates
+✔ No tearing, no stale values
+
+---
+
+# Example: `matchMedia`
+
+```tsx
+import { useSyncExternalStore } from 'react'
+
+function makeMediaQueryStore(query: string) {
+  const mql = window.matchMedia(query)
+
+  return () =>
+    useSyncExternalStore(
+      (cb) => {
+        mql.addEventListener('change', cb)
+        return () => mql.removeEventListener('change', cb)
+      },
+      () => mql.matches,
+      () => false // SSR fallback
+    )
+}
+
+const useNarrowScreen = makeMediaQueryStore('(max-width: 600px)')
+
+function App() {
+  const isNarrow = useNarrowScreen()
+  return <div>{isNarrow ? 'Narrow' : 'Wide'}</div>
+}
+```
+
+✔ React updates when the media query changes.    
+✔ Works correctly with concurrent rendering
+
+# Use when?
+
+Use `useSyncExternalStore` when:
+
+* Integrating browser APIs (media, sensors, visibility, location)
+* Connecting to non-React stores (Redux, Zustand, custom pub/sub)
+* Building libraries that expose external state

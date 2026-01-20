@@ -1,0 +1,64 @@
+---
+title: "Optimize Context"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPerformance']
+date: 2025-07-12
+thumbnailText: React Performance
+---
+
+> React Context is great for avoiding prop drilling—but **every context update re-renders all consumers**, even if they don’t use the changed data.
+
+### Problem: New References Trigger Re-renders
+
+```tsx
+const CountContext = createContext(null);
+
+function CountProvider({ children }) {
+  const [count, setCount] = useState(0);
+  const value = [count, setCount]; // new array each render ❌
+
+  return <CountContext.Provider value={value}>{children}</CountContext.Provider>;
+}
+```
+
+React compares context values by **reference**, not content.
+A new array/object = forced re-render.
+
+### Fix 1: Memoize Context Value
+
+```tsx
+function CountProvider({ children }) {
+  const [count, setCount] = useState(0);
+  const value = useMemo(() => [count, setCount], [count]);
+
+  return <CountContext.Provider value={value}>{children}</CountContext.Provider>;
+}
+```
+
+✔ Consumers now re-render **only when `count` changes**.
+
+### Fix 2: Split Context (State vs Setters)
+
+```tsx
+const FooterStateContext = createContext(null);
+const FooterSettersContext = createContext(null);
+
+function FooterProvider({ children }) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState('black');
+
+  const state = useMemo(() => ({ name, color }), [name, color]);
+  const setters = useMemo(() => ({ setName, setColor }), []);
+
+  return (
+    <FooterStateContext.Provider value={state}>
+      <FooterSettersContext.Provider value={setters}>
+        {children}
+      </FooterSettersContext.Provider>
+    </FooterStateContext.Provider>
+  );
+}
+```
+
+✔ Components only re-render for what they actually use.

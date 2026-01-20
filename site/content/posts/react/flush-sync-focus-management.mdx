@@ -1,0 +1,84 @@
+---
+title: "flushSync() for Focus Management"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-29
+thumbnailText: React Fundamentals
+---
+
+When building interactive UIs with forms and dynamic components, **focus management** is critical—not just for UX, but also for accessibility and keyboard navigation.
+
+Good focus management ensures:
+
+* Smooth keyboard navigation
+* A predictable and seamless user experience
+
+# Problem
+
+```tsx
+function MyComponent() {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [show, setShow] = useState(false)
+
+  return (
+    <div>
+      <button
+        onClick={() => {
+          setShow(true)
+          inputRef.current?.focus()
+        }}
+      >
+        Show
+      </button>
+      {show && <input ref={inputRef} />}
+    </div>
+  )
+}
+```
+
+You expect the input to receive focus when it appears — but it doesn’t.
+
+### Why?
+
+Because React **batches state updates**, the DOM is not updated immediately after calling `setShow(true)`.
+
+# Fix: `flushSync`
+
+```tsx
+import { flushSync } from 'react-dom'
+
+function MyComponent() {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [show, setShow] = useState(false)
+
+  return (
+    <div>
+      <button
+        onClick={() => {
+          flushSync(() => setShow(true))
+          inputRef.current?.focus()
+        }}
+      >
+        Show
+      </button>
+      {show && <input ref={inputRef} />}
+    </div>
+  )
+}
+```
+
+### Why This Works
+
+`flushSync` forces React to commit the DOM update synchronously, so the input exists when `focus()` is called.
+
+> ⚠️ Use sparingly — `flushSync` is a performance trade-off and should only be used for UX-critical cases like focus management.
+
+# Key Takeaways
+
+* React batches updates → new elements aren’t immediately focusable
+* Use `ref + focus()` to control focus explicitly
+* Prefer `useEffect` when focus isn’t urgent
+* Use `flushSync` only when DOM must update synchronously
+* Always support keyboard interactions
+* Focus management is a core accessibility requirement

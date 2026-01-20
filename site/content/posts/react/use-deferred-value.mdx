@@ -1,0 +1,55 @@
+---
+title: "useDeferredValue() for Responsive Inputs"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-30
+thumbnailText: React Fundamentals
+---
+
+> `useDeferredValue` lets React **delay updating a value for non-urgent renders**, while keeping the UI responsive.
+
+React immediately updates the UI using `search`, and in the background updates parts that depend on `deferredValue`.
+
+```tsx
+const [search, setSearch] = useState('')
+const deferredSearch = useDeferredValue(search)
+```
+
+Use `search` for the input
+Use `deferredSearch` for heavy rendering or fetching
+
+### Practical Example
+
+```tsx
+function PokemonSearch() {
+  const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
+
+  const pokemons = use(searchPokemons(deferredSearch))
+  const isPending = deferredSearch !== search
+
+  return (
+    <>
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search pokemons..."
+      />
+      {isPending && <span>Loading...</span>}
+      <ul>
+        {pokemons.map(p => <li key={p.id}>{p.name}</li>)}
+      </ul>
+    </>
+  )
+}
+```
+
+✔ Typing stays instant.    
+✔ Fetching can suspend.    
+✔ UI feels smooth.    
+
+### Use:
+
+* `useTransition` → for navigation and view changes
+* `useDeferredValue` → for inputs and filters

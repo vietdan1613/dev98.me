@@ -1,0 +1,69 @@
+---
+title: "⚡ React Performance: Code Splitting"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPerformance']
+date: 2025-07-14
+thumbnailText: React Performance
+---
+
+> Code splitting breaks your bundle into smaller chunks that load on demand instead of all at once.
+
+> Think: *stream one episode, not the whole season.*
+
+### Lazy Load with `React.lazy` + `Suspense`
+
+```tsx
+const SmileyFace = lazy(() => import('./SmileyFace'));
+
+<Suspense fallback={<div>Loading...</div>}>
+  <SmileyFace />
+</Suspense>
+```
+
+✔ Component loads only when rendered.   
+✔ Smaller initial bundle.   
+✔ Faster startup.   
+
+### Load Heavy Features On Demand
+
+Avoid loading expensive libraries (e.g. Three.js) until needed:
+
+```tsx
+const Globe = lazy(() => import('./Globe'));
+
+{showGlobe && (
+  <Suspense fallback={<div>Loading globe...</div>}>
+    <Globe />
+  </Suspense>
+)}
+```
+
+✔ Login page stays fast.    
+✔ Globe loads only when user requests it
+
+### Preload on Hover or Focus
+
+If users almost always open the feature, preload it early:
+
+```tsx
+const preloadGlobe = () => import('./Globe');
+
+<label onPointerOver={preloadGlobe} onFocus={preloadGlobe}>
+```
+
+✔ Starts loading before click.    
+✔ Feels instant
+
+### Smooth UX with `useTransition`
+
+Avoid flashing loaders when lazy components load quickly:
+
+```tsx
+startTransition(() => setShowGlobe(true));
+```
+
+✔ Marks UI update as low priority
+✔ Keeps interactions smooth
+
+Optional: use `spin-delay` to prevent flickering loaders.

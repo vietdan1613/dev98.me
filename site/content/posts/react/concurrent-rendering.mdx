@@ -1,0 +1,93 @@
+---
+title: "Concurrent Rendering"
+category: React1
+author: Daniel Nguyen
+tags: ['#ReactPerformance']
+date: 2025-08-13
+thumbnailText: React Performance
+---
+
+> To feel smooth, browsers aim for **60 frames per second**, giving us only:
+
+React must:
+
+* Reconcile changes
+* Render components
+* Let the browser paint updates
+
+When React takes too long, users experience:
+
+* Input lag
+* Frozen UI
+
+This is where concurrent rendering changes the game.
+
+# What Is Concurrent Rendering?
+
+Concurrent rendering is a new rendering model in React 18 that allows React to:
+
+✅ Start rendering.   
+⏸ Pause rendering if it takes too long.   
+▶ Resume later.   
+🚫 Without blocking user interactions.   
+
+Instead of treating rendering as a single uninterruptible task, React now breaks it into small chunks and yields control back to the browser when needed.
+
+This allows:
+
+* Buttons to stay clickable
+* Typing to stay responsive
+* Animations to remain smooth
+
+Even during heavy UI updates.
+
+# What Changed in React 18?
+
+Concurrent rendering is not a feature you “turn on” directly — it’s the foundation for new APIs like:
+
+* `useDeferredValue`
+* `startTransition`
+* `Suspense`
+* Streaming SSR
+
+These APIs allow React to **prioritize updates** instead of treating all renders equally.
+
+# Why Prioritization Matters
+
+Not all UI updates are equally important.
+
+Example:
+
+* Typing in a search box → **High priority**
+* Rendering 1,000 filtered results → **Low priority**
+
+Without prioritization, React would block typing until all results finish rendering 😵.
+
+Concurrent rendering lets React:
+
+* Update what users care about **first**
+* Defer less important work
+
+## Example Concurrent Features
+
+### Using `useDeferredValue`
+
+```tsx
+function App() {
+  const [text, setText] = useState('');
+  const deferredText = useDeferredValue(text);
+
+  return (
+    <>
+      <input value={text} onChange={e => setText(e.target.value)} />
+      <SlowList text={deferredText} />
+    </>
+  );
+}
+```
+
+Now:
+
+* Input updates immediately
+* Heavy list updates later
+* UI feels smooth

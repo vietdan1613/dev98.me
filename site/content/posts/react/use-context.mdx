@@ -1,0 +1,105 @@
+---
+title: "React Context for Shared State"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-27
+thumbnailText: React Fundamentals
+---
+
+Sometimes, multiple components need access to the same state. While lifting state up works in many cases, it becomes impractical when components are deeply nested or separated by routers or layout boundaries.
+
+This is where **React Context** becomes essential.
+
+# The Problem
+
+A custom hook creates isolated state per usage:
+
+```tsx
+function useCount() {
+  const [count, setCount] = useState(0)
+  const increment = () => setCount(c => c + 1)
+  return { count, increment }
+}
+```
+
+Using it in two components:
+
+```tsx
+function DisplayCount() {
+  const { count } = useCount()
+  return <div>{count}</div>
+}
+
+function IncrementCount() {
+  const { increment } = useCount()
+  return <button onClick={increment}>Increment</button>
+}
+```
+
+Each component gets its **own state**, so clicking the button doesn’t update the display.
+
+### When Context Is the Right Tool
+
+Use Context when:
+
+✔ State must be shared across distant components
+✔ Prop drilling becomes messy
+✔ You want implicit sharing (e.g. themes, auth, locale)
+
+# Sharing State with Context
+
+Here’s how to refactor using Context:
+
+```tsx
+const CountContext = createContext(null)
+
+function CountProvider({ children }) {
+  const [count, setCount] = useState(0)
+  const increment = () => setCount(c => c + 1)
+  return (
+    <CountContext.Provider value={{ count, increment }}>
+      {children}
+    </CountContext.Provider>
+  )
+}
+
+function useCount() {
+  const context = useContext(CountContext)
+  if (!context) throw new Error("useCount must be used inside CountProvider")
+  return context
+}
+```
+
+Consumers:
+
+```tsx
+function DisplayCount() {
+  const { count } = useCount()
+  return <div>{count}</div>
+}
+
+function IncrementCount() {
+  const { increment } = useCount()
+  return <button onClick={increment}>Increment</button>
+}
+```
+
+App:
+
+```tsx
+<CountProvider>
+  <DisplayCount />
+  <IncrementCount />
+</CountProvider>
+```
+
+> Now both components share the same state.
+
+### How Context Works
+
+* The Provider stores and exposes the state.    
+* Consumers read the shared value.    
+* When context value changes → all consumers re-render.    
+* The closest provider wins if nested.    
+* Using a custom hook ensures safe access.    

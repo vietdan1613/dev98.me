@@ -1,0 +1,63 @@
+---
+title: "useTransition() for Improved UX"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactTesting']
+date: 2025-07-30
+thumbnailText: React Fundamentals
+---
+
+> `useTransition` lets you mark certain state updates as **non-urgent**, allowing React to keep the UI responsive while those updates are processed in the background.
+
+```tsx
+const [isPending, startTransition] = useTransition()
+```
+
+It returns:
+
+* `startTransition` → wraps low-priority updates
+* `isPending` → tells you if a transition is in progress
+
+# The Problem 
+
+Without transitions, every update blocks rendering:
+
+```tsx
+setFilter(value) // slow update blocks typing
+```
+
+If filtering is expensive, the input lags — bad UX.
+
+# The Solution: useTransition
+
+```tsx
+const [isPending, startTransition] = useTransition()
+
+function onChange(e) {
+  const value = e.target.value
+  startTransition(() => {
+    setFilter(value)
+  })
+}
+```
+
+✔ Typing stays smooth.    
+✔ Heavy updates run in the background.    
+✔ UI feels faster.    
+
+# Takeaway
+
+`useTransition` doesn’t make your code faster —
+it makes your UI **feel** faster.
+
+Use it wisely, and your React apps will feel:
+
+* Smoother
+* More responsive
+
+Use `useTransition` for:
+
+* Filtering and sorting large lists
+* Data-driven navigation
+* Switching views or tabs
+* Rendering expensive components
