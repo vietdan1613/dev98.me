@@ -81,199 +81,200 @@ thumbnailText: Daily
 > Updating      
 > Unmounting        
 
-> * What causes a component to re-render?     
-> State changes, prop changes, or parent re-renders
+> What causes a component to re-render?     
+> - State changes, prop changes, or parent re-renders
 
-> * What is controlled vs uncontrolled components
-> Controlled components have their state managed by React (via props/state)
-> Uncontrolled components manage their own state (via refs/DOM)
+> What is controlled vs uncontrolled components
+> - Controlled components have their state managed by React (via props/state)
+> - Uncontrolled components manage their own state (via refs/DOM)
 
-> * What is a Pure Component?
-> A component that renders the same output for the same props/state.
+> What is a Pure Component?
+> - A component that renders the same output for the same props/state.
 
-> * What is a Higher Order Component (HOC)?
-> A function that takes a component and returns a new component with enhanced behavior.
+> What is a Higher Order Component (HOC)?
+> - A function that takes a component and returns a new component with enhanced behavior.
 
-> * What is reconciliation in React?     
-> React’s process of diffing the virtual DOM and updating the real DOM efficiently.
+> What is reconciliation in React?     
+> - React’s process of diffing the virtual DOM and updating the real DOM efficiently.
 
-> * What is the difference between `useEffect()` and `useLayoutEffect()`?       
-> `useEffect` → runs after paint (non-blocking)     
-> `useLayoutEffect` → runs before paint (blocking)
+> What is the difference between `useEffect()` and `useLayoutEffect()`?       
+> - `useEffect` → runs after paint (non-blocking)     
+> - `useLayoutEffect` → runs before paint (blocking)
 
-> * Why is useLayoutEffect considered dangerous if misused?     
-> It can block rendering and cause performance issues if it contains heavy computations.
+> Why is useLayoutEffect considered dangerous if misused?     
+> - It can block rendering and cause performance issues if it contains heavy computations.
 
-> * Give a real-world use case for useLayoutEffect     
-> Measuring DOM elements before paint (e.g., calculating sizes for animations)
+> Give a real-world use case for useLayoutEffect     
+> - Measuring DOM elements before paint (e.g., calculating sizes for animations)
 
-> * How does Concurrent Rendering affect lifecycle behavior?     
-> It allows React to interrupt rendering, which can change when effects run and improve responsiveness.
+> How does Concurrent Rendering affect lifecycle behavior?     
+> - It allows React to interrupt rendering, which can change when effects run and improve responsiveness.
 
 ### What is your error-handling strategy in production apps?
 
-> Use Error Boundaries to catch rendering errors.   
-> try/catch in async code.      
+> - Use Error Boundaries to catch rendering errors.   
+> - try/catch in async code.      
 
-> * What are Error Boundaries?      
-> React components that catch JavaScript errors in their child component tree.      
+> What are Error Boundaries?      
+> - React components that catch JavaScript errors in their child component tree.      
 
-> * What errors do Error Boundaries NOT catch?      
-> Event handlers, async code, server-side rendering.        
+> What errors do Error Boundaries NOT catch?      
+> - Event handlers, async code, server-side rendering.        
 
-> * How do you handle errors in event handlers?     
-> Use try/catch blocks within the event handler functions.      
+> How do you handle errors in event handlers?     
+> - Use try/catch blocks within the event handler functions.      
 
-> * How do you handle errors with React Query?      
-> Use onError callbacks and error states provided by React Query hooks.     
+> How do you handle errors with React Query?      
+> - Use onError callbacks and error states provided by React Query hooks.     
 
-> * Different between isError, error?   
-> isError is a boolean flag;    
-> error contains the actual error object/details.   
+> Different between isError, error?   
+> - isError is a boolean flag;    
+> - error contains the actual error object/details.   
 
 ### 3. How do you render a list in React?
 
-> Use `Array.map()` to create elements from data arrays.        
-> Use unique `key` props for each item.
+> - Use `Array.map()` to create elements from data arrays.        
+> - Use unique `key` props for each item.
 
-> * Why are keys important in React lists?        
-> Keys help React identify which items have changed, added, or removed for efficient updates.
+> Why are keys important in React lists?        
+> - Keys help React identify which items have changed, added, or removed for efficient updates.
 
-> * What makes a good key?        
-> Unique, stable identifiers (e.g., IDs). Avoid using indexes if the list can change
+> What makes a good key?        
+> - Unique, stable identifiers (e.g., IDs). Avoid using indexes if the list can change
 
-> * Can you use array index as a key?        
-> Only if the list is static and won’t change order or have items added/removed.
+> Can you use array index as a key?        
+> - Only if the list is static and won’t change order or have items added/removed.
 
-> * What happens if you don’t provide keys?        
-> React will use indexes by default, which can lead to inefficient updates and bugs.
+> What happens if you don’t provide keys?        
+> - React will use indexes by default, which can lead to inefficient updates and bugs.
 
-> * How do you optimize large lists?        
-> Use virtualization libraries (e.g., react-window) to render only visible items.
+> How do you optimize large lists?        
+> - Use virtualization libraries (e.g., react-window) to render only visible items.
 
-> * How useId() differs from key?
-* `useId` generates a new value per render
-* Keys must be stable across renders
+> How useId() differs from key?
+> -`useId` generates a new value per render
+> - Keys must be stable across renders
 
 ### 4. What is the Context API?
 
-> A way to share state globally without prop drilling.        
-> Use `React.createContext()`, `Provider`, and `useContext()`.
+> - A way to share state globally without prop drilling.        
+> - Use `React.createContext()`, `Provider`, and `useContext()`.
 
-> * When should you use Context?        
-> For global state like themes, auth, or settings.
+> When should you use Context?        
+> - For global state like themes, auth, or settings.
 
-> * How Context Works        
-> Create a context with `React.createContext()`. Wrap components with `Provider` to supply values. Use `useContext()` to consume values.
+> How Context Works        
+> - Create a context with `React.createContext()`. Wrap components with `Provider` to supply values. Use `useContext()` to consume values.
 
-> * Performance Considerations        
-> Context updates re-render all consumers. Optimize by splitting contexts or memoizing values.        
+> Performance Considerations        
+> - Context updates re-render all consumers. Optimize by splitting contexts or memoizing values.        
 
 ### 5. What causes performance issues in React apps?
 
-> Unnecessary re-renders, large component trees, heavy computations in render.
+> - Unnecessary re-renders, large component trees, heavy computations in render.
 
-> * How do you optimize it?
-> Memoization (`React.memo`, `useMemo`, `useCallback`)    
-> Split components & state    
-> Virtualize large lists    
-> Optimize Context usage    
+> How do you optimize it?
+> - Memoization (`React.memo`, `useMemo`, `useCallback`)    
+> - Split components & state    
+> - Virtualize large lists    
+> - Optimize Context usage    
 
-> * How do you detect and diagnose **unnecessary re-renders**?        
-> React DevTools Profiler        
-> Console logging renders        
+> How do you detect and diagnose **unnecessary re-renders**?        
+> - React DevTools Profiler        
+> - Console logging renders        
 
-> * The different between `React.memo()`, `useMemo()`, and `useCallback()`?        
-> `React.memo` → memoizes entire components        
-> `useMemo` → memoizes computed values        
-> `useCallback` → memoizes functions        
+> The different between `React.memo()`, `useMemo()`, and `useCallback()`?        
+> - `React.memo` → memoizes entire components        
+> - `useMemo` → memoizes computed values        
+> - `useCallback` → memoizes functions        
 
-> * When should you use `React.memo()` and when should you avoid it?        
-> Use it when re-renders are expensive and props are stable        
-> Avoid when renders are cheap or props change frequently        
+> When should you use `React.memo()` and when should you avoid it?        
+> - Use it when re-renders are expensive and props are stable        
+> - Avoid when renders are cheap or props change frequently        
 
-> * How would you optimize **rendering a list with thousands of items**?        
-> List virtualization (`react-window`)        
-> Memoized row components        
+> How would you optimize **rendering a list with thousands of items**?        
+> - List virtualization (`react-window`)        
+> - Memoized row components        
 
-> * When would you use `useDeferredValue()` or `useTransition()`?       
-> For deferring non-urgent updates to keep the UI responsive during heavy rendering.        
-> `useDeferredValue` delay rendering non-urgent derived values. Example: filtering a large list while typing.   
-> `useTransition` mark updates as low-priority. Example: switching tabs while fetching/rendering data.    
+> When would you use `useDeferredValue()` or `useTransition()`?       
+> - For deferring non-urgent updates to keep the UI responsive during heavy rendering.        
+> - `useDeferredValue` delay rendering non-urgent derived values. Example: filtering a large list while typing.   
+> - `useTransition` mark updates as low-priority. Example: switching tabs while fetching/rendering data.    
 
 ### 6. What is React Testing Library (RTL)?
 
-> A testing library focused on testing React components via the DOM, simulating real user interactions.
+> - A testing library focused on testing React components via the DOM, simulating real user interactions.
 
-> * How do you find elements in RTL?
-> Use accessible queries like `getByRole`, `getByLabelText`, `getByText`.
+> How do you find elements in RTL?
+> - Use accessible queries like `getByRole`, `getByLabelText`, `getByText`.
 
-> * Why is getByRole preferred?
-> It reflects how users interact with the app and improves test reliability.
+> Why is getByRole preferred?
+> - It reflects how users interact with the app and improves test reliability.
 
-> * What’s the difference between getBy, queryBy, and findBy?
-> `getBy` throws an error if not found (synchronous)    
-> `queryBy` returns null if not found (synchronous)    
-> `findBy` returns a promise and waits for the element (asynchronous)
+> What’s the difference between getBy, queryBy, and findBy?
+> - `getBy` throws an error if not found (synchronous)    
+> - `queryBy` returns null if not found (synchronous)    
+> - `findBy` returns a promise and waits for the element (asynchronous)
 
-> * Why prefer userEvent over fireEvent?
-> `userEvent` simulates real user interactions more accurately (e.g., typing, clicking).
+> Why prefer userEvent over fireEvent?
+> - `userEvent` simulates real user interactions more accurately (e.g., typing, clicking).
 
-> * Why do we avoid testing implementation details?
-> Tests should focus on user-visible behavior, not internal component structure.
+> Why do we avoid testing implementation details?
+> - Tests should focus on user-visible behavior, not internal component structure.
 
-> * When should you mock and when not?
-> Mock external dependencies (APIs, timers) but avoid mocking DOM/browser APIs unless necessary.
+> When should you mock and when not?
+> - Mock external dependencies (APIs, timers) but avoid mocking DOM/browser APIs unless necessary.
 
-> * Why use MSW instead of mocking fetch?
-> MSW mocks at the network level, providing realistic responses and reusable mocks across tests.
+> Why use MSW instead of mocking fetch?
+> - MSW mocks at the network level, providing realistic responses and reusable mocks across tests.
 
-> * What’s the biggest mistake people make with RTL?
-> Testing implementation details instead of user behavior.
-> Manual ReactDOM testing
+> What’s the biggest mistake people make with RTL?
+> - Testing implementation details instead of user behavior.
+> - Manual ReactDOM testing
 
-> * What is JSDOM?
-> JSDOM is a JavaScript implementation of the DOM and HTML standards, used for testing React components in a Node.js environment without a real browser.
+> What is JSDOM?
+> - JSDOM is a JavaScript implementation of the DOM and HTML standards, used for testing React components in a Node.js environment without a real browser.
 
-> * Which browser APIs are missing or incomplete in **JSDOM**?
-> `ResizeObserver`, `matchMedia`, `Clipboard`
+> Which browser APIs are missing or incomplete in **JSDOM**?
+> - `ResizeObserver`, `matchMedia`, `Clipboard`
 
-> * Why is mocking browser APIs called **“poking a hole in reality”**?
-> Mocks reduce realism; **integration/e2e tests should minimize mocking** to better reflect real user environments.
+> Why is mocking browser APIs called **“poking a hole in reality”**?
+> - Mocks reduce realism; **integration/e2e tests should minimize mocking** to better reflect real user environments.
 
-> * When testing forms, what user behaviors should be simulated?
-> Typing, clicking, focusing, submitting, and validation feedback, not direct state manipulation.
+> When testing forms, what user behaviors should be simulated?
+> - Typing, clicking, focusing, submitting, and validation feedback, not direct state manipulation.
 
-> * Which matcher do you use?
-> `toBeInTheDocument()` to check presence in the DOM.
-> `toHaveTextContent()` to verify text content.
-> `toHaveAttribute()` to check element attributes.
-> `toBeVisible()` to ensure element visibility.
+> Which matcher do you use?
+> - `toBeInTheDocument()` to check presence in the DOM.
+> - `toHaveTextContent()` to verify text content.
+> - `toHaveAttribute()` to check element attributes.
+> - `toBeVisible()` to ensure element visibility.
 
 ### 7. What patterns do you apply in your React project?
 
-> Composition -> avoid prop drilling
-> Latest ref -> store the latest value
-> Compound components -> shared state
-> Prop collection -> full control
+> - Composition -> avoid prop drilling
+> - Latest ref -> store the latest value
+> - Compound components -> shared state
+> - Prop collection -> full control
 
-> * Why use Component Composition instead of inheritance?
-> It lets components receive behavior and UI via children instead of passing props deeply, improving flexibility and reuse.
-> Example use cases: tabs, layouts, dropdowns.
+> Why use Component Composition instead of inheritance?
+> - It lets components receive behavior and UI via children instead of passing props deeply, improving flexibility and reuse.
+> - Example use cases: tabs, layouts, dropdowns.
 
-> * Why store the latest value in useRef instead of state for async logic?
-> Refs update without triggering re-renders, making them ideal for async callbacks that need the latest value.
-> Example use cases: timers, debounce, async callbacks.
+> Why store the latest value in useRef instead of state for async logic?
+> - Refs update without triggering re-renders, making them ideal for async callbacks that need the latest value.
+> - Example use cases: timers, debounce, async callbacks.
 
-> * What are Compound Components in React?
-> A pattern where related components share state via Context, allowing flexible APIs without prop drilling.
-> Example use cases: tabs, accordions, dropdowns.
-> * How does the **state reducer pattern** customize behavior?
-> **It lets consumers intercept and modify state transitions without changing internal component logic.**
+> What are Compound Components in React?
+> - A pattern where related components share state via Context, allowing flexible APIs without prop drilling.
+> - Example use cases: tabs, accordions, dropdowns.
 
-> * Advantage of a Prop Getter over prop collection?
-> Prop getters give consumers full control while still applying required logic, preventing accidental overrides.
-> Example use cases: custom inputs, dropdowns, modals.
+> How does the **state reducer pattern** customize behavior?
+> - **It lets consumers intercept and modify state transitions without changing internal component logic.**
+
+> Advantage of a Prop Getter over prop collection?
+> - Prop getters give consumers full control while still applying required logic, preventing accidental overrides.
+> - Example use cases: custom inputs, dropdowns, modals.
 
 #  State Management
 
@@ -289,105 +290,105 @@ thumbnailText: Daily
 > * UI → Action → Middleware → Reducer → Store → UI
 > * Redux Toolkit is recommended way to write Redux that reduces boilerplate and enforces best practices.
 
-> - What does createSlice do?   
->   Combines state, reducers, and actions in one place
+> What does createSlice do?   
+> - Combines state, reducers, and actions in one place
 
-> * How can RTK allow “mutating” state?     
->  Uses Immer to convert mutations to immutable updates
+> How can RTK allow “mutating” state?     
+> - Uses Immer to convert mutations to immutable updates
 
-> * What is configureStore?     
-> Sets up the Redux store with good defaults (DevTools, middleware)
+> What is configureStore?     
+> - Sets up the Redux store with good defaults (DevTools, middleware)
 
-> * How you use middleware in RTK?      
->  Use with libraries redux-logger
+> How you use middleware in RTK?      
+> - Use with libraries redux-logger
 
-> * What is createAsyncThunk?       
->  Simplifies async logic (CRUD, single API calls)
+> What is createAsyncThunk?       
+> - Simplifies async logic (CRUD, single API calls)
 
-> * Can one slice respond to actions from another slice?        
->  Yes, using extraReducers
+> Can one slice respond to actions from another slice?        
+> - Yes, using extraReducers
 
-> * extraReducers vs reducers?      
-> reducers handle this slice’s actions; extraReducers handle external actions
+> extraReducers vs reducers?      
+> - reducers handle this slice’s actions; extraReducers handle external actions
 
 ### 3. What is Redux Saga?
 
 > * Middleware for handling complex async side effects in Redux applications.
 
-> * Why does Redux-Saga use generator functions?        
-> Generators allow pausing and resuming async logic.
+> Why does Redux-Saga use generator functions?        
+> - Generators allow pausing and resuming async logic.
 
-> * What is a saga?     
-> A saga is a generator function that handles side effects.
+> What is a saga?     
+> - A saga is a generator function that handles side effects.
 
-> * Difference between call and put and fork?       
-> call runs a function, put dispatches an action.
-> call is blocking—the saga waits for the function to complete. 
-> fork is non-blocking and runs the task in the background, allowing concurrent execution.
+> Difference between call and put and fork?       
+> - call runs a function, put dispatches an action.
+> - call is blocking—the saga waits for the function to complete. 
+> - fork is non-blocking and runs the task in the background, allowing concurrent execution.
 
-> * What does takeLatest do?        
-> Runs only the latest action, cancels previous ones.
+> What does takeLatest do?        
+> - Runs only the latest action, cancels previous ones.
 
-> * Difference between takeEvery, takeLatest, and takeLeading?      
-> takeEvery runs for every action.      
-> takeLatest runs only the latest action, cancelling previous ones.     
-> takeLeading runs only the first action, ignoring subsequent ones until it completes.      
+> Difference between takeEvery, takeLatest, and takeLeading?      
+> - takeEvery runs for every action.      
+> - takeLatest runs only the latest action, cancelling previous ones.     
+> - takeLeading runs only the first action, ignoring subsequent ones until it completes.      
 
-> * How do you run multiple API calls in parallel?      
-> Use yield all([...]) to run effects concurrently.     
+> How do you run multiple API calls in parallel?      
+> - Use yield all([...]) to run effects concurrently.     
 
-> * How do you handle errors in Redux-Saga?     
-> Use try/catch blocks inside sagas.        
+> How do you handle errors in Redux-Saga?     
+> - Use try/catch blocks inside sagas.        
 
-> * How do you cancel a running saga?       
-> Using takeLatest or cancel.       
+> How do you cancel a running saga?       
+> - Using takeLatest or cancel.       
 
-> * What is race and when would you use it?     
-> race runs multiple effects and completes when the first one finishes.     
+> What is race and when would you use it?     
+> - race runs multiple effects and completes when the first one finishes.     
 
-> * Why should reducers remain pure when using Redux-Saga?      
-> To ensure predictable state updates and maintainability.
+> Why should reducers remain pure when using Redux-Saga?      
+> - To ensure predictable state updates and maintainability.
 
 ### 4. **What is React Query?**
 
-> * Data-fetching library for React that simplifies server state management.    
-> React Query manages server state—fetching, caching, and syncing data with the server.
+> Data-fetching library for React that simplifies server state management.    
+> - React Query manages server state—fetching, caching, and syncing data with the server.
 
-> * What is a mutation?     
-> A mutation is an operation that modifies server data (POST, PUT, DELETE).
+> What is a mutation?     
+> - A mutation is an operation that modifies server data (POST, PUT, DELETE).
 
-> * What are query keys and why are they important?     
-> Query keys uniquely identify queries for caching and refetching.
+> What are query keys and why are they important?     
+> - Query keys uniquely identify queries for caching and refetching.
 
-> * How does React Query handle caching?        
-> Caches data based on query keys and provides stale-while-revalidate behavior.
+> How does React Query handle caching?        
+> - Caches data based on query keys and provides stale-while-revalidate behavior.
 
-> * What is staleTime?      
-> Duration data is considered fresh before being marked stale.
+> What is staleTime?      
+> - Duration data is considered fresh before being marked stale.
 
-> * What is cacheTime / gcTime?     
-> Duration unused data remains in cache before garbage collection.
+> What is cacheTime / gcTime?     
+> - Duration unused data remains in cache before garbage collection.
 
-> * When does React Query refetch automatically?        
-> On window focus, network reconnect, or interval-based refetching.
+> When does React Query refetch automatically?        
+> - On window focus, network reconnect, or interval-based refetching.
 
-> * What does enabled do?       
-> Controls whether a query should automatically run.
+> What does enabled do?       
+> - Controls whether a query should automatically run.
 
-> * Difference between isLoading and isFetching?        
-> isLoading is true on the initial fetch; isFetching is true on any fetch (initial or subsequent).
+> Difference between isLoading and isFetching?        
+> - isLoading is true on the initial fetch; isFetching is true on any fetch (initial or subsequent).
 
-> * How do you invalidate queries?      
-> Use queryClient.invalidateQueries(queryKey) to refetch data.
+> How do you invalidate queries?      
+> - Use queryClient.invalidateQueries(queryKey) to refetch data.
 
-> * How do you perform optimistic updates?      
-> Update the UI immediately, then roll back if the mutation fails.
+> How do you perform optimistic updates?      
+> - Update the UI immediately, then roll back if the mutation fails.
 
-> * How do you handle pagination and infinite scrolling?        
-> Use useInfiniteQuery for fetching paginated data.
+> How do you handle pagination and infinite scrolling?        
+> - Use useInfiniteQuery for fetching paginated data.
 
-> * How do you handle mutation errors?      
-> Use onError callback in useMutation to handle errors.
+> How do you handle mutation errors?      
+> - Use onError callback in useMutation to handle errors.
 
 #  JavaScript
 
@@ -398,7 +399,6 @@ thumbnailText: Daily
 ### 2. What is `hoisting`?
 
 > How does it behave differently for:
-> 
 > * `var`
 > * `let`
 > * `const`
@@ -415,7 +415,6 @@ thumbnailText: Daily
 ### 4. What is the **JavaScript `event loop`**?
 
 > Explain the execution order of:
->
 > * synchronous code
 > * microtasks (`Promise.then`, `queueMicrotask`)
 > * macrotasks (`setTimeout`, `setInterval`)
@@ -427,7 +426,6 @@ thumbnailText: Daily
 ### 6. What are common **`asynchronous patterns`** in JavaScript?
 
 > When should you use:
-> 
 > * callbacks
 > * Promises
 > * `async/await`?
