@@ -7,117 +7,243 @@ date: 2025-07-28
 thumbnailText: React Fundamentals
 ---
 
-
 > **"TypeScript is not making your life terrible. It's just showing you how terrible your life already is."**
 
-### Why?
+## 1. TypeScript catches errors at compile time
 
-TypeScript catches errors before your users do.
+**What it means:**
+TypeScript checks your code before it runs and blocks invalid usage.
 
 ```ts
-function greet(user) {
+function greet(user: { name: string }) {
   return user.name.toUpperCase()
 }
 
-greet({ age: 25 }) // ❌ runtime error
+greet({ age: 25 }) 
+// ❌ Error: Property 'name' is missing
 ```
 
-> With TypeScript, this mistake is caught at compile time — not in production.
+**Why it matters:**
+Without TypeScript, this crashes at runtime.
+With TypeScript, it never ships.
 
-## Type
+---
+
+## 2. `type`, `interface`, `enum`
+
+### `type`
+
+Defines a data shape.
 
 ```ts
-type MessageProps = { children: React.ReactNode }
+type User = { id: number; name: string }
+```
 
-function Message({ children }: MessageProps) {
-  return <div>{children}</div>
+---
+
+### `interface`
+
+Like `type`, but extendable and mergeable.
+
+```ts
+interface User {
+  id: number
+  name: string
 }
 ```
 
-> Types make function contracts explicit and easier to reason about.
+Use `interface` for public object APIs.
 
-## Narrowing Types
+---
+
+### `enum`
+
+Represents a fixed set of named values.
+
+```ts
+enum Status {
+  Loading,
+  Success,
+  Error,
+}
+```
+
+---
+
+## 3. Narrowing types
+
+**What it means:**
+Restricting values to specific allowed options.
 
 ```ts
 type Operator = "+" | "-" | "*" | "/"
-
-type CalculatorProps = {
-  left: number
-  right: number
-  operator: Operator
-}
 ```
 
-> Now invalid operators are rejected at compile time.
+Now `"%"` is rejected at compile time.
 
-## Deriving Types
+---
+
+## 4. Deriving types
+
+**What it means:**
+Creating types automatically from real values.
 
 ```ts
 const operations = {
   "+": (a: number, b: number) => a + b,
   "-": (a: number, b: number) => a - b,
-  "*": (a: number, b: number) => a * b,
-  "/": (a: number, b: number) => a / b,
 }
 
 type Operator = keyof typeof operations
 ```
 
-> Types now automatically update when the object changes.
+**Why it matters:**
+When you change `operations`, `Operator` updates automatically.
 
-## Interface
+---
+
+## 5. `keyof` and `typeof`
+
+### `typeof`
+
+Gets the type of a runtime value.
 
 ```ts
-interface CalculatorProps {
-  left: number
-  right: number
-  operator: Operator
+type Ops = typeof operations
+```
+
+---
+
+### `keyof`
+
+Extracts keys as a union.
+
+```ts
+type Operator = keyof Ops
+```
+
+---
+
+## 6. Generics
+
+**What it means:**
+Write reusable, type-safe code.
+
+```ts
+function identity<T>(value: T): T {
+  return value
 }
 ```
 
-> Interfaces are extendable and work well with object-oriented patterns.
+TypeScript infers `T` automatically.
 
-## `Record`
+---
+
+## 7. Utility types
+
+### `Record<K, T>`
+
+**What it does:**
+Enforces exact keys and consistent value types.
 
 ```ts
-type Operator = "+" | "-" | "*" | "/"
 type OperationFn = (a: number, b: number) => number
 
-const operations: Record<Operator, OperationFn> = {
-  "+": (a, b) => a + b,
-  "-": (a, b) => a - b,
-  "*": (a, b) => a * b,
-  "/": (a, b) => a / b,
-}
+const operations: Record<Operator, OperationFn> = { ... }
 ```
 
-> This enforces structure and consistency.
+Now you can’t miss keys or add wrong ones.
 
-## `satisfies`
+---
+
+### `Partial<T>`
+
+**What it does:**
+Makes all fields optional.
+
+```ts
+type PartialUser = Partial<User>
+```
+
+---
+
+### `Pick<T, K>`
+
+**What it does:**
+Selects specific fields.
+
+```ts
+type UserName = Pick<User, "name">
+```
+
+---
+
+### `Omit<T, K>`
+
+**What it does:**
+Removes specific fields.
+
+```ts
+type UserWithoutId = Omit<User, "id">
+```
+
+---
+
+## 8. `satisfies` operator
+
+**What it does:**
+Checks shape without losing inference.
 
 ```ts
 const operations = {
-  "+": (a, b) => a + b,
-  "-": (a, b) => a - b,
-  "*": (a, b) => a * b,
-  "/": (a, b) => a / b,
+  "+": (a: number, b: number) => a + b,
+  "-": (a: number, b: number) => a - b,
 } satisfies Record<Operator, OperationFn>
 ```
 
-✔ Ensures correct shape.   
-✔ Preserves precise types.   
-✔ Prevents missing or invalid keys.   
+**Why it’s better than `: Record<...>`**
 
-## Default Props with Types
+* ✔ Validates structure
+* ✔ Preserves exact key types
+* ✔ Prevents missing keys
 
-```tsx
-function Calculator({
-  left = 0,
-  right = 0,
-  operator = "+",
-}: Partial<CalculatorProps>) {
-  return operations[operator](left, right)
+---
+
+## 9. `any` vs `unknown` vs `never`
+
+### `any`
+
+Turns off type safety.
+
+```ts
+let v: any = 10
+v.foo.bar() // allowed, unsafe
+```
+
+---
+
+### `unknown`
+
+Forces validation.
+
+```ts
+let v: unknown = "hello"
+
+if (typeof v === "string") {
+  v.toUpperCase() // safe
 }
 ```
 
-This allows flexibility while staying type-safe.
+---
+
+### `never`
+
+Represents impossible values.
+
+```ts
+function fail(): never {
+  throw new Error("Crash")
+}
+```
+
+Also used for exhaustive checks.

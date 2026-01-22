@@ -407,11 +407,10 @@ thumbnailText: Daily
 ### 3. How does `this` work in JavaScript?
 
 > How is it determined in:
-> 
-> * normal functions
+> * regular functions
 > * arrow functions
+> * methods
 > * event handlers
-> * class methods?
 
 ### 4. What is the **JavaScript `event loop`**?
 
@@ -447,6 +446,9 @@ thumbnailText: Daily
 
 ### 10. What is the difference between **`null` and `undefined`**?
 
+> - null is an assigned value representing "no value".
+> - undefined means a variable has been declared but not assigned a value.
+
 ### 11. What is a **`shallow copy` vs `deep copy`**?
 
 > How can you create them in JavaScript?
@@ -471,61 +473,93 @@ thumbnailText: Daily
 
 > What are common causes and how can you prevent them?
 
+### 16. What is scope and lexical scope?
+
+> - Scope is the current context of code, determining variable accessibility. 
+> - Lexical scope means scope is determined by the code structure.
+
+### 17. What are the different data types in JavaScript?
+
+> - Primitive types: string, number, boolean, null, undefined, symbol, bigint
+> - Non-primitive types: object, array, function
+
+### 18. What is the difference between `var`, `let`, and `const`?
+
+> - `var` is function-scoped and can be redeclared.
+> - `let` is block-scoped and cannot be redeclared.
+> - `const` is block-scoped and cannot be reassigned.
+
+### 19. What is event delegation?
+
+> Event delegation is a technique where a single event listener is added to a parent element to handle events for its child elements, improving performance and simplifying code.
+
+> How we stop event propagation?
+> - Use `event.stopPropagation()` to prevent the event from bubbling up the DOM tree.
+
+### 20. What is the difference between `call`, `apply`, and `bind`?
+
+- `call` invokes a function with a specified `this` context and arguments passed individually.
+- `apply` invokes a function with a specified `this` context and arguments passed as an array.
+- `bind` returns a new function with a specified `this` context and optional preset arguments.
+
+### Difference between setTimeout and setInterval?
+
+- `setTimeout` executes a function once after a specified delay.
+- `setInterval` repeatedly executes a function at specified intervals.
+
 #  TypeScript
 
 ### 1. What are the **main differences between TypeScript and JavaScript**?
 
-> * What problems does TypeScript solve?
-> * Is TypeScript required at runtime?
+> * TypeScript catches type errors at compile time.
+> * type, interfaces, enums.
+> * deriving and narrowing types.
+> * keyof and typeof operators.
+> * generics types.
+> * Record, Partial, Pick, Omit utility types.
+> * satisfies operator for type checking without changing inferred type.
+> * any vs unknown vs never
 
-### 2. How does **TypeScript improve code safety at compile time**?
+> difference between type and interface and enum.
+> - interfaces can be extended or merged, while type aliases cannot.
+> - type can represent more complex types like unions and intersections.
+> - enums define a set of named constants.
 
-> * What kinds of errors can it catch before runtime?
-> * How does static typing help large codebases?
+> how unions and intersections work.
+> - unions allow a variable to hold multiple types (A | B), while intersections combine types (A & B).
 
-### 3. What are **interfaces** in TypeScript?
+> how deriving and narrowing types work.
+> - TypeScript can infer types based on usage, and you can narrow types using type guards.
 
-> * How do interfaces work?
-> * Can interfaces be extended or merged?
+> what are keyof and typeof operators, how you use them?
+> - keyof gets the keys of a type as a union of string literals.
+> - typeof gets the type of a variable or expression.
+> - use them for dynamic type manipulation.
 
-### 4. What are **type aliases (`type`)** in TypeScript?
+> what are Record, Partial, Pick, and Omit. how do you use them?
+> - Record creates an object type with specified keys and value types.
+> - Partial makes all properties of a type optional.
+> - Pick selects specific properties from a type.
+> - Omit removes specific properties from a type.
 
-> * What can `type` represent that `interface` cannot?
+> what is genneric types in TypeScript? how do you use them?
+> - Generics allow you to create reusable components and functions that work with any data type while maintaining type safety.
 
-### 5. When should you use **`interface` vs `type`**?
+> what is the satisfies operator? when would you use it?
+> - The satisfies operator checks that an expression matches a specific type without changing its inferred type. 
+> - It’s useful for validating complex objects while preserving their specific types.
 
-> * Which one is better for public APIs?
-> * Which one works better with unions?
+> what is any vs unknown vs never?
+> - any disables type checking, allowing any value.    
+> - unknown is a safer alternative to any, requiring type checks before usage.    
+> - never represents values that never occur, useful for functions that always throw or never return.
 
-### 6. What are **generic types** in TypeScript?
+> what are optional properties and readonly?
+> - Optional properties may or may not be present in an object (using ?).
+> - Readonly properties cannot be modified after initialization.
 
-> * Why are generics important?
-> * How do generics improve reusability and type safety?
-
-### 7. What is **type inference** in TypeScript?
-
-> * When does TypeScript infer types automatically?
-> * When should you explicitly define types?
-
-### 8. What are **union and intersection types**?
-
-> * How do they differ?
-> * Give real-world examples.
-
-### 9. What is **`any` vs `unknown`**?
-
-> * Why is `unknown` safer?
-> * When should `any` be avoided?
-
-### 10. What is **`never`** in TypeScript?
-
-> * When does TypeScript infer `never`?
-> * Why is it useful?
-
-### 11. What are **optional properties** and **readonly**?
-### 12. What is **strict mode** (`strict: true`)?
-### 13. How does TypeScript work with **third-party JS libraries**?
-### 14. What are **utility types** (`Partial`, `Pick`, `Omit`)?
+> how TypeScript work with third-party JS libraries?
+> - Use type declaration files (.d.ts) to provide type information for libraries without built-in TypeScript support.
 
 # CSS/SCSS/Tailwind
 
@@ -569,35 +603,75 @@ thumbnailText: Daily
 
 > Focus on color contrast, focus states, and semantic HTML.
 
+# Accessibility
+
+### 1. How you improve web accessibility in your projects?
+
+> - Use semantic HTML elements
+> - Ensure keyboard navigability
+> - Provide alt text for images
+> - Use ARIA roles and attributes appropriately
+> - Ensure sufficient color contrast
+> - Test with screen readers
+
+# Tool
+
+### 1. What are software development tools, and why are they important in modern web development?
+
+> - They help automate tasks, improve code quality, and streamline workflows.
+> - Examples: 
+>   - VScode for code editing
+>   - Git for version control
+>   - Vite or Webpack for build tools
+>   - Jest and React Testing Library for testing frameworks
+>   - Jira for project management
+
+> What is Vite, and why would you choose it over Webpack?
+> - Webpack is a powerful but complex module bundler that can have slower build times and requires more configuration.
+> - Vite is a modern build tool that offers faster development startup and hot module replacement (HMR) using native ES modules.
+
+# Development process
+
+### 1. Can you walk me through your typical software development process from requirements and planning to release and maintenance?
+
+> 1. Requirements Gathering: Understand project goals.
+> 2. Planning: Break down requirements into tasks, estimate effort.
+> 3. Design: create a wireframe, folder architecture, data flow.
+> 4. Development: Write code following best practices
+> 5. Testing: Perform unit, integration, and end-to-end testing to catch bugs and ensure functionality.
+> 6. Deployment: Use CI/CD pipelines to automate build, test, and deployment processes.
+> 7. Maintenance: Monitor performance, fix bugs
+
 # CI/CD
 
-### 1. Can you describe your **CI/CD experience**?
+1. Can you describe your **CI/CD experience**?
 
 > * What CI/CD tools have you used (GitHub Actions, GitLab CI, Jenkins, Bitbucket)?   
 > * What stages were included (lint, test, build, deploy)?
 
-### 2. How do you **design and maintain a CI/CD pipeline** for a frontend application?
+# HTML
 
-> How do you handle:
->
->  * environment variables
->  * build optimization
->  * caching dependencies
->  * multiple environments (dev, staging, production)?
+### 1. What are semantic HTML elements, and why are they important?
 
-### 3. How do you ensure **code quality and stability** in CI/CD?
+> Semantic HTML elements clearly describe their meaning in a human- and machine-readable way. They improve accessibility, SEO, and maintainability.
+> - Examples include `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, and `<footer>`.
+> - section: groups related content
+> - article: self-contained content
 
-> * What checks do you add before deployment?
-> * How do you prevent broken builds from reaching production?
+> How do semantic elements improve accessibility?
+> - Screen readers and assistive technologies can better understand the structure and purpose of content.
 
-### 4. How does CI/CD integrate with **Agile development workflows**?
+> What is the difference between div and span?
+> - `<div>` is a block-level element used for grouping larger sections of content.
+> - `<span>` is an inline element used for styling or grouping small pieces of text within
 
-> * How do pull requests, code reviews, and CI checks work together?
-> * How do you support frequent releases?
+> What is the difference between inline, inline-block, and block?
+> - Inline elements do not start on a new line and only take up as much width as necessary (e.g., `<span>`, `<a>`).
+> - Block elements start on a new line and take up the full width available (e.g., `<div>`, `<p>`).
+> - Inline-block elements are similar to inline but allow setting width and height (e.g., `<img>`, `<button>`).
 
-### 5. Why is **version control (Git)** essential in CI/CD pipelines?
-
-> * How do branching strategies (Git Flow, trunk-based development) affect CI/CD?
+> What are data attributes?
+> Data attributes allow you to store extra information on HTML elements using attributes prefixed with `data-` (e.g., `data-user-id="123"`). They are useful for storing custom data without affecting the element's presentation or behavior.
 
 # React Live Codinng
 
@@ -695,3 +769,104 @@ thumbnailText: Daily
 > * Portal usage (`createPortal`)
 > * Styling and theming support
 > * Performance and stacking multiple modals
+
+# CSS
+
+1. How you using css in your React project?
+
+> - Tailwind CSS for utility-first styling
+
+> Difference between Flexbox and Grid?
+> - Flexbox is one-dimensional (row or column) for aligning items along a single axis.
+> - Grid is two-dimensional for controlling both rows and columns.
+
+> Position values in CSS?
+> - static: default position
+> - relative: positioned relative to its normal position
+> - absolute: positioned relative to the nearest positioned ancestor
+> - fixed: positioned relative to the viewport
+> - sticky: toggles between relative and fixed based on scroll position
+
+> What is the box model in CSS?
+> - Content: the actual content of the element
+> - Padding: space between content and border
+> - Border: the border surrounding the padding (if any)
+> - Margin: space outside the border
+
+> What is the difference between display: none and visibility: hidden?
+> - display: none removes the element from the document flow, and it does not take up space.
+> - visibility: hidden hides the element but it still takes up space in the layout.
+
+### 2. What are CSS pre-processors?
+
+> - CSS pre-processors like Sass and Less extend CSS with features like variables, nesting, mixins, and functions.
+
+> when would you use a pre-processor?
+> - For large projects needing modular, maintainable, and reusable styles.
+
+> How do variables work in Sass?
+> - Variables store values (colors, fonts) for reuse throughout stylesheets.
+
+> How does nesting work in Sass?
+> - Nesting allows writing CSS rules inside other rules, reflecting the HTML structure.
+
+> How do mixins work in Sass?
+> - Mixins are reusable blocks of styles that can be included in other selectors.
+
+> How do functions work in Sass?
+> - Functions perform calculations and return values for use in styles.
+
+### 3. what is Tailwind CSS?
+
+> - Tailwind CSS is a utility-first CSS framework that provides low-level utility classes for building custom designs without writing custom CSS.
+
+- When would you choose Tailwind over SCSS or CSS Modules?
+> - For rapid development, consistent design, and reduced CSS bloat.
+
+> What is meant by utility-first framework?
+> - It emphasizes using small, single-purpose classes to build components directly in the markup.
+
+> How does Tailwind CSS handle responsive design?
+> - Tailwind uses mobile-first breakpoints with utility classes prefixed by screen sizes (e.g., `sm:`, `md:`).
+
+> How does dark mode work in Tailwind CSS?
+> - Dark mode can be implemented using media queries or a class strategy (e.g., adding a `dark` class to the root element).
+
+> What is @apply, and when should (or shouldn’t) you use it?
+> - `@apply` allows you to compose utility classes into custom CSS classes. Use it sparingly to avoid losing the benefits of utility-first styling.
+
+> What problems can misuse of @apply cause?
+> - It can lead to larger CSS files and reduced maintainability if overused.
+
+> How do you manage reusable components and consistency in Tailwind?
+> - Use utility composition for small components, component abstraction for larger ones, and design tokens for consistent theming.
+
+> How do you optimize Tailwind CSS for production?
+> - Use PurgeCSS to remove unused styles and enable tree-shaking in the build process.
+
+# Agile
+
+### 1. what is Agile methodology?
+
+> - Agile is an iterative approach to software development that emphasizes collaboration, customer feedback, and small, rapid releases.
+
+
+> How Agile methodologies improve software development processes in your team? 
+> - They promote adaptability to change, enhance communication, and deliver value incrementally.
+> - They encourage continuous improvement through regular retrospectives and feedback loops.
+> - They foster a collaborative environment where cross-functional teams work together effectively.
+
+> What are some common Agile frameworks or practices you have experience with?
+> - Scrum: roles (Scrum Master, Product Owner), ceremonies (sprints, stand-ups, retrospectives)
+> - User stories: capturing requirements from the user perspective
+
+# Architecture
+
+### 1. How do you structure a large React application for scalability and maintainability?
+
+> - Use a modular folder structure (components, pages, services, hooks, utils)
+> - Follow component-driven development
+> - Use state management (Redux, Context API) appropriately
+> - Implement code splitting and lazy loading
+> - Write comprehensive tests (unit, integration, e2e)
+> - API layer for data fetching and caching
