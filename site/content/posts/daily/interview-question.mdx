@@ -392,118 +392,129 @@ thumbnailText: Daily
 
 #  JavaScript
 
-### 1. What is a `closure` in JavaScript?
+### 1. Scope, Closures & Hoisting
 
-> How does it help with data encapsulation and state preservation?
+> **What is a closure in JavaScript?**
+> - A closure is when a function remembers and can access variables from its outer (lexical) scope even after the outer function has finished executing.
 
-### 2. What is `hoisting`?
+> **What is hoisting?**
+> - Hoisting is JavaScript’s behavior of moving variable and function declarations to the top of their scope.
+> * `var`: hoisted and initialized as `undefined`
+> * `let` / `const`: hoisted but in the temporal dead zone
+> * Function declarations: fully hoisted
+> * Function expressions: not fully hoisted
 
-> How does it behave differently for:
-> * `var`
-> * `let`
-> * `const`
-> * function declarations vs function expressions?
+> **Q13. How does scope work in JavaScript?**
+> - Scope determines where variables are accessible. JavaScript has global, function, and block scope.
+ 
+> **Q16. What is lexical scope?**
+> - Lexical scope means a variable’s scope is determined by where it is written in the code, not where it is called.
 
-### 3. How does `this` work in JavaScript?
+> **Q18. What is the difference between `var`, `let`, and `const`?**
+> * `var`: function-scoped, can be redeclared
+> * `let`: block-scoped, cannot be redeclared
+> * `const`: block-scoped, cannot be reassigned
 
-> How is it determined in:
-> * regular functions
-> * arrow functions
-> * methods
-> * event handlers
+### 2. `this` Binding & Function Context
 
-### 4. What is the **JavaScript `event loop`**?
+> **Q3. How does `this` work in JavaScript?**
+> * Regular functions: depends on how the function is called
+> * Arrow functions: inherit `this` from their surrounding scope
+> * Methods: `this` refers to the object
+> * Event handlers: `this` refers to the element
 
-> Explain the execution order of:
-> * synchronous code
-> * microtasks (`Promise.then`, `queueMicrotask`)
-> * macrotasks (`setTimeout`, `setInterval`)
+> **Q20. What is the difference between `call`, `apply`, and `bind`?**
+> * `call`: invokes with arguments listed
+> * `apply`: invokes with arguments as an array
+> * `bind`: returns a new function with fixed `this`
 
-### 5. What are **`microtasks vs macrotasks`**?
+> **Q14. What happens when you use `new` with a function?**
+> It creates a new object, sets its prototype, binds `this` to it, and returns it.
 
-> Why do Promises run before `setTimeout`?
+### 3. Asynchronous JavaScript & Event Loop
 
-### 6. What are common **`asynchronous patterns`** in JavaScript?
+> **Q4. What is the JavaScript event loop?**
+> - The event loop handles execution of synchronous code, then microtasks, then macrotasks.
 
-> When should you use:
-> * callbacks
-> * Promises
-> * `async/await`?
+> **Q5. What are microtasks vs macrotasks?**
+> - Microtasks (Promises) run before macrotasks (`setTimeout`).
 
-### 7. What is **`debouncing`** and **`throttling`**?
+> **Q6. What are common async patterns?**
+> - Callbacks, Promises, and `async/await`.
 
-> What problem do they solve, and what is the difference?
+> **Q21. Difference between `setTimeout` and `setInterval`?**
+> * `setTimeout`: runs once after a delay
+> * `setInterval`: runs repeatedly
 
-### 8. What is the difference between **`==` and `===`**?
+### 4. Objects, Prototypes & Inheritance
 
-> Explain type coercion with examples.
+> **Q9. What is prototype inheritance?**
+> - Objects inherit properties from their prototype via the prototype chain.
 
-### 9. What is **`prototype inheritance`**?
+### 5. Equality, Types & Coercion
 
-> How does the prototype chain work in JavaScript?
+> **Q8. Difference between `==` and `===`?**
+> * `==`: allows type coercion
+> * `===`: strict comparison
 
-### 10. What is the difference between **`null` and `undefined`**?
+> **Q10. Difference between `null` and `undefined`?**
+> * `null`: assigned “no value”
+> * `undefined`: declared but not assigned
 
-> - null is an assigned value representing "no value".
-> - undefined means a variable has been declared but not assigned a value.
+> **Q17. What are JavaScript data types?**
+> * Primitive: string, number, boolean, null, undefined, symbol, bigint
+> * Non-primitive: object, array, function
 
-### 11. What is a **`shallow copy` vs `deep copy`**?
+### 6. Immutability & Copying
 
-> How can you create them in JavaScript?
+> **Q11. Shallow copy vs deep copy?**
+> * Shallow: copies references
+> * Deep: copies nested objects
 
-### 12. What is **`immutability`**?
+> **Q12. What is immutability?**
+> - Not changing existing data; instead creating new data. Important for predictable state updates.
 
-> Why is it important in modern frameworks like React?
+### 7. Events & DOM Handling
 
-### 13. How does **`scope`** work in JavaScript?
+> **Q19. What is event delegation?**
+> - Using one parent listener to handle child events via bubbling.
 
-> Explain:
->
-> * global scope
-> * function scope
-> * block scope
+> **How do you stop event propagation?**
+> - Use `event.stopPropagation()`.
 
-### 14. What happens when you use `new` with a function?
+> **Q7. What is debouncing and throttling?**
+> * Debouncing: delays execution until activity stops
+> * Throttling: limits execution rate
 
-> Explain constructor behavior step by step.
+## 8. Memory & Performance
 
-### 15. What is **`memory leak`** in JavaScript?
+> ** What is a memory leak in JavaScript?**
+> - When memory that is no longer needed is not released, causing the app to slow down or crash over time.
 
-> What are common causes and how can you prevent them?
+> **What are common causes of memory leaks?**
+> * Unremoved event listeners
+> * Forgotten timers (`setInterval`, `setTimeout`)
+> * Closures holding references
+> * Global variables
 
-### 16. What is scope and lexical scope?
+> **How can you prevent memory leaks?**
+> * Remove event listeners when not needed
+> * Clear timers
+> * Avoid unnecessary global variables
+> * Clean up in framework lifecycles (e.g., React `useEffect` cleanup)
 
-> - Scope is the current context of code, determining variable accessibility. 
-> - Lexical scope means scope is determined by the code structure.
+> **What is garbage collection?**
+> Automatic memory management that frees objects no longer reachable from the root.
 
-### 17. What are the different data types in JavaScript?
 
-> - Primitive types: string, number, boolean, null, undefined, symbol, bigint
-> - Non-primitive types: object, array, function
+> **How do you improve JavaScript performance?**
+> * Minimize DOM operations
+> * Use debouncing/throttling
+> * Cache expensive computations
+> * Use web workers for heavy tasks
 
-### 18. What is the difference between `var`, `let`, and `const`?
-
-> - `var` is function-scoped and can be redeclared.
-> - `let` is block-scoped and cannot be redeclared.
-> - `const` is block-scoped and cannot be reassigned.
-
-### 19. What is event delegation?
-
-> Event delegation is a technique where a single event listener is added to a parent element to handle events for its child elements, improving performance and simplifying code.
-
-> How we stop event propagation?
-> - Use `event.stopPropagation()` to prevent the event from bubbling up the DOM tree.
-
-### 20. What is the difference between `call`, `apply`, and `bind`?
-
-- `call` invokes a function with a specified `this` context and arguments passed individually.
-- `apply` invokes a function with a specified `this` context and arguments passed as an array.
-- `bind` returns a new function with a specified `this` context and optional preset arguments.
-
-### Difference between setTimeout and setInterval?
-
-- `setTimeout` executes a function once after a specified delay.
-- `setInterval` repeatedly executes a function at specified intervals.
+> **What is memoization?**
+> - Caching function results to avoid repeated computations.
 
 #  TypeScript
 
