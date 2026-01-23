@@ -247,3 +247,38 @@ function fail(): never {
 ```
 
 Also used for exhaustive checks.
+
+Here’s the **concise version**:
+
+## Safe vs Unsafe in TypeScript
+
+**Safe** = TypeScript can guarantee it won’t crash at runtime.
+**Unsafe** = TypeScript has to trust you.
+
+### 🚨 Unsafe
+
+* `any` → disables type checking
+* `as SomeType` (casts) → you might lie to the compiler
+* Using `unknown` without checks
+* `// @ts-ignore`, non-null `!`
+
+```ts
+let v: any = 10
+v.foo.bar() // allowed, unsafe
+```
+
+### ✅ Safe
+
+* `unknown` + runtime checks
+* Union types (`"a" | "b"`)
+* `keyof typeof`
+* `satisfies`
+* Exhaustive checks with `never`
+
+```ts
+let v: unknown = "hi"
+
+if (typeof v === "string") {
+  v.toUpperCase() // safe
+}
+```
