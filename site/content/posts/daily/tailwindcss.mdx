@@ -1,0 +1,207 @@
+---
+title: "Tailwind CSS"
+category: Daily
+author: Daniel Nguyen
+tags: ['#tailwindcss']
+date: 2026-01-24
+thumbnailText: Vitest
+---
+
+## Utility Classes
+
+Tailwind’s biggest shift is how you write CSS. Instead of creating custom class names and jumping between files, you compose small utility classes right in your markup.
+
+```html
+<div class="flex items-center gap-4 p-4 text-sm text-gray-700 bg-white rounded shadow" />
+```
+
+It feels noisy at first, but over time I found it much faster. You see exactly how something is styled without hunting for a CSS file.
+
+> Rule: Group classes by purpose:
+> - layout → spacing → typography → color → effects.
+
+## States
+
+Using utilities to style elements:
+
+> - Interaction States: hover, focus, active, disabled
+> - Responsive States: sm, md, lg, xl
+> - Dark Mode: dark:
+
+```html
+<input class="border focus:border-blue-500 focus:ring" />
+<button class="bg-blue-600 hover:bg-blue-700 active:scale-95">
+  Click me
+</button>
+```
+
+There’s no custom CSS needed for most interactions, and the intent is obvious when reading the markup.
+
+## Responsive Design
+
+Responsive styles are just as simple. Tailwind is mobile-first, and you layer styles using breakpoint prefixes.
+
+```html
+<div class="text-sm md:text-base lg:text-lg">
+  Responsive text
+</div>
+```
+
+There are five breakpoints by default, inspired by common device resolutions:
+
+> * `sm`: 640px
+> * `md`: 768px
+> * `lg`: 1024px
+> * `xl`: 1280px
+> * `2xl`: 1536px
+
+## Dark Mode
+
+Dark mode doesn’t fight you in Tailwind. You add `dark:` variants and switch themes via a class or media query.
+
+```html
+<div class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+  Hello dark mode
+</div>
+```
+
+It’s clean, readable, and easy to maintain.
+
+Persist User Preference
+
+```tsx
+import { useEffect, useState } from "react";
+
+export function ThemeToggle() {
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.theme === "dark";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+
+    if (isDark) {
+      root.classList.add("dark");
+      localStorage.theme = "dark";
+    } else {
+      root.classList.remove("dark");
+      localStorage.theme = "light";
+    }
+  }, [isDark]);
+
+  return (
+    <button
+      onClick={() => setIsDark(!isDark)}
+      className="bg-blue-600 text-white px-4 py-2 rounded"
+    >
+      {isDark ? "Light Mode" : "Dark Mode"}
+    </button>
+  );
+}
+```
+
+## Theme Variables
+
+Everything in Tailwind comes from a theme: colors, spacing, fonts, breakpoints, shadows.
+You customize it in `tailwind.config.js`.
+
+```js
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors */
+  --color-brand-50: oklch(0.96 0.02 259);
+  --color-brand-500: oklch(0.62 0.21 259);
+  --color-brand-700: oklch(0.48 0.18 259);
+
+  /* Typography */
+  --font-body: Inter, system-ui, sans-serif;
+  --font-heading: Poppins, system-ui, sans-serif;
+
+  /* Spacing scale */
+  --spacing-lg: 2rem;
+
+  /* Border radius */
+  --radius-soft: 1.25rem;
+
+  /* Shadow */
+  --shadow-soft: 0 10px 30px rgb(0 0 0 / 0.08);
+
+  /* Custom breakpoint */
+  --breakpoint-3xl: 120rem;
+}
+```
+
+This gives you a real design system without inventing one from scratch.
+
+## Colors
+
+Tailwind ships with a thoughtfully designed color palette.
+Instead of random hex values, you use consistent scales:
+
+```html
+<div class="bg-indigo-500 text-white">
+  Indigo box
+</div>
+```
+
+You can override or extend these colors to match your brand.
+
+## Adding Custom Styles
+
+When utilities aren’t enough, you can still write CSS — just in a Tailwind-friendly way.
+
+```css
+@layer components {
+  .card {
+    background-color: var(--color-white);
+    border-radius: var(--radius-soft);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-xl);
+  }
+}
+```
+
+## Detecting Classes in Source Files
+
+Tailwind scans your source files and generates only the CSS you actually use.
+This keeps bundles tiny and build times fast.
+
+```js
+module.exports = {
+  content: ["./src/**/*.{html,js,ts,vue,jsx,tsx}"],
+};
+```
+
+If Tailwind can’t “see” a class in your source, it won’t be included in the final CSS.
+
+## Functions and Directives
+
+Add a Custom Utility with @utility
+
+```css
+@layer utilities {
+    .text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+}
+```
+
+Add a Component Class with @apply
+
+```css
+.btn {
+    @apply bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700;
+}
+```
+
+Use Variants in Custom CSS with @variant
+
+```css
+.card {
+    @apply p-4 bg-white rounded shadow;
+    @variant hover {
+        @apply shadow-lg;
+    }
+}
+```

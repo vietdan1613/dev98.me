@@ -7,13 +7,9 @@ date: 2026-01-06
 thumbnailText: Daily
 ---
 
-### What is a CSS Pre-processor?
-
-A CSS pre-processor (like **SASS/SCSS** or **LESS**) extends plain CSS with features such as **variables, nesting, mixins, and functions**. These features make styles more **maintainable and reusable**, especially as a React app grows.
+> A CSS pre-processor (like **SASS/SCSS** or **LESS**) extends plain CSS with features such as **variables, nesting, mixins, and functions**. These features make styles more **maintainable and reusable**, especially as a React app grows.
 
 ![Image](./imgs/scss.png)
-
----
 
 ### Why use a pre-processor in React?
 
@@ -25,8 +21,6 @@ React focuses on **component-based UI**, and pre-processors help keep styles org
 * **Nesting** → mirror component structure
 * **Mixins** → reuse common patterns (buttons, flex utilities)
 * **Cleaner maintenance** → fewer repeated rules
-
----
 
 ### Typical setup in React
 
@@ -60,36 +54,9 @@ $primary: #3b82f6;
 }
 ```
 
----
-
 ### Where CSS Pre-processors shine
 
 ✅ Migrating or maintaining **legacy CSS**
 ✅ **Design-heavy** apps with many custom styles
 ✅ Teams comfortable with traditional CSS workflows
 ✅ Complex animations or shared styling logic
-
----
-
-### Limitations in modern React
-
-⚠️ Styles live **outside JSX** (context switching)
-⚠️ Possible **global CSS conflicts** without discipline
-⚠️ No built-in unused CSS removal
-⚠️ Slower iteration compared to utility-first approaches
-
----
-
-### Pre-processors vs modern alternatives
-
-* **CSS Pre-processors** → enhance *how you write CSS*
-* **Utility-first (e.g., Tailwind)** → change *how you think about styling*
-
-Many teams now prefer utilities for scalability, while pre-processors remain valuable for **existing codebases**.
-
----
-
-### Final take
-
-> **CSS pre-processors are still useful in React**, especially for legacy projects or CSS-heavy designs.
-> For new React apps focused on speed and scalability, many teams choose utility-first solutions instead.

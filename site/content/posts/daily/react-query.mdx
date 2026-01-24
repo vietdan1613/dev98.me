@@ -7,9 +7,7 @@ date: 2026-01-17
 thumbnailText: State Management
 ---
 
-# What?
-
-**TanStack Query** is a library for managing **server state** in React applications.
+> **TanStack Query** is a library for managing **server state** in React applications.
 
 It helps with:
 
@@ -45,9 +43,7 @@ export function App() {
 }
 ```
 
-# useQuery 
-
-> Basic Data Fetching
+# Basic Data Fetching
 
 ```tsx
 import { useQuery } from "@tanstack/react-query";
@@ -92,7 +88,7 @@ Rules:
 | `enabled`              | Conditional fetching              |
 | `refetchOnWindowFocus` | Auto refetch on focus             |
 
-# useMutation
+# Mutation Fetching
 
 > POST / PUT / DELETE
 
@@ -135,7 +131,7 @@ queryClient.refetchQueries({ queryKey: ["todos"] });
 
 ✅ **Best practice**: use `invalidateQueries`
 
-# useInfiniteQuery
+# Infinite Fetching
 
 > Infinite Scrolling / Pagination
 

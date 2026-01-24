@@ -7,14 +7,9 @@ date: 2025-11-02
 thumbnailText: Structure
 ---
 
-After building and refactoring several React applications, I realized that **how you organize your project matters as much as the code itself**.
-A clean structure doesn’t just look nice — it makes scaling, debugging, and collaborating infinitely smoother.
+> Here are five lessons that completely changed how I structure React projects 
 
-Here are five lessons that completely changed how I structure React projects 👇
-
----
-
-## 1️⃣ Organize by **Feature**, Not by **Type**
+## 1. Organize by **Feature**, Not by **Type**
 
 A common mistake many developers make (including my past self) is splitting everything by type:
 
@@ -44,11 +39,7 @@ src/
       api/
 ```
 
-This way, your app scales naturally. When you add or remove a feature, it’s self-contained and easy to manage.
-
----
-
-## 2️⃣ Create a **shared/** Folder for Reusable Code
+## 2. Create a **shared/** Folder for Reusable Code
 
 Some elements — buttons, modals, utility functions — are used everywhere.
 Put these in a `shared/` folder to **avoid duplication** and keep your code DRY (Don’t Repeat Yourself).
@@ -63,9 +54,7 @@ src/
 
 This helps maintain consistency across your app and reduces future headaches.
 
----
-
-## 3️⃣ **Naming Conventions Matter**
+## 3. **Naming Conventions Matter**
 
 Clear naming = clear thinking. Here’s what works well:
 
@@ -75,9 +64,7 @@ Clear naming = clear thinking. Here’s what works well:
 
 Small details like this make your project easier to navigate — especially for new contributors.
 
----
-
-## 4️⃣ Think in **Layers** (Frontend System Design)
+## 4. Think in **Layers** 
 
 Just like in backend development, frontend apps have layers too. Understanding them helps you keep your architecture clean and modular.
 
@@ -87,13 +74,8 @@ Just like in backend development, frontend apps have layers too. Understanding t
 * **Utilities Layer →** Helper functions
 
 👉 **Rule:** Keep these layers **decoupled**.
-Never mix your API logic directly inside UI components. It might work now — but it’ll hurt later.
 
----
-
-## 5️⃣ A Scalable Project Structure Example
-
-Here’s a structure I’ve found works beautifully for real-world apps:
+## 5. A Scalable Project Structure Example
 
 ```
 src/
@@ -173,12 +155,3 @@ resolve: {
   }
 }
 ```
----
-
-## ⚡ Bonus Tips
-
-* 🧪 Keep test files next to components → `Button.test.jsx`
-* 🗂️ Document your structure in `README.md`
-* ⚙️ Keep config files at the root → `.eslintrc`, `tailwind.config.js`, etc.
-
----

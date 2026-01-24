@@ -11,68 +11,186 @@ thumbnailText: Redux
 
 ![Image](./imgs/redux-toolkit.gif)
 
-### Why Redux Toolkit?
+# Core Concepts 
 
-Classic Redux was powerful but verbose:
+> Flow: UI → Action → Reducer → Store → UI
 
-* Too many files
-* Manual immutability
-* Complex store setup
-
-Redux Toolkit fixes this by providing **opinionated defaults** and **simpler APIs**.
-
-## `createSlice`
-
-Defines **state + reducers + actions** in one place.
+### 1. Define a slice
 
 ```ts
-const slice = createSlice({
-  name: 'counter',
+const counterSlice = createSlice({
+  name: "counter",
   initialState: { value: 0 },
   reducers: {
     increment(state) {
-      state.value++
+      state.value++;
     },
   },
-})
+});
 ```
 
-✔ No action types
-✔ No switch statements
+RTK auto-creates:
 
-### Safe Mutations
+* Action types → `"counter/increment"`
+* Action creators → `increment()`
 
-RTK lets you “mutate” state in reducers.
-Behind the scenes, **Immer** converts it to immutable updates.
-
-## `configureStore`
-
-Replaces `createStore` and gives you:
-
-* Redux DevTools enabled
-* Default middleware
-* Safer configuration
+### 2. Configure the store
 
 ```ts
 const store = configureStore({
-  reducer: { counter: slice.reducer },
-})
+  reducer: { counter: counterSlice.reducer },
+});
 ```
 
-## `createAsyncThunk`
+RTK:
 
-Best for **simple async flows** (CRUD, single API calls).
+* Combines reducers
+* Adds default middleware
+* Enables DevTools
+
+### 3. UI dispatches actions
 
 ```ts
-export const fetchData = createAsyncThunk(
-  'data/fetch',
-  async () => fetch('/api').then(r => r.json())
-)
+dispatch(counterSlice.actions.increment());
 ```
 
-## Best Practices
+### 4. Reducer updates state (via Immer)
 
-* Organize Redux by **feature**, not by type
-* Keep components thin
-* Use RTK for state, Saga for side effects
-* Don’t store everything in Redux
+```ts
+state.value++; // looks mutable, stays immutable
+```
+
+### 5. Store saves new state → UI re-renders
+
+Components subscribed with `useSelector` get updated automatically.
+
+# Handle Async Logic
+
+> Dispatch thunk → pending → (API call) → fulfilled OR rejected → state update → UI re-render
+
+```ts
+// dispatch(fetchData());
+const slice = createSlice({
+  name: "data",
+  initialState: { data: null, loading: false, error: null },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchData.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch";
+      });
+  },
+});
+```
+
+RTK auto-dispatches:
+
+1. `data/fetch/pending`
+2. `data/fetch/fulfilled`
+3. `data/fetch/rejected`
+
+Handled in slice `extraReducers`.
+
+# Redux-Saga 
+
+> **Redux-Saga** is a Redux **middleware** for handling **complex async side effects** like API calls, delays, retries, concurrency, and cancellation.
+
+It uses **generator functions (`function*`)** to:
+
+* Pause/resume with `yield`
+* Write async logic in a sync-looking way
+* Control **concurrency, cancellation, sequencing**
+
+### Core Effects
+
+1. `call(fn, ...args)`
+
+* Runs a function (e.g., API call)
+* **Blocking**: waits for result
+
+2. `put(action)`
+
+* Dispatches a Redux action
+
+3. `takeEvery`
+
+* Runs saga for **every action**
+* No cancellation
+
+4. `takeLatest`
+
+* Runs only the **latest**
+* Cancels previous
+
+5. `takeLeading`
+
+* Runs only the **first**
+* Ignores others until done
+
+### Parallel Effects
+
+```js
+yield all([
+  call(fetchUser),
+  call(fetchPosts),
+  call(fetchComments),
+])
+```
+
+Runs effects **concurrently**.
+
+# Redux-Saga Example
+
+```ts
+// sagas.ts
+function* fetchPokemonAllWorker(): SagaIterator {
+    try {
+        const list: { id: number; name: string }[] =
+            yield call(api.fetchPokemonListApi)
+
+        const fullList: PokemonFull[] = yield all(
+            list.map(p => call(fetchPokemonFullWorker, p))
+        )
+
+        yield put(fetchPokemonAllSuccess(fullList))
+    } catch (e) {
+        yield put(fetchPokemonAllFailure('Failed to load Pokémon'))
+    }
+}
+
+function* fetchPokemonFullWorker(
+    pokemon: { id: number; name: string }
+): SagaIterator<PokemonFull> {
+    const detail: any = yield call(api.fetchPokemonDetail, pokemon.name)
+
+    const [species, types, abilities]: [any, any[], any[]] = yield all([
+        call(api.fetchByUrl, detail.species.url),
+        all(detail.types.map((t: any) => call(api.fetchByUrl, t.type.url))),
+        all(detail.abilities.map((a: any) =>
+            call(api.fetchByUrl, a.ability.url)
+        )),
+    ])
+
+    return {
+        id: detail.id,
+        name: detail.name,
+        detail,
+        species,
+        types,
+        abilities,
+    }
+}
+
+export default function* pokemonSaga(): SagaIterator {
+    yield takeLatest(fetchPokemonAll.type, fetchPokemonAllWorker)
+}
+```

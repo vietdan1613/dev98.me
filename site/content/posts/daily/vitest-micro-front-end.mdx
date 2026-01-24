@@ -7,10 +7,9 @@ date: 2025-12-29
 thumbnailText: Vitest
 ---
 
-**Micro Frontends** split a large frontend into **independently developed and deployed apps**. Combined with **Vite** and **Module Federation**, this approach enables fast builds, team autonomy, and scalable frontend architecture.
+> **Micro Frontends** split a large frontend into **independently developed and deployed apps**. Combined with **Vite** and **Module Federation**, this approach enables fast builds, team autonomy, and scalable frontend architecture.
 
 ![example](./imgs/vitest-1.png 'example')
-
 
 ## What is a Micro Frontend?
 
@@ -20,8 +19,6 @@ This helps teams:
 * Move faster
 * Reduce coupling
 * Scale independently
-
----
 
 ## Module Federation (in short)
 
@@ -33,16 +30,12 @@ With Vite, this is enabled via:
 @originjs/vite-plugin-federation
 ```
 
----
-
 ## Why Vite?
 
 * ⚡ Extremely fast dev server
 * 🧩 Simple configuration
 * 🚀 Ideal for micro-frontend workflows
 * 🛠 Works well with modern React setups
-
----
 
 ## Architecture Overview
 
@@ -54,8 +47,6 @@ Host App
  └── loads → Remote Components (via remoteEntry.js)
 ```
 
----
-
 ## Implementation Steps (High Level)
 
 ### 1. Create Apps
@@ -66,16 +57,12 @@ npm create vite@latest todo-components -- --template react
 npm install
 ```
 
----
-
 ### 2. Build Remote Components
 
 Expose reusable UI from the remote app:
 
 * `Input.jsx`
 * `List.jsx`
-
----
 
 ### 3. Add Module Federation (Remote)
 
@@ -98,8 +85,6 @@ npm run build
 npm run preview
 ```
 
----
-
 ### 4. Add Module Federation (Host)
 
 ```js
@@ -112,8 +97,6 @@ federation({
 })
 ```
 
----
-
 ### 5. Use Remote Components
 
 ```js
@@ -122,28 +105,3 @@ import List from "todo_components/List";
 ```
 
 Remote components now behave like **local imports**.
-
----
-
-## Key Benefits
-
-* ✅ Independent deployments
-* ✅ Faster team velocity
-* ✅ Shared dependencies
-* ✅ Clean separation of concerns
-
----
-
-## When to Use (and When Not)
-
-**Good fit when:**
-
-* Multiple teams
-* Large, evolving frontend
-* Independent release cycles
-
-**Avoid when:**
-
-* Small apps
-* Tight coupling required
-* Overhead outweighs benefits

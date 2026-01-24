@@ -9,8 +9,6 @@ thumbnailText: ReactJS
 
 Good naming is not about style — it’s about **clarity, scalability, and long-term maintainability**. Senior developers optimize for *reading code six months later*, not typing speed.
 
----
-
 ## 1. Components: **PascalCase**
 
 **Why:** Distinguishes components from HTML elements.
@@ -26,15 +24,6 @@ ModalConfirm.tsx
 * One component per file
 * File name = component name
 
-❌ Avoid
-
-```tsx
-userprofile.tsx
-settings_sidebar.tsx
-```
-
----
-
 ## 2. Hooks: **camelCase + `use` prefix**
 
 **Why:** React relies on this convention for rules of hooks.
@@ -44,21 +33,6 @@ useAuth.ts
 useUserSettings.ts
 useConnectionsTable.ts
 ```
-
-Inside hook:
-
-```ts
-const [isLoading, setIsLoading] = useState(false);
-```
-
-❌ Avoid
-
-```ts
-authHook()
-UseAuth()
-```
-
----
 
 ## 3. Variables & Functions: **camelCase**
 
@@ -77,16 +51,6 @@ hasPermission
 canEdit
 ```
 
-❌ Avoid
-
-```ts
-open
-permission
-flag1
-```
-
----
-
 ## 4. Constants & Enums: **SCREAMING_SNAKE_CASE**
 
 **Why:** Signals immutability instantly.
@@ -99,8 +63,6 @@ export const ROUTES = {
   SETTINGS: "/settings",
 };
 ```
-
----
 
 ## 5. Types & Interfaces: **PascalCase**
 
@@ -115,15 +77,6 @@ interface User {
 type SortOrder = "asc" | "desc";
 ```
 
-❌ Avoid
-
-```ts
-IUser
-TUser
-```
-
----
-
 ## 6. Props Interfaces: **`ComponentNameProps`**
 
 **Why:** Improves searchability and readability.
@@ -134,8 +87,6 @@ interface ModalProps {
   onClose: () => void;
 }
 ```
-
----
 
 ## 7. Event Handlers: **`handle` prefix**
 
@@ -152,8 +103,6 @@ JSX:
 <button onClick={handleSubmit} />
 ```
 
----
-
 ## 8. Files & Folders: **kebab-case**
 
 **Why:** Works best across OS, Git, and URLs.
@@ -166,16 +115,7 @@ features/
     user-profile.types.ts
 ```
 
-❌ Avoid mixing styles:
-
-```txt
-userProfile/
-User_Profile/
-```
-
----
-
-## 9. Page, Layout, Component Suffixes (Optional but Senior-Friendly)
+## 9. Page, Layout, Component suffixes
 
 ```txt
 home.page.tsx
@@ -188,32 +128,7 @@ user-card.component.tsx
 * Use suffixes only when project grows
 * Be consistent across the codebase
 
----
-
-## 10. Absolute Imports & Aliases
-
-**Why:** Cleaner imports, fewer refactors.
-
-```ts
-import MainLayout from "@/shared/layouts/main.layout";
-import UserCard from "@/features/users/components/user-card.component";
-```
-
----
-
-## Golden Rule (Senior Mindset)
-
-> If the name needs a comment — rename it.
-
-Good names:
-
-* Reduce documentation
-* Reduce bugs
-* Reduce onboarding time
-
----
-
-### TL;DR
+### Concise
 
 | Item             | Convention           |
 | ---------------- | -------------------- |
@@ -224,5 +139,3 @@ Good names:
 | Constant         | SCREAMING_SNAKE_CASE |
 | Type / Interface | PascalCase           |
 | Files            | kebab-case           |
-
----

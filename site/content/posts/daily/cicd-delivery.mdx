@@ -1,5 +1,5 @@
 ---
-title: "🚀 CI/CD: The Engine Behind Modern Software Delivery"
+title: "CI/CD with Git and Vercel"
 category: Daily
 author: Daniel Nguyen
 tags: ['#redux']
@@ -7,87 +7,133 @@ date: 2025-12-13
 thumbnailText: Redux Toolkit
 ---
 
-In today’s fast-paced development world, software teams need to deliver updates faster, with fewer bugs, and with confidence. That’s where **CI/CD** — short for **Continuous Integration** and **Continuous Delivery (or Deployment)** — comes in. It’s not just a buzzword; it’s the foundation of modern DevOps practices.
+> CI/CD is a DevOps practice that automates building, testing, and deploying code so teams can deliver changes faster, safer, and with confidence
 
----
+# What Is CI/CD?
 
-## 🔧 What is CI/CD?
+### Continuous Integration (CI)
 
-At its core, **CI/CD** is about **automation** and **continuous improvement**.
+Developers frequently push code to a shared Git repository (such as GitHub or GitLab). Each push triggers automated checks such as:
 
-* **Continuous Integration (CI):**
-  Developers frequently merge their code changes into a shared repository (like GitHub or GitLab). Each commit triggers an **automated build and test process**, ensuring that the new code doesn’t break existing functionality.
+* Installing dependencies
+* Running unit or integration tests
+* Building the application
 
-* **Continuous Delivery (CD):**
-  Once the code passes CI, it’s automatically prepared for release. This means your software can be deployed to production at any time — safely and reliably.
+### Continuous Delivery (CD)
 
-* **Continuous Deployment:**
-  The next step after delivery — every change that passes automated tests is **deployed automatically** to production, with zero manual steps.
+Once the code passes CI, it is automatically prepared for release. The application is always in a **deployable state**, and releases can happen safely at any time.
 
----
+### Continuous Deployment
 
-## ⚙️ Why CI/CD Matters
+The final step: every change that passes automated checks is **deployed automatically** to production — no manual steps required.
 
-Without CI/CD, teams often struggle with:
+# Why Git + Vercel?
 
-* **Integration Hell** — long-lived feature branches that break when merged.
-* **Manual Deployment** — risky, time-consuming release processes.
-* **Slow Feedback** — developers don’t know their code failed until days later.
+Git and Vercel form a lightweight yet production-ready CI/CD setup.
 
-CI/CD solves this by:
-✅ Detecting bugs early
-✅ Automating repetitive tasks
-✅ Improving release speed
-✅ Increasing confidence in every deployment
+**Git provides:**
 
----
+* Version control
+* Collaboration through pull requests
+* A trigger point for CI pipelines
 
-## 🧩 CI/CD Workflow Example
+**Vercel provides:**
 
-Here’s a simple flow you might see in a project:
+* Automatic deployments on every push
+* Preview deployments for pull requests
+* Built-in build and runtime optimizations
+* Easy rollbacks
 
-1. **Developer pushes code** → triggers CI pipeline
-2. **Build stage** → compiles app, installs dependencies
-3. **Test stage** → runs unit/integration tests
-4. **Deploy stage** → automatically deploys to staging or production
+Together, they enable a seamless developer experience.
 
-A common CI/CD tool setup might look like:
+### High-Level CI/CD Flow
 
-* **GitHub Actions** or **GitLab CI** for automation
-* **Docker** for consistent environments
-* **Jenkins** for enterprise CI/CD pipelines
-* **AWS / Vercel / Netlify** for deployment
+Here’s a typical workflow using Git and Vercel:
 
----
+1. Developer pushes code to GitHub
+2. GitHub Actions (CI) runs tests and builds the project
+3. If CI passes, Vercel automatically deploys the app
+4. A preview URL is generated for pull requests
+5. Production is updated on merge to `main`
 
-## 🚦 CI/CD in the Context of *Your Project (Example: TNC Automation Test)*
+# Setup Guide
 
-In my own project, **TNC Automation Test**, CI/CD plays a key role.
-We use Python + Selenium for automation scripts and ReactJS for the dashboard UI.
-Whenever a new test case or feature is added:
+### Step 1: Set Up Your Git Repository
 
-* The CI pipeline automatically runs all automation tests.
-* The CD pipeline deploys the latest test results to the web dashboard.
+1. Create a GitHub repository
+2. Push your project code
+3. Create a `main` branch for production
+4. (Optional) Create a `develop` branch for staging
 
-This ensures that every update is **tested, validated, and deployed** without manual effort — keeping the project stable and improving delivery speed.
+Use pull requests to merge changes safely.
 
----
+### Step 2: Add a CI Pipeline with GitHub Actions
 
-## 💡 Best Practices for CI/CD
+Create a file: `.github/workflows/ci.yml`
 
-1. **Keep builds fast** — use caching and parallel jobs.
-2. **Automate tests** — unit, integration, and end-to-end.
-3. **Use environment isolation** — Docker containers or virtual environments.
-4. **Monitor everything** — logs, metrics, alerts after deployment.
-5. **Fail fast** — detect errors early and stop the pipeline immediately.
+```yaml
+name: CI Pipeline
 
----
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
-## 🚀 Final Thoughts
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
 
-CI/CD isn’t just about automation — it’s about **culture**.
-It encourages collaboration, quality, and continuous improvement.
-With the right CI/CD setup, your team can move faster, deploy confidently, and spend more time building value rather than fixing broken releases.
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
----
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build project
+        run: npm run build
+```
+
+This workflow:
+
+* Runs on every push and pull request
+* Installs dependencies
+* Runs tests
+* Builds the app
+
+If any step fails, the pipeline stops.
+
+### Step 3: Connect Your Repo to Vercel
+
+1. Go to [https://vercel.com](https://vercel.com)
+2. Import your GitHub repository
+3. Choose your framework (Next.js, React, etc.)
+4. Set environment variables if needed
+5. Deploy
+
+Vercel will now:
+
+* Deploy every push to `main` to production
+* Create preview deployments for pull requests
+
+### Step 4: Configure Vercel for CI/CD
+
+You can let GitHub Actions handle CI and let Vercel handle CD.
+
+Or you can add deployment steps into GitHub Actions using the Vercel CLI.
+
+Example:
+
+```yaml
+- name: Deploy to Vercel
+  run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+```
