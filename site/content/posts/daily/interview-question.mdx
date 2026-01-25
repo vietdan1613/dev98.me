@@ -17,9 +17,97 @@ thumbnailText: Daily
 
 > Company product/domain + why it interests you
 
-### 3. **Can you describe a recent project you’ve been working on?**
+### 3. project you’ve been working
 
-> Your role, tech stack, and impact
+#### 3.1 Can you walk me through the architecture of your KIC Automation Testing project?
+
+> system thinking, ownership, and ability to explain complexity clearly.
+> * Frontend (React, feature-based structure)
+> * Backend (.NET Core APIs)
+> * Selenium automation layer
+> * Data flow: trigger test → backend → execution → results → dashboard
+
+> Why did you use Redux-Saga instead of Redux Thunk or only React Query?
+> (decision-making and async complexity handling)
+> * Controlled concurrency
+> * Cancellation, retries
+> * Sequencing dependent requests
+> * Why Thunk wasn’t enough
+> * Why React Query alone wasn’t enough
+
+> How did Redux-Saga and React Query work together without overlapping responsibilities?
+> (real-world state architecture maturity)
+> * Saga for orchestration / workflows
+> * React Query for server state + caching
+> * Avoiding duplication
+> * When data lived in Redux vs Query cache
+
+> What performance problems did you face and how did you fix them?
+> (Senior engineers are judged on this)
+> * Unnecessary re-renders
+> * Large datasets (test results)
+> * Query caching
+> * Memoization, pagination, virtualization
+> * Reduced API calls
+
+> What technical decisions did you personally own?
+> (leadership and seniority)
+> * Feature-based structure
+> * Redux-Saga adoption
+> * React Query integration
+> * Testing strategy
+> * Integration approach with automation backend
+
+#### 3.2 How did you design the communication between the React UI and Selenium automation?
+
+> * API triggers
+> * Long-running jobs
+> * Polling or WebSocket
+> * Error handling
+> * Status tracking
+
+> How did you handle long-running test executions?
+> * Async job IDs
+> * Progress tracking
+> * Polling
+> * UI states
+> * Timeouts / retries
+
+> How did you structure your frontend codebase for scalability?”
+> * Feature-based folders
+> * Shared components
+> * Domain boundaries
+> * Avoiding tight coupling
+
+> What kind of tests did you write and what was hard to test?
+> * Jest + Testing Library
+> * Mock APIs
+> * Async flows
+> * Automation integration edge cases
+
+> What would you redesign if you started over?
+> * Honest trade-offs
+> * Technical debt
+> * Tooling improvements
+> * What you learned
+
+#### 3.2 How did you integrate MetaMask?
+
+> * Wallet connection
+> * Provider detection
+> * Network changes
+> * Session handling
+
+> How did you handle failed blockchain transactions?
+> * UI error states
+> * Reverts
+> * User feedback
+> * Retry logic
+
+> Why Redux + Thunk for the Web3 project?
+> * Simpler async needs
+> * Team maturity at the time
+> * Trade-offs vs Saga
 
 ### 4. **What interests you about this position?**
 
@@ -39,7 +127,17 @@ thumbnailText: Daily
 
 ### 8. **What tools do you use to manage your work?**
 
-> Task tracking, version control, and communication tools
+> - They help automate tasks, improve code quality, and streamline workflows.
+> - Examples: 
+>   - VScode for code editing
+>   - Git for version control
+>   - Vite or Webpack for build tools
+>   - Jest and React Testing Library for testing frameworks
+>   - Jira for project management
+
+> What is Vite, and why would you choose it over Webpack?
+> - Webpack is a powerful but complex module bundler that can have slower build times and requires more configuration.
+> - Vite is a modern build tool that offers faster development startup and hot module replacement (HMR) using native ES modules.
 
 ### 9. **When starting a project, how do you plan and organize your work to ensure completion?**
 
@@ -72,6 +170,54 @@ thumbnailText: Daily
 ### 16. **What are your salary expectations?**
 
 > Market-based range + openness to discussion
+
+### 17.Can you describe your **CI/CD experience**?
+
+> -  Step 1: Set Up Your Git Repository
+> -  Step 2: Configure GitHub Actions for CI
+> -  Step 3: Set Up Vercel for CD
+
+### 18. How you improve web accessibility in your projects?
+
+> - Use semantic HTML elements
+> - Ensure keyboard navigability
+> - Provide alt text for images
+> - Use ARIA roles and attributes appropriately
+> - Ensure sufficient color contrast
+> - Test with screen readers
+
+### 19. Can you walk me through your typical software development process from requirements and planning to release and maintenance?
+
+> 1. Requirements Gathering: Understand project goals.
+> 2. Planning: Break down requirements into tasks, estimate effort.
+> 3. Design: create a wireframe, folder architecture, data flow.
+> 4. Development: Write code following best practices
+> 5. Testing: Perform unit, integration, and end-to-end testing to catch bugs and ensure functionality.
+> 6. Deployment: Use CI/CD pipelines to automate build, test, and deployment processes.
+> 7. Maintenance: Monitor performance, fix bugs
+
+### 20. what is Agile methodology?
+
+> - Agile is an iterative approach to software development that emphasizes collaboration, customer feedback, and small, rapid releases.
+
+
+> How Agile methodologies improve software development processes in your team? 
+> - They promote adaptability to change, enhance communication, and deliver value incrementally.
+> - They encourage continuous improvement through regular retrospectives and feedback loops.
+> - They foster a collaborative environment where cross-functional teams work together effectively.
+
+> What are some common Agile frameworks or practices you have experience with?
+> - Scrum: roles (Scrum Master, Product Owner), ceremonies (sprints, stand-ups, retrospectives)
+> - User stories: capturing requirements from the user perspective
+
+### 21. How do you structure a large React application for scalability and maintainability?
+
+> - Use a modular folder structure (components, pages, services, hooks, utils)
+> - Follow component-driven development
+> - Use state management (Redux, Context API) appropriately
+> - Implement code splitting and lazy loading
+> - Write comprehensive tests (unit, integration, e2e)
+> - API layer for data fetching and caching
 
 #  React Technical
 
@@ -570,52 +716,6 @@ thumbnailText: Daily
 > how TypeScript work with third-party JS libraries?
 > - Use type declaration files (.d.ts) to provide type information for libraries without built-in TypeScript support.
 
-# Accessibility
-
-### 1. How you improve web accessibility in your projects?
-
-> - Use semantic HTML elements
-> - Ensure keyboard navigability
-> - Provide alt text for images
-> - Use ARIA roles and attributes appropriately
-> - Ensure sufficient color contrast
-> - Test with screen readers
-
-# Tool
-
-### 1. What are software development tools, and why are they important in modern web development?
-
-> - They help automate tasks, improve code quality, and streamline workflows.
-> - Examples: 
->   - VScode for code editing
->   - Git for version control
->   - Vite or Webpack for build tools
->   - Jest and React Testing Library for testing frameworks
->   - Jira for project management
-
-> What is Vite, and why would you choose it over Webpack?
-> - Webpack is a powerful but complex module bundler that can have slower build times and requires more configuration.
-> - Vite is a modern build tool that offers faster development startup and hot module replacement (HMR) using native ES modules.
-
-# Development process
-
-### 1. Can you walk me through your typical software development process from requirements and planning to release and maintenance?
-
-> 1. Requirements Gathering: Understand project goals.
-> 2. Planning: Break down requirements into tasks, estimate effort.
-> 3. Design: create a wireframe, folder architecture, data flow.
-> 4. Development: Write code following best practices
-> 5. Testing: Perform unit, integration, and end-to-end testing to catch bugs and ensure functionality.
-> 6. Deployment: Use CI/CD pipelines to automate build, test, and deployment processes.
-> 7. Maintenance: Monitor performance, fix bugs
-
-# CI/CD
-
-1. Can you describe your **CI/CD experience**?
-
-> * What CI/CD tools have you used (GitHub Actions, GitLab CI, Jenkins, Bitbucket)?   
-> * What stages were included (lint, test, build, deploy)?
-
 # HTML
 
 ### 1. What are semantic HTML elements, and why are they important?
@@ -810,30 +910,3 @@ thumbnailText: Daily
 
 > How do you optimize Tailwind CSS for production?
 > - Use PurgeCSS to remove unused styles and enable tree-shaking in the build process.
-
-# Agile
-
-### 1. what is Agile methodology?
-
-> - Agile is an iterative approach to software development that emphasizes collaboration, customer feedback, and small, rapid releases.
-
-
-> How Agile methodologies improve software development processes in your team? 
-> - They promote adaptability to change, enhance communication, and deliver value incrementally.
-> - They encourage continuous improvement through regular retrospectives and feedback loops.
-> - They foster a collaborative environment where cross-functional teams work together effectively.
-
-> What are some common Agile frameworks or practices you have experience with?
-> - Scrum: roles (Scrum Master, Product Owner), ceremonies (sprints, stand-ups, retrospectives)
-> - User stories: capturing requirements from the user perspective
-
-# Architecture
-
-### 1. How do you structure a large React application for scalability and maintainability?
-
-> - Use a modular folder structure (components, pages, services, hooks, utils)
-> - Follow component-driven development
-> - Use state management (Redux, Context API) appropriately
-> - Implement code splitting and lazy loading
-> - Write comprehensive tests (unit, integration, e2e)
-> - API layer for data fetching and caching

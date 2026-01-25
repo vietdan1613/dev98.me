@@ -1,0 +1,100 @@
+---
+title: "JWT for Login Authentication"
+category: Daily
+author: Daniel Nguyen
+tags: ['#Daily']
+date: 2026-01-02
+thumbnailText: Login
+---
+
+> In JavaScript, the **`this`** keyword refers to **the object that is currently executing the code**.
+> Its value depends on **how a function is called**, not where it’s written.
+
+## Object Method
+
+➡️ `this` refers to the **object before the dot** → `user`
+
+```js
+const user = {
+  name: "Daniel",
+  sayHi() {
+    console.log(this.name);
+  }
+};
+
+user.sayHi(); 
+```
+
+## Regular Function
+
+* In non-strict mode → `window`
+* In strict mode → `undefined`
+
+```js
+function show() {
+  console.log(this);
+}
+
+show(); // window (browser) or undefined (strict mode)
+```
+
+# Arrow Functions
+
+- Arrow functions **don’t have their own `this`**.
+- They use `this` from the surrounding scope.
+
+```js
+const user = {
+  name: "Daniel",
+  sayHi: () => {
+    console.log(this.name);
+  }
+};
+
+user.sayHi(); // undefined
+```
+
+➡️ `this` is NOT `user` here
+
+# Event Handlers
+
+```js
+button.addEventListener("click", function () {
+  console.log(this); // button element
+});
+```
+
+➡️ `this` refers to the element that fired the event
+
+## call, apply, bind
+
+```js
+function greet() {
+  console.log(this.name);
+}
+
+const user = { name: "Daniel" };
+
+greet.call(user);  // Daniel
+greet.apply(user); // Daniel
+
+const bound = greet.bind(user);
+bound();           // Daniel
+```
+
+| Method | Calls Function Now? | How args are passed | Returns new function? |
+| ------ | ------------------- | ------------------- | --------------------- |
+| call   | ✅ Yes               | One by one          | ❌ No                  |
+| apply  | ✅ Yes               | Array               | ❌ No                  |
+| bind   | ❌ No                | One by one          | ✅ Yes                 |
+
+## Quick Summary
+
+| Situation                | What `this` is             |
+| ------------------------ | -------------------------- |
+| Object method            | The object                 |
+| Regular function         | `window` or `undefined`    |
+| Arrow function           | Inherited from outer scope |
+| Event handler (function) | The DOM element            |
+| call/apply/bind          | Explicitly set             |
+
