@@ -1,0 +1,78 @@
+---
+title: "clsx"
+category: Daily
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2026-02-02
+thumbnailText: Daily
+---
+
+> `clsx` is a tiny JavaScript utility. It’s commonly used in React to build `className` values based on state (error, active, disabled, etc.) without messy string logic.
+
+# Install
+
+```bash
+npm install clsx
+```
+
+# Why use 
+
+* **Very small** (~1KB)
+* **Improves readability**
+* **Removes string concatenation**
+* **Works perfectly with Tailwind**
+* **Easy to scale** as components grow
+
+# Usage
+
+```ts
+import clsx from "clsx"
+
+clsx("btn", "btn-primary")
+// → "btn btn-primary"
+```
+
+### Conditional
+
+```ts
+clsx(
+  "btn",
+  isActive && "btn-active",
+  isDisabled && "btn-disabled"
+)
+
+// isActive = true
+// isDisabled = false
+// → "btn btn-active"
+```
+
+> Only truthy values are included.
+
+### Object syntax
+
+```ts
+clsx("input", {
+  "input-error": hasError,
+  "input-disabled": disabled,
+})
+
+// hasError = true
+// disabled = true
+// → "input input-error input-disabled"
+```
+
+> Keys with truthy values are included.
+
+### React example
+
+```tsx
+<input
+  className={clsx(
+    "h-10 rounded-md border px-3",
+    error
+      ? "border-red-500"
+      : "border-gray-300",
+    disabled && "opacity-50 cursor-not-allowed"
+  )}
+/>
+```
