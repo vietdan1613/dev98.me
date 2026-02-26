@@ -1,0 +1,263 @@
+---
+title: "NextJS - Server vs Client Components"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-09-04
+thumbnailText: NextJS
+---
+
+Next.js splits your React tree across two environments:
+
+* **Server Components** → Run on the server for data fetching, security, and performance.
+* **Client Components** → Run in the browser for interactivity and state.
+
+By default, **all layouts and pages are Server Components**. You opt into Client Components only when necessary.
+
+
+# Server Components
+
+Use Server Components when you need to:
+
+* Fetch data from databases or APIs close to the source
+* Use secrets (API keys, tokens) securely
+* Reduce JavaScript sent to the browser
+* Improve First Contentful Paint (FCP)
+* Stream content progressively
+* Render static or SEO-heavy content
+
+### Example
+
+```tsx
+// app/[id]/page.tsx (Server Component)
+import LikeButton from '@/app/ui/like-button'
+import { getPost } from '@/lib/data'
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const post = await getPost(id)
+
+  return (
+    <main>
+      <h1>{post.title}</h1>
+      <LikeButton likes={post.likes} />
+    </main>
+  )
+}
+```
+
+This component:
+
+* Fetches data securely on the server
+* Sends only the required UI to the client
+
+# Client Components
+
+Use Client Components when you need:
+
+* State (`useState`)
+* Effects (`useEffect`)
+* Event handlers (`onClick`, `onChange`)
+* Browser APIs (`localStorage`, `window`, geolocation)
+* Custom hooks or animations
+
+### Example
+
+```tsx
+'use client'
+
+import { useState } from 'react'
+
+export default function LikeButton({ likes }: { likes: number }) {
+  const [count, setCount] = useState(likes)
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      ❤️ {count}
+    </button>
+  )
+}
+```
+
+The `"use client"` directive defines a **boundary** between server and client code.
+
+# How Server and Client Components Work
+
+### 1. On the Server
+
+Next.js renders Server Components into a special format called the:
+
+> **React Server Component Payload (RSC Payload): Think of it as a blueprint of your UI, not the UI itself.**
+
+#### Why Does RSC Payload Exist?
+
+> With React Server Components, we don’t want to send unnecessary JavaScript anymore.
+
+Before RSC, the server sent:
+
+- Fully rendered HTML
+- Then the browser downloaded all React JavaScript to hydrate everything.
+
+So instead, Next.js sends:
+
+- HTML → for fast initial paint
+- RSC Payload → instructions describing the component tree
+- JS only for Client Components
+
+This lets React rebuild the app without shipping server-only code to the browser.
+
+### 2. On First Load in the Browser
+
+The browser receives:
+
+1. **HTML preview** → Fast initial paint
+2. **RSC Payload** → Rebuilds the component tree
+3. **Client JavaScript** → Hydrates only interactive parts
+
+This process is called **hydration** — attaching event handlers to static HTML.
+
+> Server Components are never hydrated. They never run in the browser.
+
+### 3. On Subsequent Navigations
+
+Next.js:
+
+* Prefetches RSC payloads
+* Updates UI without full reload
+* Preserves client state
+* Feels faster than traditional SPAs
+
+# Examples
+
+### 1. Reducing JavaScript Bundle Size
+
+> A major benefit of Server Components is **sending less JS**.
+
+```tsx
+// layout.tsx (Server)
+import Search from './search'
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Logo />
+      <Search />
+      {children}
+    </>
+  )
+}
+```
+
+```tsx
+// search.tsx (Client)
+'use client'
+
+export default function Search() {
+  // interactive logic
+}
+```
+
+Only the search bar ships JavaScript.
+
+### 2. Passing Data from Server → Client
+
+You can pass props from Server Components to Client Components:
+
+```tsx
+// Server
+<LikeButton likes={post.likes} />
+```
+
+Props must be **serializable** (JSON-safe).
+
+You cannot pass:
+
+* Functions
+* Class instances
+* Database connections
+
+### 3. Interleaving Server and Client Components
+
+You can nest Server Components inside Client Components using `children`.
+
+### Example: Modal (Client) + Cart (Server)
+
+```tsx
+// modal.tsx
+'use client'
+export default function Modal({ children }: { children: React.ReactNode }) {
+  return <div className="modal">{children}</div>
+}
+```
+
+```tsx
+// page.tsx (Server)
+import Modal from './ui/modal'
+import Cart from './ui/cart'
+
+export default function Page() {
+  return (
+    <Modal>
+      <Cart />
+    </Modal>
+  )
+}
+```
+
+Server content is rendered first, then inserted into the interactive shell.
+
+### 4. Using Context Providers
+
+React Context is not supported in Server Components.
+
+Create providers as Client Components:
+
+```tsx
+'use client'
+import { createContext } from 'react'
+
+export const ThemeContext = createContext('dark')
+
+export default function ThemeProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeContext.Provider value="dark">
+      {children}
+    </ThemeContext.Provider>
+  )
+}
+```
+
+Import them inside a Server layout to bridge both worlds.
+
+```tsx
+import ThemeProvider from './theme-provider'
+ 
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+### 5. Sharing Data with `React.cache`
+
+Prevent duplicate fetching across Server + Client:
+
+```tsx
+import { cache } from 'react'
+
+export const getUser = cache(async () => {
+  const res = await fetch('https://api.example.com/user')
+  return res.json()
+})
+```
+
+Multiple calls during the same request reuse the same result.

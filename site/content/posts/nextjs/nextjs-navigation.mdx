@@ -1,0 +1,129 @@
+---
+title: "NextJS - Linking & Navigating"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-09-02
+thumbnailText: NextJS
+---
+
+> Prefer static rendering whenever possible.
+
+In the App Router, **pages and layouts are React Server Components by default**.
+When you navigate, the server generates a **Server Component Payload**, which the client uses to update the UI—without a full reload.
+
+There are two rendering strategies:
+
+* **Static Rendering (Prerendered)** → Generated at build time and cached. Fastest.
+* **Dynamic Rendering** → Generated per request. Flexible but slower.
+
+# Prefetching
+
+> - Always use `<Link>` for internal navigation.   
+> - Next.js automatically **prefetches routes** when a `<Link>` enters the viewport or is hovered.
+
+```tsx
+import Link from 'next/link'
+
+<Link href="/blog">Blog</Link>
+<a href="/blog">Blog</a> // ❌ No prefetch, slower navigation
+```
+
+Using a normal `<a>` tag disables this optimization:
+
+### Static vs Dynamic Routes
+
+Prefetching behavior depends on route type:
+
+| Route Type       | Prefetch Behavior        |
+| ---------------- | ------------------------ |
+| Static           | Full route is prefetched |
+| Dynamic (`[id]`) | Skipped or partial       |
+
+Dynamic routes can feel slower because they require a server response before rendering.
+
+# Streaming
+
+> Think of it as “render now, finish later.”
+
+To improve UX for dynamic routes, Next.js supports **streaming**.
+
+Add a `loading.tsx` file:
+
+```
+app/blog/[slug]/loading.tsx
+```
+
+```tsx
+export default function Loading() {
+  return <p>Loading...</p>
+}
+```
+
+This enables:
+
+* Instant visual feedback
+* Partial prefetching of layouts
+
+### Generate Static Params for Predictable Dynamic Routes
+
+If dynamic routes are known ahead of time, you can statically generate them:
+
+```tsx
+export async function generateStaticParams() {
+  const posts = await fetch('https://api.example.com/posts')
+    .then(res => res.json())
+
+  return posts.map(post => ({
+    slug: post.slug,
+  }))
+}
+```
+
+Now those pages behave like static routes—fast and cacheable.
+
+# What Can Make Navigation Slow
+
+### 1. Missing `loading.tsx` on Dynamic Routes
+
+Users see nothing while waiting → perceived lag.
+
+### 2. Not Using `generateStaticParams`
+
+Routes that could be static fall back to dynamic rendering.
+
+### 3. Large Client Bundles Delaying Hydration
+
+Prefetching cannot start until `<Link>` hydrates.
+
+> Move logic to Server Components whenever possible.
+
+# Disabling Prefetch
+
+For very large link lists:
+
+```tsx
+<Link href="/blog" prefetch={false}>Blog</Link>
+```
+
+Or prefetch only on hover:
+
+```tsx
+'use client'
+import Link from 'next/link'
+import { useState } from 'react'
+
+export default function HoverPrefetchLink({ href, children }) {
+  const [active, setActive] = useState(false)
+
+  return (
+    <Link
+      href={href}
+      prefetch={active ? null : false}
+      onMouseEnter={() => setActive(true)}
+    >
+      {children}
+    </Link>
+  )
+}
+```

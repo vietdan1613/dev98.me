@@ -1,0 +1,178 @@
+---
+title: "NextJS - Cache Components"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-09-05
+thumbnailText: NextJS
+---
+
+**Cache Components** (opt-in via `cacheComponents: true`) introduce a rendering model called:
+
+> **Partial Prerendering (PPR)**
+
+Next.js prerenders as much as possible at build time into a **static HTML shell**, then selectively streams or reuses dynamic pieces.
+
+This gives you:
+
+✅ Static-site speed    
+✅ Dynamic data where needed    
+✅ Smaller JS bundles    
+
+# How Rendering Works with Cache Components
+
+At build time, Next.js walks your component tree and asks:
+
+> *“Can this complete without a request?”*
+
+### If YES → prerender it into the static shell
+
+### If NO → you must choose:
+
+* **Defer to request time** with `<Suspense>`
+* **Cache it** with `'use cache'`
+
+If you don’t handle it explicitly, you’ll see:
+
+```
+Uncached data was accessed outside of <Suspense>
+```
+
+# Automatically Prerendered Content
+
+These are safe to execute during prerendering:
+
+* Pure computations
+* Local file reads
+* Static imports
+* Deterministic logic
+
+```ts
+import fs from 'node:fs'
+
+export default async function Page() {
+  const content = fs.readFileSync('./config.json', 'utf-8')
+  const data = JSON.parse(content)
+
+  return <div>{data.title}</div>
+}
+```
+
+➡ This becomes part of the **static shell automatically.**
+
+# Deferring Rendering to Request Time
+
+If something needs live data (API, DB, etc.), wrap it in **Suspense**:
+
+```tsx
+<Suspense fallback={<p>Loading...</p>}>
+  <DynamicContent />
+</Suspense>
+```
+
+What happens:
+
+* Fallback → included in static shell
+* Real content → streamed at request time
+
+This enables **parallel rendering** instead of blocking the page.
+
+# Using `'use cache'`
+
+This is the key feature.
+
+### It caches the result of an async function or component so it can be reused across requests.
+
+```ts
+import { cacheLife } from 'next/cache'
+ 
+export default async function Page() {
+  'use cache'
+  cacheLife('hours')
+ 
+  const users = await db.query('SELECT * FROM users')
+ 
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Now:
+
+✔ Runs once.   
+✔ Included in static shell.   
+✔ Reused across users.   
+✔ Revalidated later.   
+
+### Using Cache with Runtime Data
+
+```ts
+const session = (await cookies()).get('session')?.value
+
+return <CachedContent sessionId={session} />
+```
+
+```ts
+async function CachedContent({ sessionId }) {
+  'use cache'
+  return fetchUserData(sessionId)
+}
+```
+
+The argument becomes part of the cache key.
+
+### `cacheTag()`
+
+Attach labels to cached data.
+
+```ts
+'use cache'
+cacheTag('posts')
+```
+
+### `updateTag()` — Immediate Refresh
+
+Used after mutations (e.g., cart updates).
+
+```ts
+updateTag('cart')
+```
+
+Instantly invalidates and refreshes cache.
+
+### `revalidateTag()` — Background Refresh
+
+```ts
+revalidateTag('posts', 'max')
+```
+
+Fast response now, fresh data soon.
+
+
+# Putting It All Together
+
+```tsx
+export default function BlogPage() {
+  return (
+    <>
+      <Header />        {/* Static */}
+      <BlogPosts />     {/* Cached */}
+
+      <Suspense fallback={<p>Loading preferences...</p>}>
+        <UserPreferences /> {/* Dynamic */}
+      </Suspense>
+    </>
+  )
+}
+```
+
+Users see:
+
+⚡ Instant layout.    
+⚡ Cached content ready.    
+⏳ Personalized data streams in.    

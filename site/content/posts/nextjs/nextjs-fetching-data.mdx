@@ -1,0 +1,280 @@
+---
+title: "NextJS - Data Fetching"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# Server Components
+
+Server Components are the default in the App Router. Because they run on the server, they allow secure and efficient data access.
+
+### Simply make your component `async`:
+
+```tsx
+export default async function Page() {
+  const data = await fetch('https://api.vercel.app/blog')
+  const posts = await data.json()
+
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+* `fetch` responses are **not cached by default**
+* However, Next.js **pre-renders and caches route output**
+
+```ts
+fetch(url, { cache: 'no-store' })
+```
+
+### Using Database
+
+Because Server Components run on the server, you can directly query your database:
+
+```tsx
+import { db, posts } from '@/lib/db'
+
+export default async function Page() {
+  const allPosts = await db.select().from(posts)
+
+  return (
+    <ul>
+      {allPosts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+No API route required. No client bundle increase. Fully secure.
+
+# Client Components
+
+Sometimes you need to fetch data on the client (e.g., user interactions, polling, or real-time updates).
+
+There are two main approaches:
+
+* React’s `use()` API (for streaming)
+* Community libraries like SWR or React Query
+
+### Streaming Data with React’s `use()` API
+
+Instead of awaiting the data in the Server Component, pass the promise to a Client Component.
+
+```tsx
+//Server Component
+import Posts from '@/app/ui/posts'
+import { Suspense } from 'react'
+
+export default function Page() {
+  const posts = getPosts() // Don’t await
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Posts posts={posts} />
+    </Suspense>
+  )
+}
+```
+
+```tsx
+//Client Component
+'use client'
+import { use } from 'react'
+
+export default function Posts({ posts }) {
+  const allPosts = use(posts)
+
+  return (
+    <ul>
+      {allPosts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Because the component is wrapped in `<Suspense>`, the fallback UI appears while the promise resolves.
+
+### Using Community Libraries (Example: React Query)
+
+```tsx
+'use client'
+
+const fetcher = (url) => fetch(url).then((r) => r.json())
+
+export default function BlogPage() {
+  const { data, error, isLoading } = useQuery(
+    'https://api.vercel.app/blog',
+    fetcher
+  )
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  return (
+    <ul>
+      {data.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+These libraries provide advanced features like caching, background revalidation, and refetching.
+
+# Caching
+
+
+## 🧠 Using React’s `cache()` for Non-Fetch Data
+
+When using an ORM or database directly:
+
+```tsx
+import { cache } from 'react'
+import { db, posts, eq } from '@/lib/db'
+
+export const getPost = cache(async (id: string) => {
+  return db.query.posts.findFirst({
+    where: eq(posts.id, parseInt(id)),
+  })
+})
+```
+
+This prevents redundant database queries.
+
+---
+
+# 🌊 4. Streaming in Next.js
+
+Without streaming, the entire page waits for all data before rendering.
+
+With streaming, HTML is broken into smaller chunks and progressively sent to the client.
+
+There are two main ways to enable streaming.
+
+---
+
+## 🔹 Method 1: `loading.js`
+
+Create:
+
+```
+app/blog/loading.tsx
+```
+
+```tsx
+export default function Loading() {
+  return <div>Loading...</div>
+}
+```
+
+When navigating, users instantly see layout + loading state while the page renders.
+
+---
+
+## 🔹 Method 2: `<Suspense>`
+
+More granular control:
+
+```tsx
+import { Suspense } from 'react'
+import BlogList from '@/components/BlogList'
+import BlogListSkeleton from '@/components/BlogListSkeleton'
+
+export default function BlogPage() {
+  return (
+    <div>
+      <header>
+        <h1>Welcome to the Blog</h1>
+        <p>Read the latest posts below.</p>
+      </header>
+
+      <main>
+        <Suspense fallback={<BlogListSkeleton />}>
+          <BlogList />
+        </Suspense>
+      </main>
+    </div>
+  )
+}
+```
+
+Only `BlogList` is streamed. The header renders immediately.
+
+---
+
+# 🔄 5. Sequential vs Parallel Data Fetching
+
+## ❌ Sequential (Slow)
+
+```tsx
+const artist = await getArtist(username)
+const albums = await getAlbums(username)
+```
+
+The second request waits for the first.
+
+---
+
+## ✅ Parallel (Recommended)
+
+```tsx
+const artistPromise = getArtist(username)
+const albumsPromise = getAlbums(username)
+
+const [artist, albums] = await Promise.all([
+  artistPromise,
+  albumsPromise,
+])
+```
+
+Both requests start at the same time.
+
+---
+
+# 🚀 6. Preloading Data
+
+Preloading starts data fetching early to prevent blocking.
+
+```tsx
+const preload = (id: string) => {
+  void getItem(id)
+}
+```
+
+Call `preload(id)` before other blocking operations to improve performance.
+
+You can also combine this with React’s `cache()` and `server-only` utilities for reusable server-side data access patterns.
+
+---
+
+# 🎯 Key Takeaways
+
+* Fetch in **Server Components by default**
+* Use **Client Components only when necessary**
+* Use **Suspense + streaming** for better UX
+* Avoid waterfalls with **Promise.all**
+* Use **cache()** for database deduplication
+* Design meaningful loading states
+
+Next.js App Router gives us a powerful data-fetching model that blends server performance with client interactivity — and when used correctly, it significantly improves both UX and scalability.
+
+---
+
+If you’d like, I can:
+
+* Refactor this into a **LinkedIn-style technical article**
+* Optimize it for **SEO**
+* Or rewrite it in a more beginner-friendly style
