@@ -1,0 +1,229 @@
+---
+title: "NextJS - Updating Data"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-01
+thumbnailText: NextJS
+---
+
+With **Server Functions** (and Server Actions), you can mutate data directly on the server
+
+Because it’s invoked over a network request, it must be `async`.
+
+> ✅ Server Action = Server Function used for form submissions & mutations.   
+> ✅ Server Function = The broader concept
+
+# Creating Server Functions
+
+You define a Server Function using the `"use server"` directive.
+
+You can:
+
+1. Add it inside a function.   
+2. Add it at the top of a file (marking all exports as server functions)
+
+```ts
+// Option 1: Inside a Function
+export async function createPost(formData: FormData) {
+  'use server'
+
+  const title = formData.get('title')
+  const content = formData.get('content')
+
+  // Update database
+  // Revalidate cache
+}
+
+// Option 2: At the Top of a File
+//This marks every exported function in that file as a Server Function.
+'use server'
+
+export async function createPost() {}
+export async function deletePost() {}
+```
+
+### Server Components
+
+You can inline them directly inside a Server Component:
+
+```tsx
+export default function Page() {
+  async function createPost(formData: FormData) {
+    'use server'
+    // ...
+  }
+
+  return <></>
+}
+```
+
+### Client Components
+
+1. You **cannot define** Server Functions inside Client Components.
+
+But you **can import and call them**.
+
+```tsx
+'use client'
+
+import { createPost } from '@/app/actions'
+
+export function Button() {
+  return <button formAction={createPost}>Create</button>
+}
+```
+> In Client Components, forms invoking Server Actions will queue submissions if JavaScript isn't loaded yet, and will be prioritized for hydration. After hydration, the browser does not refresh on form submission.
+
+2. You can pass a Server Function to a Client Component:
+
+```tsx
+<ClientComponent updateItemAction={updateItem} />
+```
+
+```tsx
+'use client'
+
+export default function ClientComponent({
+  updateItemAction,
+}: {
+  updateItemAction: (formData: FormData) => void
+}) {
+  return <form action={updateItemAction}>{/* ... */}</form>
+}
+```
+
+# Invoking Server Functions
+
+There are **two main ways**:
+
+1. Forms.   
+2. Event handlers (onClick, useEffect)
+
+### 1. Using Forms 
+
+React extends the `<form>` element to accept Server Functions.
+
+```tsx
+import { createPost } from '@/app/actions'
+
+export function Form() {
+  return (
+    <form action={createPost}>
+      <input type="text" name="title" />
+      <input type="text" name="content" />
+      <button type="submit">Create</button>
+    </form>
+  )
+}
+```
+
+The function automatically receives `FormData`.
+
+```ts
+'use server'
+
+export async function createPost(formData: FormData) {
+  const title = formData.get('title')
+  const content = formData.get('content')
+
+  // Update DB
+  // Revalidate
+}
+```
+
+---
+
+### 2. Using Event Handlers
+
+You can call them inside `onClick`:
+
+```tsx
+'use client'
+
+import { incrementLike } from './actions'
+import { useState } from 'react'
+
+export default function LikeButton({ initialLikes }) {
+  const [likes, setLikes] = useState(initialLikes)
+
+  return (
+    <>
+      <p>Total Likes: {likes}</p>
+      <button
+        onClick={async () => {
+          const updatedLikes = await incrementLike()
+          setLikes(updatedLikes)
+        }}
+      >
+        Like
+      </button>
+    </>
+  )
+}
+```
+
+> ⚠️ Server Functions are executed one at a time from the client.   
+> If you need parallel work, do it inside one Server Function.
+
+# Example
+
+### Showing a Pending State
+
+Use `useActionState`:
+
+```tsx
+'use client'
+
+import { useActionState, startTransition } from 'react'
+import { createPost } from '@/app/actions'
+
+export function Button() {
+  const [state, action, pending] = useActionState(createPost, false)
+
+  return (
+    <button onClick={() => startTransition(action)}>
+      {pending ? 'Loading...' : 'Create Post'}
+    </button>
+  )
+}
+```
+
+This gives you:
+
+* `pending` boolean.   
+* automatic transition handling
+
+### Refreshing After Mutation
+
+> `refresh()` re-renders the current route.   
+> It does NOT revalidate tagged data
+
+If you need to refresh the current route:
+
+```ts
+'use server'
+
+import { refresh } from 'next/cache'
+
+export async function updatePost(formData: FormData) {
+  // Update DB
+  refresh()
+}
+```
+
+# Revalidating Cache
+
+To revalidate specific data:
+
+```ts
+import { revalidatePath } from 'next/cache'
+
+export async function createPost(formData: FormData) {
+  'use server'
+
+  // Update DB
+
+  revalidatePath('/posts')
+}
+```
