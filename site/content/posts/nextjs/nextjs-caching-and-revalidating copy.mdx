@@ -1,0 +1,124 @@
+---
+title: "NextJS - Caching & Revalidating"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-02
+thumbnailText: NextJS
+---
+
+When a page fetches data (API, DB, etc.), doing the work **every request is slow**. So **Next.js can cache the result**.
+
+Think of it like this:
+
+```
+Request → Fetch Data → Save Result in Cache
+Next Request → Use Cached Data (faster)
+```
+
+When data changes:
+
+```
+Invalidate Cache → Fetch Fresh Data → Update Cache
+```
+
+# fetch and revalidation
+
+> By default: fetch() is NOT cached
+
+### Enable caching
+
+```ts
+const data = await fetch('https://api.com/posts', {
+  cache: "force-cache",
+  next: { revalidate: 3600 }
+})
+```
+
+Now Next.js:
+
+```
+First request → fetch API.   
+Next requests → use cache.   
+after 1 hour → fetch new data.   
+```
+
+This is called:
+
+**ISR (Incremental Static Regeneration)**
+
+# cacheTag and revalidateTag
+
+> Instead of time-based refresh, you can refresh **when data changes**.
+
+```ts
+import { cacheTag } from "next/cache"
+
+export async function getProducts() {
+  "use cache"
+
+  cacheTag("products")
+
+  return db.query("SELECT * FROM products")
+}
+```
+
+Now the data is tagged, later you can invalidate it.
+
+> Refresh cache **by tag**.
+
+```ts
+import { revalidateTag } from "next/cache"
+
+export async function updateUser() {
+  await db.updateUser()
+
+  revalidateTag("users", "max")
+}
+```
+
+Flow:
+
+```
+User updates data
+      ↓
+revalidateTag("users")
+      ↓
+Next request fetches fresh data
+```
+
+# updateTag` 
+
+> Immediate refresh. Used for **Server Actions only**.
+
+```ts
+import { updateTag } from "next/cache"
+
+export async function createPost() {
+  await db.createPost()
+
+  updateTag("posts")
+}
+```
+
+So next request must fetch new data
+
+# revalidatePath
+
+Instead of invalidating **data**, you invalidate a **route**.
+
+Example:
+
+```ts
+revalidatePath("/posts")
+```
+
+Example flow:
+
+```
+User updates profile
+↓
+revalidatePath("/profile")
+↓
+Next visit shows fresh data
+```

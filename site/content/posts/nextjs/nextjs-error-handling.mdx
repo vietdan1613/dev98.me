@@ -1,0 +1,197 @@
+---
+title: "NextJS - Error Handling"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-03
+thumbnailText: NextJS
+---
+
+Next.js divides errors into **two main types**:
+
+1. **Expected errors** → normal situations that can happen (validation error, API failure).
+2. **Uncaught exceptions** → unexpected bugs that crash components.
+
+# Expected Errors
+
+> Instead of **throwing errors**, Next.js recommends **returning error states**.
+
+## Server Functions 
+
+```
+User submits form
+        ↓
+Server Action runs
+        ↓
+Error returned as state
+        ↓
+UI displays message
+```
+
+When using **Server Actions**, you return error messages instead of throwing them.
+
+```ts
+'use server'
+
+export async function createPost(prevState: any, formData: FormData) {
+  const title = formData.get('title')
+  const content = formData.get('content')
+
+  const res = await fetch('https://api.vercel.app/posts', {
+    method: 'POST',
+    body: { title, content },
+  })
+
+  if (!res.ok) {
+    return { message: 'Failed to create post' }
+  }
+}
+```
+
+Client Component using `useActionState`
+
+```tsx
+'use client'
+
+import { useActionState } from 'react'
+import { createPost } from '@/app/actions'
+
+const initialState = { message: '' }
+
+export function Form() {
+  const [state, formAction, pending] =
+    useActionState(createPost, initialState)
+
+  return (
+    <form action={formAction}>
+      <input name="title" required />
+      <textarea name="content" required />
+
+      {state?.message && <p>{state.message}</p>}
+
+      <button disabled={pending}>Create Post</button>
+    </form>
+  )
+}
+```
+
+### Server Components
+
+When fetching data in **Server Components**, check the response.
+
+```ts
+export default async function Page() {
+  const res = await fetch('https://api.example.com/posts')
+  const data = await res.json()
+
+  if (!res.ok) {
+    return 'There was an error.'
+  }
+
+  return <div>{data.title}</div>
+}
+```
+
+### Handling 404 Pages (`notFound()`)
+
+Next.js provides a special function:
+
+```
+notFound()
+```
+
+Example:
+
+```ts
+import { notFound } from 'next/navigation'
+
+export default async function Page({ params }) {
+  const post = getPostBySlug(params.slug)
+
+  if (!post) {
+    notFound()
+  }
+
+  return <div>{post.title}</div>
+}
+```
+
+Then create a **not-found UI**.
+
+```
+app/blog/[slug]/not-found.tsx
+```
+
+```tsx
+export default function NotFound() {
+  return <div>404 - Page Not Found</div>
+}
+```
+
+# Uncaught Exceptions
+
+> Next.js will catch them using **Error Boundaries**.
+
+```ts
+throw new Error("Something broke")
+```
+
+Examples:
+
+* undefined property
+* runtime exception
+* crash in component
+
+### Error Boundaries
+
+```
+app/dashboard/error.tsx
+```
+
+```tsx
+'use client'
+
+import { useEffect } from 'react'
+
+export default function ErrorPage({ error, reset }) {
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={() => reset()}>
+        Try again
+      </button>
+    </div>
+  )
+}
+```
+
+### Global Error 
+
+If something crashes **root layout**, you can use:
+
+```
+app/global-error.tsx
+```
+
+Important: must include **html and body tags**.
+
+```tsx
+'use client'
+
+export default function GlobalError({ error, reset }) {
+  return (
+    <html>
+      <body>
+        <h2>Something went wrong!</h2>
+        <button onClick={() => reset()}>
+          Try again
+        </button>
+      </body>
+    </html>
+  )
+}
+```
