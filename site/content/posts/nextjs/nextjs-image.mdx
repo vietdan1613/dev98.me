@@ -1,0 +1,98 @@
+---
+title: "NextJS - Image Optimization"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-05
+thumbnailText: NextJS
+---
+
+> Next.js solves `<img>` with the **`<Image>` component**, which extends the standard HTML `<img>` element and automatically optimizes images for performance.
+
+### Why Use `<Image>` Instead of `<img>`?
+
+The Next.js `<Image>` component provides several built-in optimizations:
+
+**1. Size Optimization**
+Next.js automatically serves the **correct image size for each device** and converts images to modern formats like **WebP** when supported.
+
+**2. Visual Stability**
+Images reserve space before loading, preventing **layout shift (CLS)**.
+
+**3. Faster Page Loads**
+Images are **lazy-loaded** and only load when they enter the viewport.
+
+**4. Asset Flexibility**
+Images can be **resized dynamically**, even when hosted on remote servers.
+
+### Local Images
+
+Static assets like images should be stored inside the **`public` folder**.
+
+```
+project
+ ├─ app
+ │   └─ page.tsx
+ └─ public
+     └─ profile.png
+```
+
+Then reference the image from the root URL.
+
+```tsx
+import Image from "next/image";
+import ProfileImage from "./profile.png";
+
+export default function Page() {
+  return (
+    <Image
+      src={ProfileImage}
+      alt="Picture of the author"
+      placeholder="blur"
+    />
+  );
+}
+```
+
+### Remote Images
+
+You can also load images from external URLs.
+
+```tsx
+import Image from "next/image";
+
+export default function Page() {
+  return (
+    <Image
+      src="https://s3.amazonaws.com/my-bucket/profile.png"
+      alt="Picture of the author"
+      width={500}
+      height={500}
+    />
+  );
+}
+```
+
+Because Next.js cannot access remote images during build time, you **must provide `width` and `height` manually**.
+
+This ensures the browser can **calculate the aspect ratio** before the image loads.
+
+> For security, Next.js requires you to **whitelist remote image sources**. Add allowed domains in **`next.config.ts`**.
+
+```ts
+import type { NextConfig } from "next";
+
+const config: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "s3.amazonaws.com",
+        pathname: "/my-bucket/**",
+      },
+    ],
+  },
+};
+
+export default config;
+```

@@ -1,0 +1,95 @@
+---
+title: "NextJS - Font Optimization"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-06
+thumbnailText: NextJS
+---
+
+`next/font` is a built-in Next.js module that optimizes web fonts automatically.
+
+# Google Fonts
+
+> Next.js allows you to automatically **self-host Google Fonts**.
+
+When you import a Google font with `next/font/google`, Next.js downloads the font at build time and serves it from your own server. This means the browser does **not send any requests to Google**.
+
+Example:
+
+```tsx
+import { Geist } from 'next/font/google'
+
+const geist = Geist({
+  subsets: ['latin'],
+})
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className={geist.className}>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+This approach improves both **performance and user privacy**.
+
+# Local Fonts
+
+In some cases, your application may need to use **custom or proprietary fonts** that are not available through Google Fonts.
+
+Next.js supports this through `next/font/local`.
+
+Example:
+
+```tsx
+import localFont from 'next/font/local'
+
+const roboto = localFont({
+  src: [
+    {
+      path: './Roboto-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './Roboto-Italic.woff2',
+      weight: '400',
+      style: 'italic',
+    },
+    {
+      path: './Roboto-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: './Roboto-BoldItalic.woff2',
+      weight: '700',
+      style: 'italic',
+    },
+  ],
+})
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className={myFont.className}>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+Local fonts can be stored in:
+
+* the `public` folder.   
+* the `app` directory.   
+* or any local project folder

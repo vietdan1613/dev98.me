@@ -1,0 +1,58 @@
+---
+title: "NextJS - CSS"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-04
+thumbnailText: NextJS
+---
+
+> Next.js supports multiple ways to style your app, each solving a different problem.
+
+| Method               | Scope                | When to Use             |
+| -------------------- | -------------------- | ----------------------- |
+| Tailwind CSS         | Utility classes      | Most UI styling         |
+| CSS Modules          | Component-scoped CSS | Custom component styles |
+| Global CSS           | Entire app           | Base styles / resets    |
+
+### Install
+
+Next, install Tailwind and the required PostCSS dependencies.
+
+```bash
+npm install tailwindcss @tailwindcss/postcss postcss
+```
+
+These packages allow Tailwind to process your CSS during the build step.
+
+### Configure PostCSS
+
+Create a file named **postcss.config.mjs** in the root of the project:
+
+```javascript
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+```
+
+This tells PostCSS to use the Tailwind plugin when compiling CSS.
+
+### Import Tailwind
+
+Open the global stylesheet:
+
+```
+app/globals.css
+```
+
+Add the following line:
+
+```css
+@import "tailwindcss";
+```
+
+This imports Tailwind’s base styles, components, and utility classes.
