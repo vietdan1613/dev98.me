@@ -1,0 +1,160 @@
+---
+title: "NextJS - Metadata and OG images"
+category: NextJS
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-10-07
+thumbnailText: NextJS
+---
+
+> Metadata controls how your page appears in: Search engines (SEO), Social media previews,...
+
+# Static Metadata
+
+If your metadata does **not depend on dynamic data**, you can define it using the `metadata` object.
+
+Example:
+
+```ts
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "My Blog",
+  description: "A blog about software development",
+}
+
+export default function Layout() {
+  return <div />
+}
+```
+
+This is the **simplest and fastest approach** because metadata is resolved at **build time**.
+
+Use static metadata for:
+
+* Home pages
+* Static marketing pages
+* Documentation pages
+
+# Dynamic Metadata
+
+Sometimes metadata depends on data such as: blog posts, products,... In these cases, use the `generateMetadata` function.
+
+Example: generate metadata based on a blog slug.
+
+```ts
+import { cache } from "react"
+
+export const getPost = cache(async (slug: string) => {
+  const res = await fetch(`https://api.vercel.app/blog/${slug}`)
+  return res.json()
+})
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string }
+}) {
+  const post = await getPost(params.slug)
+
+  return {
+    title: post.title,
+    description: post.description,
+  }
+}
+```
+
+Now each blog post automatically gets **unique SEO metadata**.
+
+React provides a `cache` function to memoize requests.
+
+### File-based Metadata
+
+Supported files include:
+
+```
+favicon.ico
+apple-icon.jpg
+icon.jpg
+opengraph-image.jpg
+twitter-image.jpg
+robots.txt
+sitemap.xml
+```
+
+![example](./imgs/meta-data-1.png)
+
+# Static Open Graph Images
+
+Open Graph images control how links appear on social media.
+
+Example preview:
+
+```
++--------------------------+
+|   Image preview          |
+|                          |
+|  Blog Post Title         |
+|                          |
++--------------------------+
+```
+
+
+```
+// To add a global OG image:
+app/opengraph-image.jpg
+
+// To create a route-specific OG image:
+app/blog/opengraph-image.jpg
+```
+
+### Dynamic
+
+For dynamic pages like blog posts, you can generate OG images programmatically.
+
+Next.js provides the `ImageResponse` API.
+
+Example:
+
+```
+app/blog/[slug]/opengraph-image.tsx
+```
+
+```ts
+import { ImageResponse } from "next/og"
+import { getPost } from "@/app/lib/data"
+
+export const size = {
+  width: 1200,
+  height: 630,
+}
+
+export const contentType = "image/png"
+
+export default async function Image({
+  params,
+}: {
+  params: { slug: string }
+}) {
+
+  const post = await getPost(params.slug)
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          fontSize: 128,
+          background: "white",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {post.title}
+      </div>
+    )
+  )
+}
+```
