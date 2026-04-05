@@ -1,5 +1,5 @@
 ---
-title: "Debouncing vs Throttling"
+title: "Debounce in JS & React"
 category: JavaScript
 author: Daniel Nguyen
 tags: ['#Javascript']
@@ -7,62 +7,98 @@ date: 2025-08-30
 thumbnailText: JavaScript
 ---
 
-> **Prevent expensive functions from running too often and hurting performance.**
+## What is Debounce?
 
-## What Is Debouncing?
+Debounce is a technique that ensures a function is only executed **after a certain period of inactivity**.
 
-**Debouncing** ensures a function runs **only after a specified delay has passed since the last event**.
+### Example
 
-```js
-function debounce(fn, delay) {
-  let timer;
-  return (...args) => {
+Typing `hello` in a search box:
+
+* Without debounce → 5 API calls ❌
+* With debounce → 1 API call ✅
+
+## Debounce Function 
+
+Use this when you want to control **when a function executes**, such as event handlers.
+
+```ts
+function debounce<T extends (...args: unknown[]) => void>(
+  fn: T,
+  delay = 500
+) {
+  let timer: ReturnType<typeof setTimeout>;
+
+  return (...args: Parameters<T>) => {
     clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
-}
-```
 
-### When to Use Debouncing
-
-* Search input (API call after user stops typing)
-* Auto-save
-
-```js
-input.addEventListener("input", debounce(handleSearch, 300));
-```
-
-## What Is Throttling?
-
-**Throttling** ensures a function runs **at most once every fixed interval**, no matter how often the event fires.
-
-```js
-function throttle(fn, interval) {
-  let lastTime = 0;
-  return (...args) => {
-    const now = Date.now();
-    if (now - lastTime >= interval) {
-      lastTime = now;
+    timer = setTimeout(() => {
       fn(...args);
-    }
+    }, delay);
   };
 }
 ```
 
-### When to Use Throttling
+### Example Usage
 
-* Scroll events
-* Window resizing
+```ts
+const handleSearch = debounce((value: string) => {
+  console.log("Searching:", value);
+}, 500);
 
-```js
-window.addEventListener("scroll", throttle(handleScroll, 200));
+input.addEventListener("input", (e) => {
+  handleSearch((e.target as HTMLInputElement).value);
+});
 ```
 
-🧠 **Key idea:** *Run regularly, but not too often.*
+👉 The function only runs **after the user stops typing**
 
-## Best Practices
+## useDebounce Hook 
 
-* ✅ Use **debounce** for user input and API calls
-* ✅ Use **throttle** for continuous UI events
-* ❌ Avoid unthrottled scroll/resize handlers
-* ✅ Prefer built-in helpers (`lodash.debounce`, `lodash.throttle`) in production
+In React, we often deal with **state**, not just functions.
+That’s where a debounce hook becomes useful.
+
+```ts
+import { useEffect, useState } from "react";
+
+function useDebounce<T>(value: T, delay = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+```
+
+### Example Usage
+
+```ts
+const [inputValue, setInputValue] = useState("");
+const debouncedValue = useDebounce(inputValue, 500);
+
+useEffect(() => {
+  if (debouncedValue) {
+    console.log("API call:", debouncedValue);
+  }
+}, [debouncedValue]);
+```
+
+👉 The API call only triggers when the user **stops typing**
+
+
+## Final Thoughts
+
+Debounce is a small utility, but it has a **huge impact on performance and user experience**.
+
+The key is not to over-engineer it:
+
+* A clean, typed version is often better than a complex one
+* Choose the right pattern depending on your use case
+
+👉 In most applications, a simple debounce is all you need.
