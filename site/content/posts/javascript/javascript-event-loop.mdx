@@ -7,83 +7,74 @@ date: 2024-04-11
 thumbnailText: JavaScript
 ---
 
-JavaScript is **single-threaded**, meaning it can execute only one task at a time. The **event loop** is the mechanism that allows JavaScript to handle asynchronous operations without blocking the main thread.
+JavaScript is single-threaded, but it can still handle things like API calls, timers, and user actions without freezing the app.
 
-### Execution In Order
+## What?
 
-#### 1. Synchronous Code
+The **event loop** is a system that decides:
 
-* Runs **first**
-* Executed immediately on the **call stack**
-* Blocks everything else until completed
+* What code runs now
+* What runs later
 
-```js
-console.log("A");
-console.log("B");
-```
+It helps JavaScript handle **asynchronous tasks** smoothly.
 
-Output:
+## Queues
 
-```
-A
-B
-```
-
----
-
-#### 2. Microtasks
-
-* Executed **after synchronous code**
-* Run **before any macrotasks**
-* Queue is fully drained before moving on
-
-Examples:
+### Microtask Queue (high priority)
 
 * `Promise.then`
-* `queueMicrotask`
-* `MutationObserver`
+* `async/await`
 
-```js
-Promise.resolve().then(() => console.log("Microtask"));
-```
-
-#### 3. Macrotasks
-
-* Executed **after microtasks**
-* Run one per event loop cycle
-
-Examples:
+### Macrotask Queue (low priority)
 
 * `setTimeout`
 * `setInterval`
-* `setImmediate` (Node.js)
+
+### How It Works
+
+The event loop runs like this:
+
+1. Run all synchronous code
+2. Run all microtasks
+3. Run one macrotask
+4. Repeat
+
+👉 Just remember:
+
+```
+Sync → Microtasks → Macrotasks
+```
+
+## Example
 
 ```js
-setTimeout(() => console.log("Macrotask"), 0);
+console.log("A");
+
+setTimeout(() => { console.log("B");}, 0);
+
+Promise.resolve()
+  .then(() => { console.log("C");})
+  .then(() => { console.log("D"); });
+
+queueMicrotask(() => { console.log("E");});
+
+(async function () {
+  console.log("F");
+  await null;
+  console.log("G");
+})();
+
+console.log("H");
 ```
 
----
+### Output
 
-### Full Execution Example
-
-```js
-console.log("Start");
-
-setTimeout(() => console.log("Timeout"), 0);
-
-Promise.resolve().then(() => console.log("Promise"));
-
-queueMicrotask(() => console.log("Microtask"));
-
-console.log("End");
-```
-
-**Output:**
-
-```
-Start
-End
-Promise
-Microtask
-Timeout
+```A
+F
+H
+C
+E
+D
+G
+B
 ```
