@@ -7,10 +7,9 @@ date: 2026-01-02
 thumbnailText: Login
 ---
 
-> In JavaScript, the **`this`** keyword refers to **the object that is currently executing the code**.
-> Its value depends on **how a function is called**, not where it’s written.
+> In JavaScript, the **`this`** keyword depends on **how a function is called**, not where it’s written.
 
-## Object Method
+# Object Method
 
 ➡️ `this` refers to the **object before the dot** → `user`
 
@@ -25,9 +24,9 @@ const user = {
 user.sayHi(); 
 ```
 
-## Regular Function
+# Regular Function
 
-* In non-strict mode → `window`
+* In non-strict mode → `window`.   
 * In strict mode → `undefined`
 
 ```js
@@ -66,7 +65,9 @@ button.addEventListener("click", function () {
 
 ➡️ `this` refers to the element that fired the event
 
-## call, apply, bind
+# call, apply, bind
+
+> They all let you manually control what this is when calling a function.
 
 ```js
 function greet() {
