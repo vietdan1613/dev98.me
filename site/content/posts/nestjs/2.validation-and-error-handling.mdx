@@ -1,0 +1,188 @@
+---
+title: "NestJS - Validation & Error Handling"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+When building real-world APIs, things don’t break because of complex logic—they break because of **bad input and inconsistent error handling**.
+
+Imagine:
+
+* A user registers with an invalid email ❌
+* Duplicate data gets inserted ❌
+* Errors return different formats ❌
+
+> This is where **validation and error handling in NestJS** become critical.
+
+**Mental Model**
+
+```text
+Client → DTO Validation → Controller → Service → Exception Filter → Response
+```
+
+# Install Validation Packages
+
+> Validation is not optional—it’s your **first line of defense**.
+
+NestJS uses:
+
+* `class-validator` → validate data.   
+* `class-transformer` → transform payloads
+
+Install them:
+
+```bash
+npm install class-validator class-transformer
+```
+
+# Create a DTO 
+
+> DTO = **contract between client and server**
+
+Create `create-user.dto.ts`:
+
+```ts
+import { IsEmail, IsNotEmpty } from 'class-validator';
+
+export class CreateUserDto {
+  @IsNotEmpty()
+  name: string;
+  
+  @IsEmail()
+  email: string;
+}
+```
+
+### What’s happening here:
+
+* `@IsNotEmpty()` → ensures name is provided.   
+* `@IsEmail()` → ensures email is valid
+
+### Common class-validator Decorators
+
+| Category | Decorator           | Description            | Example Use        |
+| -------- | ------------------- | ---------------------- | ------------------ |
+| String   | `@IsString()`       | Must be a string       | name, title        |
+| String   | `@IsNotEmpty()`     | Cannot be empty        | name, password     |
+| String   | `@Length(min,max)`  | Limit string length    | username           |
+| Email    | `@IsEmail()`        | Valid email format     | email              |
+| Format   | `@Matches(regex)`   | Match custom pattern   | username, password |
+| Number   | `@IsInt()`          | Must be an integer     | age, page          |
+| Number   | `@Min(n)`           | Minimum value          | page ≥ 1           |
+| Number   | `@Max(n)`           | Maximum value          | limit ≤ 100        |
+| Boolean  | `@IsBoolean()`      | Must be true/false     | isActive           |
+| Date     | `@IsDateString()`   | Valid ISO date string  | startDate          |
+| Optional | `@IsOptional()`     | Field is optional      | update DTO         |
+| Array    | `@IsArray()`        | Must be an array       | tags               |
+| Array    | `@ArrayNotEmpty()`  | Array cannot be empty  | tags               |
+| Nested   | `@ValidateNested()` | Validate nested object | profile object     |
+
+# Enable Global Validation Pipe
+
+Update `main.ts`:
+
+```ts
+import { ValidationPipe } from '@nestjs/common';
+
+app.useGlobalPipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  });
+);
+```
+
+### Why this matters:
+
+* Removes unknown fields automatically
+* Prevents unexpected data injection
+* Keeps API clean
+
+
+# Connect DTO to Controller
+
+> Validate at the boundary, not inside business logic.
+
+```ts
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+  
+  @Get()
+  findAll(): Promise<User[]> {
+    return this.userService.findAll();
+  }
+  
+  @Post()
+  create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.userService.create(createUserDto);
+  }
+}
+```
+
+👉 What happens now:
+
+* Incoming request → validated automatically.   
+* Invalid data → rejected before reaching service
+
+# Handle Errors 
+
+NestJS provides built-in exceptions:
+
+* `BadRequestException`
+* `NotFoundException`
+* `UnauthorizedException`
+
+### Example (Service Layer)
+
+```ts
+if (existing) {
+  throw new BadRequestException('Email already exists');
+}
+```
+
+👉 Why:
+
+* Clean error messages.   
+* Standard HTTP responses
+
+
+### Create a Custom Exception Filter
+
+For consistent API responses, create:
+
+```ts
+@Catch()
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : 500;
+
+    const message =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : 'Internal server error';
+
+    response.status(status).json({
+      statusCode: status,
+      message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+```
+
+### Register globally:
+
+```ts
+app.useGlobalFilters(new HttpExceptionFilter());
+```
