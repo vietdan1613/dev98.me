@@ -1,0 +1,334 @@
+---
+title: "NestJS - Dependency Injection"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# 🚀 Dependency Injection in NestJS — Quick Guide with Intro + Example for Each
+
+---
+
+# 🧠 1. What is Dependency Injection?
+
+**👉 Introduction:** Dependency Injection lets NestJS create and provide dependencies instead of you manually instantiating them.
+
+```ts
+@Injectable()
+export class UsersService {
+  findAll() {
+    return ['user1', 'user2'];
+  }
+}
+
+@Controller('users')
+export class UsersController {
+  constructor(private usersService: UsersService) {}
+
+  @Get()
+  getUsers() {
+    return this.usersService.findAll();
+  }
+}
+```
+
+**👉 Explanation:** NestJS automatically creates `UsersService` and injects it into the controller.
+
+---
+
+# 🏗️ 2. Control NestJS Module Encapsulation
+
+**👉 Introduction:** Modules control which providers are private or shared across the app.
+
+```ts
+@Module({
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+
+@Module({
+  imports: [UsersModule],
+  providers: [OrdersService],
+})
+export class OrdersModule {}
+```
+
+**👉 Explanation:** `UsersService` is accessible in `OrdersModule` because it is exported.
+
+---
+
+# 🔧 3. Custom Providers
+
+**👉 Introduction:** Custom providers allow you to define exactly how a dependency is created.
+
+```ts
+@Module({
+  providers: [
+    {
+      provide: 'HELLO_MESSAGE',
+      useValue: 'Hello DI',
+    },
+  ],
+})
+export class AppModule {}
+```
+
+```ts
+@Injectable()
+export class HelloService {
+  constructor(@Inject('HELLO_MESSAGE') private message: string) {}
+
+  getMessage() {
+    return this.message;
+  }
+}
+```
+
+**👉 Explanation:** You manually define what gets injected using a custom token.
+
+---
+
+# 📦 4. Value-based Providers (`useValue`)
+
+**👉 Introduction:** Value providers inject static data into your application.
+
+```ts
+@Module({
+  providers: [
+    {
+      provide: 'CONFIG',
+      useValue: {
+        defaultLimit: 10,
+      },
+    },
+  ],
+})
+export class AppModule {}
+```
+
+```ts
+@Injectable()
+export class UsersService {
+  constructor(@Inject('CONFIG') private config) {}
+
+  getLimit() {
+    return this.config.defaultLimit;
+  }
+}
+```
+
+**👉 Explanation:** Useful for config or constants without logic.
+
+---
+
+# 🔑 5. Non-class-based Provider Tokens
+
+**👉 Introduction:** Tokens don’t have to be classes—they can be strings or symbols.
+
+```ts
+export const CONFIG_TOKEN = Symbol('CONFIG');
+
+@Module({
+  providers: [
+    {
+      provide: CONFIG_TOKEN,
+      useValue: { limit: 20 },
+    },
+  ],
+})
+export class AppModule {}
+```
+
+```ts
+@Injectable()
+export class UsersService {
+  constructor(@Inject(CONFIG_TOKEN) private config) {}
+}
+```
+
+**👉 Explanation:** Symbols prevent naming conflicts in large apps.
+
+---
+
+# 🧱 6. Class Providers (`useClass`)
+
+**👉 Introduction:** Class providers let you swap implementations for the same dependency.
+
+```ts
+@Injectable()
+export class MockUsersService {
+  findAll() {
+    return ['mock-user'];
+  }
+}
+```
+
+```ts
+@Module({
+  providers: [
+    {
+      provide: UsersService,
+      useClass: MockUsersService,
+    },
+  ],
+})
+export class AppModule {}
+```
+
+```ts
+@Controller('users')
+export class UsersController {
+  constructor(private usersService: UsersService) {}
+
+  @Get()
+  getUsers() {
+    return this.usersService.findAll();
+  }
+}
+```
+
+**👉 Explanation:** Controller still injects `UsersService`, but gets `MockUsersService`.
+
+---
+
+# ⚙️ 7. Factory Providers (`useFactory`)
+
+**👉 Introduction:** Factory providers create dependencies using a function.
+
+```ts
+@Module({
+  providers: [
+    {
+      provide: 'RANDOM_NUMBER',
+      useFactory: () => Math.random(),
+    },
+  ],
+})
+export class AppModule {}
+```
+
+```ts
+@Injectable()
+export class RandomService {
+  constructor(@Inject('RANDOM_NUMBER') private num: number) {}
+
+  getNumber() {
+    return this.num;
+  }
+}
+```
+
+**👉 Explanation:** The value is generated dynamically when injected.
+
+---
+
+# ⚡ 8. Async Providers
+
+**👉 Introduction:** Async providers allow dependencies to be initialized asynchronously.
+
+```ts
+@Module({
+  providers: [
+    {
+      provide: 'ASYNC_DATA',
+      useFactory: async () => {
+        return new Promise((resolve) =>
+          setTimeout(() => resolve('Loaded'), 1000),
+        );
+      },
+    },
+  ],
+})
+export class AppModule {}
+```
+
+```ts
+@Injectable()
+export class DataService {
+  constructor(@Inject('ASYNC_DATA') private data: string) {}
+}
+```
+
+**👉 Explanation:** Nest waits for async data before starting the app.
+
+---
+
+# 🧩 9. Dynamic Modules
+
+**👉 Introduction:** Dynamic modules allow you to configure a module when importing it.
+
+```ts
+@Module({})
+export class ConfigModule {
+  static forRoot(options): DynamicModule {
+    return {
+      module: ConfigModule,
+      providers: [
+        { provide: 'CONFIG', useValue: options },
+      ],
+      exports: ['CONFIG'],
+    };
+  }
+}
+```
+
+```ts
+@Module({
+  imports: [ConfigModule.forRoot({ port: 3000 })],
+})
+export class AppModule {}
+```
+
+```ts
+@Injectable()
+export class AppService {
+  constructor(@Inject('CONFIG') private config) {}
+}
+```
+
+**👉 Explanation:** Config is passed at import time and injected anywhere.
+
+---
+
+# 🔍 10. Request-Scoped Providers
+
+**👉 Introduction:** Request-scoped providers create a new instance for each request.
+
+```ts
+@Injectable({ scope: Scope.REQUEST })
+export class RequestContextService {
+  constructor(@Inject(REQUEST) private req: Request) {}
+
+  getUser() {
+    return this.req.user;
+  }
+}
+```
+
+```ts
+@Injectable()
+export class UsersService {
+  constructor(private ctx: RequestContextService) {}
+
+  getCurrentUser() {
+    return this.ctx.getUser();
+  }
+}
+```
+
+**👉 Explanation:** Each request gets its own instance, allowing access to request-specific data.
+
+---
+
+# 🎯 Final Thought
+
+Dependency Injection in NestJS is the foundation of:
+
+* Clean architecture
+* Flexible systems
+* Scalable applications
+
+Master it, and you move from **writing code → designing systems**.

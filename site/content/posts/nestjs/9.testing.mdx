@@ -1,0 +1,266 @@
+---
+title: "NestJS - Testingcd"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# 1. Install Required Packages
+
+```bash
+npm install -D jest @types/jest ts-jest supertest @types/supertest
+```
+
+If you haven’t:
+
+```bash
+npm install -D @nestjs/testing
+```
+
+---
+
+# 2. Basic Project Structure
+
+```
+src/
+  users/
+    users.service.ts
+    users.controller.ts
+test/
+  app.e2e-spec.ts
+jest.config.ts
+```
+
+---
+
+# 3. Jest Configuration (IMPORTANT)
+
+Create `jest.config.ts`:
+
+```ts
+import type { Config } from 'jest';
+
+const config: Config = {
+  moduleFileExtensions: ['js', 'json', 'ts'],
+  rootDir: '.',
+  testRegex: '.*\\.spec\\.ts$',
+  transform: {
+    '^.+\\.(t|j)s$': 'ts-jest',
+  },
+  collectCoverageFrom: ['src/**/*.(t|j)s'],
+  coverageDirectory: './coverage',
+  testEnvironment: 'node',
+};
+
+export default config;
+```
+
+---
+
+# 4. Add Scripts in package.json
+
+```json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  }
+}
+```
+
+---
+
+# 5. Unit Test Example (Service)
+
+### users.service.ts
+
+```ts
+export class UsersService {
+  findAll() {
+    return [{ id: 1, name: 'Daniel' }];
+  }
+}
+```
+
+### users.service.spec.ts
+
+```ts
+import { UsersService } from './users.service';
+
+describe('UsersService', () => {
+  let service: UsersService;
+
+  beforeEach(() => {
+    service = new UsersService();
+  });
+
+  it('should return users', () => {
+    const result = service.findAll();
+    expect(result).toEqual([{ id: 1, name: 'Daniel' }]);
+  });
+});
+```
+
+---
+
+# 6. Controller Test (with Nest Testing Module)
+
+```ts
+import { Test, TestingModule } from '@nestjs/testing';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
+
+describe('UsersController', () => {
+  let controller: UsersController;
+
+  const mockUsersService = {
+    findAll: jest.fn(() => [{ id: 1, name: 'Daniel' }]),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [UsersController],
+      providers: [
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
+        },
+      ],
+    }).compile();
+
+    controller = module.get<UsersController>(UsersController);
+  });
+
+  it('should return users', () => {
+    expect(controller.findAll()).toEqual([
+      { id: 1, name: 'Daniel' },
+    ]);
+  });
+});
+```
+
+👉 Key idea: **mock service → isolate controller**
+
+---
+
+# 7. e2e Test Setup
+
+### test/jest-e2e.json
+
+```json
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "testEnvironment": "node"
+}
+```
+
+---
+
+# 8. e2e Test Example
+
+```ts
+import { Test } from '@nestjs/testing';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../src/app.module';
+
+describe('App (e2e)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  it('/GET users', () => {
+    return request(app.getHttpServer())
+      .get('/users')
+      .expect(200);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+});
+```
+
+---
+
+# 9. Real-World Improvements (What interviewers expect)
+
+### 1. Use `.env.test`
+
+* Separate test database
+* Never use production DB
+
+---
+
+### 2. Use test database (IMPORTANT)
+
+* SQLite (fast) OR
+* Test Postgres schema
+
+---
+
+### 3. Add coverage threshold
+
+```ts
+coverageThreshold: {
+  global: {
+    branches: 80,
+    functions: 80,
+    lines: 80,
+    statements: 80,
+  },
+}
+```
+
+---
+
+### 4. Folder convention (clean architecture)
+
+```
+users/
+  users.service.ts
+  users.service.spec.ts
+  users.controller.ts
+  users.controller.spec.ts
+```
+
+---
+
+# 10. Common Mistakes (you should avoid)
+
+* ❌ Testing database in unit tests
+* ❌ Not mocking dependencies
+* ❌ Writing huge e2e tests only
+* ❌ Ignoring test coverage
+
+---
+
+# Final Insight
+
+Think like this:
+
+* **Unit test** → “Is my logic correct?”
+* **e2e test** → “Does my system actually work?”
+
+---
+
+If you want next step, I can:
+
+* Review your **current NestJS project structure**
+* Or help you **write tests for your real code (service/controller)** so you can use it in your interview 💼

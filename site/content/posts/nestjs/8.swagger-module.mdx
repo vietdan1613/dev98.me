@@ -1,0 +1,312 @@
+---
+title: "NestJS - Swagger Module"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# 🚀 Swagger Module in NestJS — Complete Practical Guide
+
+## 🧠 Introduction
+
+When building APIs, documentation is not optional—it’s essential. Without it, frontend developers, QA engineers, and even your future self will struggle to understand how your system works.
+
+That’s where the **Swagger Module** comes in.
+
+Using:
+
+* @nestjs/swagger
+
+NestJS can automatically generate **interactive API documentation** based entirely on your code.
+
+---
+
+## 📘 What is Swagger Module?
+
+The **Swagger Module** is a tool that:
+
+* Scans your NestJS application
+* Generates an **OpenAPI Specification (JSON)**
+* Displays it using a **beautiful interactive UI**
+
+👉 In simple terms:
+
+> Swagger Module = Auto-generated, interactive API documentation
+
+---
+
+## 🖥️ What You Get
+
+After setup, you’ll have a UI like:
+
+```
+http://localhost:3000/docs
+```
+
+Where you can:
+
+* View all endpoints
+* See request/response schemas
+* Try APIs directly in the browser
+
+---
+
+## ⚙️ Setup Swagger in NestJS
+
+### 1. Install dependencies
+
+```bash
+npm install @nestjs/swagger swagger-ui-express
+```
+
+---
+
+### 2. Configure in `main.ts`
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('My API')
+    .setDescription('API documentation')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('docs', app, document);
+
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+---
+
+## 🧱 Core Concepts
+
+### 1. Decorating Model Properties
+
+Define how your request body looks using DTOs:
+
+```ts
+import { ApiProperty } from '@nestjs/swagger';
+
+export class CreateUserDto {
+  @ApiProperty({ example: 'john_doe' })
+  username: string;
+
+  @ApiProperty({ example: 'john@gmail.com' })
+  email: string;
+}
+```
+
+👉 This tells Swagger:
+
+* Field names
+* Data types
+* Example values
+
+---
+
+### 2. Adding Example Responses
+
+Provide realistic API responses:
+
+```ts
+import { ApiResponse } from '@nestjs/swagger';
+
+@ApiResponse({
+  status: 201,
+  description: 'User created successfully',
+  schema: {
+    example: {
+      id: 1,
+      username: 'john_doe',
+      email: 'john@gmail.com',
+    },
+  },
+})
+```
+
+👉 Helps frontend developers understand real output instantly.
+
+---
+
+### 3. Using Tags to Group APIs
+
+Organize endpoints into categories:
+
+```ts
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Users')
+@Controller('users')
+export class UserController {}
+```
+
+👉 Swagger UI will group endpoints under **Users**
+
+---
+
+## ⚡ Swagger CLI Plugin (Important)
+
+Instead of writing many decorators, enable the plugin:
+
+```json
+{
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "@nestjs/swagger/plugin",
+        "options": {
+          "classValidatorShim": true,
+          "introspectComments": true
+        }
+      }
+    ]
+  }
+}
+```
+
+---
+
+### Benefits:
+
+* Auto-generate `@ApiProperty()`
+* Use TypeScript types directly
+* Reduce boilerplate
+
+---
+
+## 🧠 Best Practices
+
+### ✅ 1. Always Use DTOs
+
+Never expose raw entities directly.
+
+---
+
+### ✅ 2. Add Examples
+
+Good docs = faster development
+
+---
+
+### ✅ 3. Group APIs with Tags
+
+Keep Swagger clean and readable
+
+---
+
+### ✅ 4. Combine with Validation
+
+```ts
+import { IsEmail } from 'class-validator';
+
+export class CreateUserDto {
+  username: string;
+
+  @IsEmail()
+  email: string;
+}
+```
+
+👉 Swagger + validation = strong API contract
+
+---
+
+### ✅ 5. Standardize Responses
+
+Example:
+
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "OK"
+}
+```
+
+---
+
+## ⚠️ Common Mistakes
+
+### ❌ Installing plugin separately
+
+```bash
+npm install @nestjs/swagger/plugin
+```
+
+👉 Wrong — plugin is built-in
+
+---
+
+### ❌ No examples in responses
+
+👉 Makes API hard to use
+
+---
+
+### ❌ Messy tags
+
+👉 Leads to confusing documentation
+
+---
+
+### ❌ Using `ts-node` without build
+
+👉 Plugin won’t work
+
+---
+
+## 🏗️ Suggested Project Structure
+
+```
+src/
+├── config/
+│   └── swagger.config.ts
+├── modules/
+│   └── user/
+│       ├── dto/
+│       ├── user.controller.ts
+│       └── user.service.ts
+```
+
+---
+
+## 🎯 Conclusion
+
+Swagger Module is not just a documentation tool—it’s a **core part of modern backend development**.
+
+It helps you:
+
+* Build self-documented APIs
+* Improve team collaboration
+* Reduce communication overhead
+* Deliver faster and cleaner systems
+
+---
+
+## 🧩 Final Thought
+
+> If your API is hard to understand in Swagger, your API design probably needs improvement.
+
+---
+
+If you want to go further, next topics to explore:
+
+* Pagination + Swagger
+* Authentication (JWT) in Swagger UI
+* Generic API response wrappers
+* Versioning APIs (v1, v2)
+
+---

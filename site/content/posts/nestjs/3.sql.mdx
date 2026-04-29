@@ -1,0 +1,227 @@
+---
+title: "NestJS - TypeORM & PostgreSQL"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+## 🧠 What is TypeORM?
+
+TypeORM lets you work with the database using **TypeScript instead of SQL**.
+
+---
+
+## 🧩 How Everything Connects
+
+```text
+Client (Postman / Frontend)
+        ↓
+Controller (NestJS)
+        ↓
+Service (Business Logic)
+        ↓
+Repository (TypeORM)
+        ↓
+PostgreSQL Database
+```
+
+👉 This is your full backend flow.
+
+---
+
+## 🧱 Entity → Table Mapping
+
+```text
+TypeScript Class          Database Table
+
+User Entity       →       users table
+Post Entity       →       posts table
+```
+
+Example:
+
+```ts
+User {
+  id
+  name
+  email
+}
+```
+
+↓
+
+```text
+users table
+-----------------
+id | name | email
+```
+
+---
+
+## 🔗 Relations (User ↔ Posts)
+
+```text
+User (1) -------- (N) Post
+
+users table           posts table
+-------------        ----------------------
+id                   id
+name                 title
+                     content
+                     userId  ← foreign key
+```
+
+👉 One user → many posts
+👉 Each post → belongs to one user
+
+---
+
+## ⚡ Cascade Insert (Magic Explained)
+
+```text
+Save User
+   ↓
+Detect posts[]
+   ↓
+Insert posts
+   ↓
+Link with userId
+```
+
+Code:
+
+```ts
+repo.save({
+  name: 'Daniel',
+  posts: [{ title: 'Hello' }]
+});
+```
+
+👉 Everything saved automatically
+
+---
+
+## 📄 Pagination
+
+```text
+All Data:
+[1,2,3,4,5,6,7,8,9,10]
+
+Page 1 (limit 3):
+[1,2,3]
+
+Page 2:
+[4,5,6]
+```
+
+Logic:
+
+```text
+skip = (page - 1) * limit
+take = limit
+```
+
+---
+
+## 🔐 Transactions
+
+```text
+Start Transaction
+      ↓
+Create User
+      ↓
+Create Posts
+      ↓
+Error? ─── YES → Rollback ❌
+      ↓
+      NO → Commit ✅
+```
+
+👉 Ensures data consistency
+
+---
+
+## ⚡ Index (Performance)
+
+Without index:
+
+```text
+Search email → scan ALL rows 😩
+```
+
+With index:
+
+```text
+Search email → jump directly ⚡
+```
+
+---
+
+## 🔄 Migrations Flow
+
+```text
+Change Entity
+      ↓
+Generate Migration
+      ↓
+Run Migration
+      ↓
+Database Updated
+```
+
+Example:
+
+```text
+Add column "age"
+      ↓
+Migration file created
+      ↓
+DB updated safely
+```
+
+---
+
+## 🧠 Full Data Flow (End-to-End)
+
+```text
+POST /users
+      ↓
+Controller receives request
+      ↓
+DTO validates input
+      ↓
+Service processes logic
+      ↓
+Repository saves data
+      ↓
+TypeORM maps to SQL
+      ↓
+PostgreSQL stores data
+```
+
+---
+
+## 🎯 Summary Diagram
+
+```text
+Entities → Repositories → Services → Controllers → Client
+     ↓
+   Database (PostgreSQL)
+```
+
+---
+
+## 🎯 Conclusion
+
+With TypeORM + PostgreSQL, you get:
+
+* Clean architecture
+* Strong relationships
+* Safe database updates
+* Scalable backend design
+
+---
+
+Happy coding 🚀

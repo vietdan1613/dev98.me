@@ -1,0 +1,255 @@
+---
+title: "NestJS - configuration architecture"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+
+Alright — here’s a **clean, production-level NestJS configuration architecture** that combines:
+
+* ✅ ConfigModule
+* ✅ Custom config files
+* ✅ Namespaces (`registerAs`)
+* ✅ Schema validation (Joi)
+* ✅ Async modules (`forRootAsync`)
+* ✅ Strong typing
+
+This is the kind of setup that **actually impresses senior interviewers** 👇
+
+---
+
+# 🏗️ 1. Project Structure (Enterprise Style)
+
+```bash
+src/
+ ├── config/
+ │    ├── app.config.ts
+ │    ├── database.config.ts
+ │    ├── auth.config.ts
+ │    ├── validation.ts
+ │
+ ├── modules/
+ │    ├── database/
+ │    │    └── database.module.ts
+ │
+ ├── app.module.ts
+```
+
+---
+
+# 🧩 2. Config Files (Namespaces)
+
+## 📌 database.config.ts
+
+```ts
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('database', () => ({
+  type: 'postgres',
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432', 10),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  name: process.env.DB_NAME,
+}));
+
+export type DatabaseConfig = ReturnType<typeof databaseConfig>;
+```
+
+---
+
+## 📌 app.config.ts
+
+```ts
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('app', () => ({
+  port: parseInt(process.env.PORT || '3000', 10),
+  env: process.env.NODE_ENV,
+}));
+```
+
+---
+
+## 📌 auth.config.ts
+
+```ts
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('auth', () => ({
+  jwtSecret: process.env.JWT_SECRET,
+  expiresIn: '1d',
+}));
+```
+
+---
+
+# ✅ 3. Validation (Fail Fast)
+
+## 📌 validation.ts
+
+Using Joi:
+
+```ts
+import * as Joi from 'joi';
+
+export const validationSchema = Joi.object({
+  NODE_ENV: Joi.string().valid('development', 'production', 'test').required(),
+
+  PORT: Joi.number().default(3000),
+
+  DB_HOST: Joi.string().required(),
+  DB_PORT: Joi.number().required(),
+  DB_USER: Joi.string().required(),
+  DB_PASS: Joi.string().required(),
+  DB_NAME: Joi.string().required(),
+
+  JWT_SECRET: Joi.string().min(10).required(),
+});
+```
+
+---
+
+# 🌍 4. Global ConfigModule Setup
+
+## 📌 app.module.ts
+
+```ts
+import { ConfigModule } from '@nestjs/config';
+import databaseConfig from './config/database.config';
+import appConfig from './config/app.config';
+import authConfig from './config/auth.config';
+import { validationSchema } from './config/validation';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+
+      envFilePath: [
+        `.env.${process.env.NODE_ENV}`,
+        '.env',
+      ],
+
+      load: [databaseConfig, appConfig, authConfig],
+
+      validationSchema,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+---
+
+# ⚡ 5. Async Dynamic Module (TypeORM Example)
+
+## 📌 database.module.ts
+
+```ts
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+
+@Module({
+  imports: [
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const db = config.getOrThrow('database');
+
+        return {
+          type: 'postgres',
+          host: db.host,
+          port: db.port,
+          username: db.username,
+          password: db.password,
+          database: db.name,
+          autoLoadEntities: true,
+          synchronize: false,
+        };
+      },
+    }),
+  ],
+})
+export class DatabaseModule {}
+```
+
+---
+
+# 🧠 6. Usage Anywhere
+
+```ts
+@Injectable()
+export class AppService {
+  constructor(private config: ConfigService) {}
+
+  getPort() {
+    return this.config.get<number>('app.port');
+  }
+
+  getJwtSecret() {
+    return this.config.get<string>('auth.jwtSecret');
+  }
+}
+```
+
+---
+
+# 🔥 7. Key Design Principles
+
+### ✅ Namespaces
+
+* `database.*`, `auth.*`, `app.*`
+* Avoid conflicts
+* Clean structure
+
+### ✅ Validation
+
+* App fails fast if config is wrong
+* No runtime surprises
+
+### ✅ Async Modules
+
+* Use `forRootAsync` for DB, JWT, Redis
+* Fully DI-based
+
+### ✅ Strong Typing
+
+* Use `get<T>()` or `getOrThrow<T>()`
+* Avoid `any` (fix ESLint errors)
+
+### ✅ Environment-based loading
+
+```ts
+envFilePath: [`.env.${NODE_ENV}`, '.env']
+```
+
+---
+
+# 🚫 Common Mistakes (Senior-level awareness)
+
+* ❌ Using `process.env` directly everywhere
+* ❌ No validation → runtime crashes
+* ❌ Flat config (DB_HOST, DB_PORT everywhere)
+* ❌ Not using async config for DB
+* ❌ Ignoring typing (`any`)
+
+---
+
+# 🎯 Perfect Interview Answer
+
+> “In a production NestJS app, I use ConfigModule globally with Joi validation, split configuration into namespaced files using registerAs, and load them via the load option. I access values through ConfigService with strong typing, and for infrastructure modules like TypeORM or JWT, I use forRootAsync to inject configuration dynamically.”
+
+---
+
+If you want next level, I can show:
+
+* 🔥 Fully typed ConfigService (no generics needed)
+* 🔥 Config per microservice
+* 🔥 Secret manager integration (AWS/GCP)
+
+Those are **top 5% candidate topics**.

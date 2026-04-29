@@ -1,0 +1,228 @@
+---
+title: "NestJS - Application Configuration"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+## 1. Introducing the Config Module
+
+The @nestjs/config helps manage environment variables (`.env`) in a clean and scalable way.
+
+👉 Why use it?
+
+* Centralized config
+* Avoid hardcoding values
+* Environment-based setups (dev, prod, test)
+
+**Example:**
+
+```ts
+import { ConfigModule } from '@nestjs/config';
+
+@Module({
+  imports: [ConfigModule.forRoot()],
+})
+export class AppModule {}
+```
+
+Now you can use `.env`:
+
+```
+PORT=3000
+DB_HOST=localhost
+```
+
+---
+
+## 2. Custom Environment File Paths
+
+You can load different `.env` files depending on environment.
+
+👉 Useful for:
+
+* `.env.development`
+* `.env.production`
+
+**Example:**
+
+```ts
+ConfigModule.forRoot({
+  envFilePath: '.env.development',
+});
+```
+
+Or multiple:
+
+```ts
+ConfigModule.forRoot({
+  envFilePath: ['.env.development', '.env'],
+});
+```
+
+---
+
+## 3. Schema Validation
+
+Use Joi to validate environment variables at startup.
+
+👉 Prevents runtime errors due to missing/invalid config.
+
+**Example:**
+
+```ts
+import * as Joi from 'joi';
+
+ConfigModule.forRoot({
+  validationSchema: Joi.object({
+    PORT: Joi.number().required(),
+    DB_HOST: Joi.string().required(),
+  }),
+});
+```
+
+---
+
+## 4. Using the Config Service
+
+Use `ConfigService` to access config values anywhere.
+
+**Example:**
+
+```ts
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class AppService {
+  constructor(private configService: ConfigService) {}
+
+  getPort() {
+    return this.configService.get<number>('PORT');
+  }
+}
+```
+
+👉 Pro tip: Add default values
+
+```ts
+this.configService.get<number>('PORT', 3000);
+```
+
+---
+
+## 5. Custom Configuration Files
+
+Instead of using only `.env`, you can define structured config files.
+
+👉 Good for grouping related config (DB, auth, etc.)
+
+**Example:**
+
+```ts
+// config/database.config.ts
+export default () => ({
+  database: {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+  },
+});
+```
+
+Register:
+
+```ts
+ConfigModule.forRoot({
+  load: [databaseConfig],
+});
+```
+
+Use:
+
+```ts
+configService.get('database.host');
+```
+
+---
+
+## 6. Configuration Namespaces and Partial Registration
+
+Use `registerAs` to create **namespaced configs**.
+
+👉 Helps avoid key collisions and improves structure.
+
+**Example:**
+
+```ts
+import { registerAs } from '@nestjs/config';
+
+export default registerAs('database', () => ({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+}));
+```
+
+Register:
+
+```ts
+ConfigModule.forRoot({
+  load: [databaseConfig],
+});
+```
+
+Use:
+
+```ts
+configService.get('database.host');
+```
+
+👉 Partial registration (only in specific module):
+
+```ts
+ConfigModule.forFeature(databaseConfig);
+```
+
+---
+
+## 7. Asynchronously Configure Dynamic Modules
+
+Some modules need async config (e.g., DB connection).
+
+👉 Use `forRootAsync` when config depends on `ConfigService`.
+
+**Example (TypeORM):**
+
+```ts
+TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => ({
+    type: 'postgres',
+    host: config.get('DB_HOST'),
+    port: config.get('DB_PORT'),
+  }),
+});
+```
+
+👉 Why this matters:
+
+* Load config dynamically
+* Supports secrets, external services
+* Cleaner dependency injection
+
+---
+
+# 🎯 Quick Summary (for interview)
+
+* **ConfigModule** → manage `.env`
+* **envFilePath** → support multiple environments
+* **Joi validation** → fail fast on invalid config
+* **ConfigService** → access values globally
+* **Custom config files** → structured config
+* **Namespaces** → avoid conflicts, better organization
+* **forRootAsync** → dynamic + async configuration
+
+---
+
+If you want, I can turn this into a **blog-style article** (like your previous DI blog) or give you **real-world project structure (enterprise-level)** — that’s usually what interviewers care about most.

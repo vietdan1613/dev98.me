@@ -1,0 +1,396 @@
+---
+title: "NestJS - Provider Scopes"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# 🎯 Understanding Provider Scopes in NestJS (Complete Guide)
+
+When building scalable backend systems with NestJS, **Provider Scope** is a concept that directly impacts:
+
+* Performance ⚡
+* Memory usage 🧠
+* Application architecture 🏗️
+
+If you misuse it, your app can become **slow and hard to debug**. If you use it correctly, you get **clean, efficient, production-ready systems**.
+
+---
+
+# 🧠 What is Provider Scope?
+
+> **Provider Scope defines the lifecycle of a provider — how often it is created and how long it lives**
+
+---
+
+# 🔥 The 3 Types of Provider Scopes
+
+---
+
+# 1️⃣ Singleton Scope (DEFAULT) 🟢
+
+```ts id="a1x2y3"
+@Injectable()
+export class UsersService {}
+```
+
+👉 Equivalent to:
+
+```ts id="b4c5d6"
+@Injectable({ scope: Scope.DEFAULT })
+```
+
+---
+
+## ✅ Behavior
+
+* Created **once** when the app starts
+* Shared across the entire application
+
+```text id="t1"
+App Start
+   ↓
+Create UsersService (1 instance)
+   ↓
+Reuse everywhere
+```
+
+---
+
+## ✅ Real-world usage
+
+* Business logic services
+* Database access (TypeORM repositories)
+* API integrations
+
+---
+
+## 🚀 Example
+
+```ts id="t2"
+@Injectable()
+export class UsersService {
+  findAll() {
+    return 'all users';
+  }
+}
+```
+
+👉 Every controller uses the **same instance**
+
+---
+
+# 2️⃣ Request Scope 🟡
+
+```ts id="t3"
+import { Scope } from '@nestjs/common';
+
+@Injectable({ scope: Scope.REQUEST })
+export class RequestService {}
+```
+
+---
+
+## ✅ Behavior
+
+* New instance **for every HTTP request**
+
+```text id="t4"
+Request A → new instance
+Request B → new instance
+```
+
+---
+
+## 🔥 Real-world use cases
+
+* Current user (`req.user`)
+* Request tracking / logging
+* Multi-tenant systems
+
+---
+
+## 🚀 Example
+
+```ts id="t5"
+import { Injectable, Scope, Inject } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
+import { Request } from 'express';
+
+@Injectable({ scope: Scope.REQUEST })
+export class RequestContextService {
+  constructor(@Inject(REQUEST) private req: Request) {}
+
+  getUser() {
+    return this.req.user;
+  }
+}
+```
+
+---
+
+## 🧩 Usage in a service
+
+```ts id="t6"
+constructor(private ctx: RequestContextService) {}
+```
+
+👉 Each request gets **its own user context**
+
+---
+
+# 3️⃣ Transient Scope 🔵
+
+```ts id="t7"
+@Injectable({ scope: Scope.TRANSIENT })
+export class LoggerService {}
+```
+
+---
+
+## ✅ Behavior
+
+* New instance **every time it is injected**
+
+```text id="t8"
+Injected 3 times → 3 instances
+```
+
+---
+
+## 🔥 Real-world use cases
+
+* Logging utilities
+* Stateless helpers
+* Lightweight services
+
+---
+
+## 🚀 Example
+
+```ts id="t9"
+@Injectable({ scope: Scope.TRANSIENT })
+export class LoggerService {
+  log(message: string) {
+    console.log(message);
+  }
+}
+```
+
+---
+
+# 🧠 Scope Comparison
+
+```text id="t10"
+Singleton  → 1 instance for whole app
+Request    → 1 instance per request
+Transient  → 1 instance per injection
+```
+
+---
+
+# ⚠️ Scope Propagation (VERY IMPORTANT)
+
+This is where most developers make mistakes.
+
+---
+
+## ❗ Example
+
+```ts id="t11"
+@Injectable()
+export class UsersService {
+  constructor(private ctx: RequestContextService) {}
+}
+```
+
+👉 If `RequestContextService` is request-scoped:
+
+```text id="t12"
+UsersService becomes REQUEST-SCOPED too
+```
+
+---
+
+## 🔥 Chain Effect
+
+```text id="t13"
+RequestContextService (REQUEST)
+        ↓
+UsersService (REQUEST)
+        ↓
+Controller (REQUEST)
+```
+
+👉 This can **slow down your app significantly**
+
+---
+
+# ⚠️ Performance Impact
+
+| Scope     | Performance |
+| --------- | ----------- |
+| Singleton | Fastest 🚀  |
+| Request   | Slower ⚠️   |
+| Transient | Depends ⚠️  |
+
+---
+
+## ❗ Why Request Scope is expensive
+
+* Creates new instances per request
+* More memory usage
+* More garbage collection
+
+---
+
+# 🚀 Real-world Patterns
+
+---
+
+## ✅ Pattern 1 — Default architecture
+
+```text id="t14"
+Controller (Singleton)
+   ↓
+Service (Singleton)
+   ↓
+Repository (Singleton)
+```
+
+👉 Fast and efficient
+
+---
+
+## ✅ Pattern 2 — Add request context
+
+```text id="t15"
+Controller
+   ↓
+Service
+   ↓
+RequestContextService (Request)
+```
+
+👉 Only one part is request-scoped
+
+---
+
+## ❌ Bad Pattern
+
+```text id="t16"
+Everything → Request Scope ❌
+```
+
+👉 Very slow system
+
+---
+
+# 🔥 Advanced Example — Request ID Tracking
+
+```ts id="t17"
+@Injectable({ scope: Scope.REQUEST })
+export class RequestIdService {
+  private id = Math.random().toString(36);
+
+  getId() {
+    return this.id;
+  }
+}
+```
+
+---
+
+## Use it
+
+```ts id="t18"
+constructor(private requestId: RequestIdService) {}
+
+log(message: string) {
+  console.log(`[${this.requestId.getId()}] ${message}`);
+}
+```
+
+👉 Each request has unique trace ID
+
+---
+
+# 🎯 When to Use Each Scope
+
+---
+
+## 🟢 Singleton (Default)
+
+Use when:
+
+* General services
+* Business logic
+* Database operations
+
+---
+
+## 🟡 Request Scope
+
+Use when:
+
+* Need request-specific data
+* Auth / current user
+* Multi-tenant apps
+
+---
+
+## 🔵 Transient
+
+Use when:
+
+* Stateless utilities
+* Logging
+* Lightweight helpers
+
+---
+
+# 🧠 Mental Model
+
+```text id="t19"
+Singleton → Shared brain
+Request   → Per-user brain
+Transient → Per-use brain
+```
+
+---
+
+# 🎯 Best Practices
+
+* ✅ Use **Singleton by default**
+* ✅ Use Request scope **only when necessary**
+* ✅ Keep request-scoped providers small
+* ❌ Don’t inject request scope everywhere
+* ❌ Avoid making core services request-scoped
+
+---
+
+# 🎤 Interview Answer
+
+> “Provider scope in NestJS defines the lifecycle of a provider. Singleton scope creates one shared instance, request scope creates a new instance per request, and transient scope creates a new instance per injection. Request scope should be used carefully due to performance implications.”
+
+---
+
+# 🚀 Final Thought
+
+Provider scope is not just a technical detail—it’s an **architecture decision**.
+
+Used correctly:
+
+```text id="t20"
+Fast + Scalable + Maintainable system
+```
+
+Used incorrectly:
+
+```text id="t21"
+Slow + Memory-heavy + Hard-to-debug system
+```
+
+👉 Master this, and you’re already thinking like a **senior backend engineer**.

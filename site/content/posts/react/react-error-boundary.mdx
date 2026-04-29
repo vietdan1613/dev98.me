@@ -1,5 +1,5 @@
 ---
-title: "Error Boundaries"
+title: "ReactJS - Error Boundaries"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactTesting']
@@ -7,50 +7,19 @@ date: 2025-07-26
 thumbnailText: React Fundamentals
 ---
 
-No matter how carefully you write your code, things will eventually go wrong. When a React component throws an error and it isn’t handled, the entire UI can crash — leaving users with a blank screen. That’s where **Error Boundaries** come in.
+> In React, if a component throws during render and nothing catches it, React can unmount the whole tree and users may see a blank screen.
 
-## Try/Catch Doesn’t Work for JSX
+> **Error Boundaries** prevent that by catching render-time errors and showing a fallback UI instead.
 
-You might think you can wrap your app in a `try/catch`, but that won’t work:
+# Error Boundaries
 
-```tsx
-const element = <Calculator />
-```
+In real apps, prefer use *react-error-boundary* library.
 
-At this stage, React only creates *descriptions* of components — it does not execute them yet.
-Errors happen later when React actually renders components, outside JavaScript’s normal `try/catch` scope.
-
-Wrapping every component in `try/catch` is possible, but impractical and messy.
-
-## Error Boundaries?
-
-An **Error Boundary** is a special React component that catches errors during rendering and displays a fallback UI instead of crashing the entire app.
-
-Conceptually, this is what we want:
+> npm install react-error-boundary
 
 ```tsx
-<ErrorBoundary fallback={<div>Oh no!</div>}>
-  <App />
-</ErrorBoundary>
-```
+import { ErrorBoundary } from "react-error-boundary";
 
-Just like `try/catch`, but for React components.
-
-## How Error Boundaries Work
-
-React doesn’t provide a built-in ErrorBoundary component, but it provides the API to create one — using a **class component**:
-
-```tsx
-class ErrorBoundary extends React.Component {
-  static getDerivedStateFromError(error) {
-    return { error }
-  }
-}
-```
-
-### Use a Library Instead
-
-```tsx
 function Fallback({ error, resetErrorBoundary }) {
   return (
     <div>
@@ -69,34 +38,46 @@ function App() {
 }
 ```
 
-Now, any rendering error inside `App` will be caught and replaced with the fallback UI.
+# Handling Async Errors
 
-* Cleaner API
-* Reset and retry logic
-* Hooks for async errors
-* Production-ready patterns
+Error boundaries only catch errors that happen during **rendering**. 
 
-## Handling Async Errors
-
-Error boundaries only catch errors that happen during **rendering** — not in:
+Not in:
 
 * Event handlers
 * `useEffect`
 * Promises or async code
 
-To handle those, you can manually surface them to an error boundary using `react-error-boundary`:
+To handle those, you can manually surface them to an error boundary using `useErrorBoundary()`:
 
 ```tsx
-const { showBoundary } = useErrorBoundary()
+import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
+import { useEffect } from "react";
+
+function Users() {
+  const { showBoundary } = useErrorBoundary();
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load users");
+        return res.json();
+      })
+      .catch(showBoundary); // send async error to ErrorBoundary
+  }, [showBoundary]);
+
+  return <div>User List</div>;
+}
+
+function Fallback({ error }) {
+  return <div>{error.message}</div>;
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary FallbackComponent={Fallback}>
+      <Users />
+    </ErrorBoundary>
+  );
+}
 ```
-
-Then pass async or event errors into the boundary when needed.
-
-## Best Practices
-
-✅ Use multiple localized error boundaries.     
-✅ Prefer `react-error-boundary` over custom ones.     
-✅ Catch rendering errors with boundaries.     
-✅ Handle async errors manually.     
-❌ Don’t use one boundary for the entire app.     
-❌ Don’t rely on `try/catch` for React rendering.     

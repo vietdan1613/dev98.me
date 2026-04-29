@@ -1,0 +1,314 @@
+---
+title: "NestJS - Building Blocks"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#NestJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# 🧱 NestJS Building Blocks — A Practical Guide for Real Projects
+
+When people start with NestJS, they often learn pieces in isolation—**guards, pipes, interceptors, middleware**—but don’t see how everything fits together.
+
+This guide connects all the **building blocks** into one clear mental model, with simple examples you can actually use in your project.
+
+---
+
+# 🚀 The Big Picture
+
+Every request in NestJS goes through a structured pipeline:
+
+```
+Request 
+ → Middleware 
+ → Guards 
+ → Interceptors (before) 
+ → Pipes 
+ → Controller 
+ → Service 
+ → Interceptors (after) 
+ → Exception Filters
+ → Response
+```
+
+Each block has **one responsibility**. That’s why NestJS scales well.
+
+---
+
+# 1️⃣ Middleware — Handle Request Early
+
+### 🎯 Purpose
+
+* Logging
+* Parsing
+* Pre-processing
+
+### ✅ Example
+
+```ts
+@Injectable()
+export class LoggerMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: () => void) {
+    console.log(`${req.method} ${req.url}`);
+    next();
+  }
+}
+```
+
+👉 Runs **before everything**
+
+---
+
+# 2️⃣ Guards — Protect Routes
+
+### 🎯 Purpose
+
+* Authentication (JWT)
+* Authorization (roles)
+
+### ✅ Example
+
+```ts
+@Injectable()
+export class AuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest<Request>();
+    return !!req.headers.authorization;
+  }
+}
+```
+
+👉 Decides: **Can user access this route?**
+
+---
+
+# 3️⃣ Pipes — Validate & Transform Input
+
+### 🎯 Purpose
+
+* Validate request data
+* Convert types
+
+### ✅ Example
+
+```ts
+@Injectable()
+export class ParseIntPipe implements PipeTransform<string, number> {
+  transform(value: string): number {
+    const val = parseInt(value, 10);
+    if (isNaN(val)) throw new BadRequestException('Invalid number');
+    return val;
+  }
+}
+```
+
+👉 Keeps controllers clean
+
+---
+
+# 4️⃣ Interceptors — Control Execution
+
+### 🎯 Purpose
+
+* Transform response
+* Logging / timing
+* Timeout handling
+
+### ✅ Example
+
+```ts
+@Injectable()
+export class TransformInterceptor<T>
+  implements NestInterceptor<T, { success: boolean; data: T }>
+{
+  intercept(context: ExecutionContext, next: CallHandler<T>) {
+    return next.handle().pipe(
+      map((data: T) => ({
+        success: true,
+        data,
+      })),
+    );
+  }
+}
+```
+
+👉 Runs **before and after controller**
+
+---
+
+# 5️⃣ Exception Filters — Handle Errors
+
+### 🎯 Purpose
+
+* Centralized error handling
+* Standard API responses
+
+### ✅ Example
+
+```ts
+@Catch(HttpException)
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException, host: ArgumentsHost) {
+    const res = host.switchToHttp().getResponse<Response>();
+
+    res.status(exception.getStatus()).json({
+      statusCode: exception.getStatus(),
+      message: exception.message,
+    });
+  }
+}
+```
+
+👉 Replaces messy `try/catch`
+
+---
+
+# 6️⃣ Custom Param Decorators — Clean Controllers
+
+### 🎯 Purpose
+
+* Extract request data easily
+
+### ✅ Example
+
+```ts
+export const User = createParamDecorator(
+  (_, ctx: ExecutionContext) => {
+    const req = ctx.switchToHttp().getRequest();
+    return req.user;
+  },
+);
+```
+
+### Usage
+
+```ts
+@Get()
+getProfile(@User() user: any) {
+  return user;
+}
+```
+
+👉 Cleaner than `req.user`
+
+---
+
+# 7️⃣ Metadata — Build Generic Logic
+
+### 🎯 Purpose
+
+* Make guards/interceptors reusable
+
+### ✅ Example
+
+```ts
+export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
+```
+
+```ts
+@Roles('admin')
+@Get()
+findAll() {}
+```
+
+👉 Used with `Reflector` in guards
+
+---
+
+# 8️⃣ Binding Techniques — Where Logic Applies
+
+| Level      | Scope                    |
+| ---------- | ------------------------ |
+| Method     | One route                |
+| Controller | All routes in controller |
+| Global     | Entire app               |
+
+### Example
+
+```ts
+@UseGuards(AuthGuard)
+@Controller('users')
+```
+
+👉 Applies to all `/users` routes
+
+---
+
+# 🔥 Putting It All Together
+
+A real production setup looks like this:
+
+```ts
+// main.ts
+app.useGlobalPipes(new ValidationPipe());
+app.useGlobalFilters(new HttpExceptionFilter());
+app.useGlobalInterceptors(new TransformInterceptor());
+```
+
+```ts
+// controller
+@UseGuards(AuthGuard)
+@Controller('users')
+export class UsersController {
+
+  @Get()
+  findAll(@Query('page', ParseIntPipe) page: number) {
+    return this.service.findAll(page);
+  }
+}
+```
+
+---
+
+# 🧠 Clean Architecture Mental Model
+
+| Layer        | Responsibility    |
+| ------------ | ----------------- |
+| Middleware   | Request logging   |
+| Guards       | Access control    |
+| Pipes        | Input validation  |
+| Interceptors | Response handling |
+| Filters      | Error handling    |
+
+---
+
+# ⚠️ Common Mistakes
+
+* ❌ Putting everything in controllers
+* ❌ Using `any` everywhere
+* ❌ Not separating concerns
+* ❌ Overusing global bindings
+
+---
+
+# 💡 Key Insight
+
+NestJS is powerful because:
+
+> “Each building block does one thing—and does it well.”
+
+---
+
+# 🎯 Interview Summary
+
+If asked:
+
+👉 *“How does NestJS structure applications?”*
+
+You answer:
+
+> “NestJS uses middleware, guards, pipes, interceptors, and filters to handle different concerns in the request lifecycle, making the application modular and scalable.”
+
+---
+
+# 🚀 Final Thought
+
+Once you master these building blocks, you stop writing “code that works” and start building **systems that scale**.
+
+---
+
+If you want:
+
+* I can convert this into a **LinkedIn post (short + impactful)**
+* Or build a **real production template using your current project**
