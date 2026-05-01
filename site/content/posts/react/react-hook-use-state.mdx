@@ -1,0 +1,106 @@
+---
+title: "React Hook - useState()"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHook']
+date: 2025-07-27
+thumbnailText: React Hook
+---
+
+> `useState` is the most fundamental React Hook. It allows function components to store and update state, making UIs dynamic and interactive.
+
+# What?
+
+`useState` lets a component remember values between renders.
+
+It returns:
+
+* The current state value.   
+* A function to update it
+
+```tsx
+const [state, setState] = useState(initialValue)
+```
+
+### Example
+
+> Clicking the button updates the state and re-renders the UI.
+
+```tsx
+function Counter() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      {count}
+    </button>
+  )
+}
+```
+
+# Updates
+
+### Functional
+
+When new state depends on previous state. This avoids bugs when updates happen quickly or in batches.
+
+```tsx
+setCount(prev => prev + 1)
+```
+
+### Objects and Arrays
+
+Always copy state instead of mutating it:
+
+```tsx
+const [user, setUser] = useState({ name: "Daniel" })
+
+setUser(prev => ({ ...prev, name: "Alex" }))
+```
+
+```tsx
+setItems(prev => [...prev, newItem])
+```
+
+# Lazy Initialization
+
+> For expensive initial state. This runs only once, not on every render.
+
+```tsx
+const [value, setValue] = useState(() => computeInitial())
+```
+
+# Colocate State
+
+> Rule of thumb: if only one component needs it, keep it local -> fewer unnecessary re-renders.
+
+```jsx
+function SearchInput() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <input
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Search..."
+    />
+  );
+}
+```
+
+# Lift State
+
+> Rule of thumb: if multiple components need it, lift it up.
+
+```jsx
+function App() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <>
+      <SearchInput query={query} onChange={setQuery} />
+      <SearchResults query={query} />
+    </>
+  );
+}
+```

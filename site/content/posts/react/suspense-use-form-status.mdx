@@ -1,25 +1,15 @@
 ---
-title: "useFormStatus() for Form Feedback"
+title: "React Suspense: useFormStatus()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
-date: 2025-07-30
-thumbnailText: React Fundamentals
+tags: ['#ReactSuspense']
+date: 2025-08-09
+thumbnailText: React Suspense
 ---
 
 > `useFormStatus` is a React hook that lets you read the **submission state of a form**.
 
-It works by:
-
-* Treating `<form>` as a context provider
-* Allowing child components to subscribe to its status
-* Eliminating the need to pass loading flags through props
-
-Think of it as:
-
-> “Let every part of the form know when submission is happening — automatically.”
-
-# What Problems Does It Solve?
+# Problems
 
 Without `useFormStatus`, you often write:
 
@@ -29,10 +19,9 @@ const [isSubmitting, setIsSubmitting] = useState(false)
 
 And manually manage:
 
-* Button disabled states
-* Loading labels
-* Race conditions
-* State cleanup
+* Button disabled states.   
+* Loading labels.   
+* State cleanup.   
 
 With `useFormStatus`, React handles this for you — declaratively.
 
@@ -62,8 +51,8 @@ function SubmitButton() {
 
 That means:
 
-* It only works inside a form
-* It automatically updates when the form submits
+* It only works inside a form.   
+* It automatically updates when the form submits.   
 * It resets when the submission finishes
 
 # Real Example: Login Form UX
@@ -93,15 +82,3 @@ function SubmitButton() {
 ✔ Clear feedback.   
 ✔ Prevents double-clicks.   
 ✔ Improves accessibility.   
-
-# Takeaway
-
-`useFormStatus` doesn’t just simplify forms —
-it **standardizes form UX** across your application.
-
-Use it to build forms that feel:
-
-* More responsive
-* More accessible
-* More professional
-

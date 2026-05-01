@@ -1,0 +1,58 @@
+---
+title: "React Fundamentals: Components"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactFundamentals']
+date: 2025-07-26
+thumbnailText: React Fundamentals
+---
+
+# Controlled Components
+
+> A **controlled component** is one where form data is handled by React state.
+
+```jsx
+const [value, setValue] = useState("");
+
+<input value={value} onChange={e => setValue(e.target.value)} />
+```
+
+# Uncontrolled Components
+
+> An **uncontrolled component** lets the DOM handle its own state.
+
+```jsx
+const inputRef = useRef();
+
+<input ref={inputRef} />
+```
+
+# Pure Component
+
+> A **Pure Component** renders the same output when given the same props and state. Use Pure Components to improve performance by avoiding redundant rendering.
+
+```jsx
+const MyComponent = React.memo(function MyComponent(props) {
+  return <div>{props.name}</div>;
+});
+```
+
+# Higher-Order Component
+
+### Example
+
+> A **Higher-Order Component (HOC)** is a function that takes a component and returns a new component with enhanced behavior.
+
+```jsx
+const withLogger = (WrappedComponent) => {
+  return (props) => {
+    console.log("Rendering", WrappedComponent.name);
+    return <WrappedComponent {...props} />;
+  };
+};
+```
+### Why use HOCs?
+
+* Code reuse
+* Cross-cutting concerns (auth, logging, permissions)
+* Keeps components clean

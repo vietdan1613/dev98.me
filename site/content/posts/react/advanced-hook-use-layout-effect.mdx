@@ -1,0 +1,56 @@
+---
+title: "Advanced Hook - useLayoutEffect()"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactAdvancedHooks']
+date: 2025-07-29
+thumbnailText: Advanced Hook
+---
+
+> The `useLayoutEffect` hook runs after the DOM has been updated but before the browser has had 
+> a chance to paint the screen. This means you can make your measurements and then render the 
+> UI with the correct measurements before the user sees anything.
+
+![example](./imgs/hook-flow-diagram.png 'example')
+
+## useLayoutEffect
+
+```tsx
+useLayoutEffect(() => {
+  // your layout-effect code here.
+  // this is where you read/write layout synchronously
+  // e.g. measure DOM, set position, prevent flicker
+  doLayoutThing()
+
+  return function cleanup() {
+    // clean up layout-related side-effects
+    // e.g. remove observers, cancel animations
+    doSomeCleanup()
+  }
+}, [
+  // this is where dependencies of your useLayoutEffect callback go
+  // any value used inside the effect should be listed here
+  dep1,
+  dep2,
+])
+```
+
+## Use `useLayoutEffect`?
+
+Use it when you need to:
+
+### 1. Measure DOM before paint
+
+```jsx
+useLayoutEffect(() => {
+  const height = ref.current.offsetHeight;
+  setHeight(height);
+}, []);
+```
+### 2. Synchronize scroll or position
+
+```jsx
+useLayoutEffect(() => {
+  window.scrollTo(0, savedPosition);
+}, []);
+```

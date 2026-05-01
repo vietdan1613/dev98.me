@@ -1,10 +1,10 @@
 ---
-title: "useSyncExternalStore() for Syncing External State"
+title: "Advanced Hook: useSyncExternalStore()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
+tags: ['#ReactAdvancedHooks']
 date: 2025-07-29
-thumbnailText: React Fundamentals
+thumbnailText: Advanced Hook
 ---
 
 > It provides a safe and concurrent-friendly way to subscribe to external mutable sources and keep React in sync.
@@ -66,7 +66,7 @@ function MyLocation() {
 }
 ```
 
-✔ React now re-renders whenever location updates
+✔ React now re-renders whenever location updates.   
 ✔ No tearing, no stale values
 
 ---
@@ -105,6 +105,6 @@ function App() {
 
 Use `useSyncExternalStore` when:
 
-* Integrating browser APIs (media, sensors, visibility, location)
-* Connecting to non-React stores (Redux, Zustand, custom pub/sub)
+* Integrating browser APIs (media, sensors, visibility, location).   
+* Connecting to non-React stores (Redux, Zustand, custom pub/sub).   
 * Building libraries that expose external state

@@ -1,15 +1,13 @@
 ---
-title: "React Context for Shared State"
+title: "Advanced Hook: createContext()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
-date: 2025-07-27
-thumbnailText: React Fundamentals
+tags: ['#ReactAdvancedHooks']
+date: 2025-07-29
+thumbnailText: Advanced Hook
 ---
 
-Sometimes, multiple components need access to the same state. While lifting state up works in many cases, it becomes impractical when components are deeply nested or separated by routers or layout boundaries.
-
-This is where **React Context** becomes essential.
+> Sometimes, multiple components need access to the same state. While lifting state up works in many cases, it becomes impractical when components are deeply nested or separated by routers or layout boundaries. This is where **React Context** becomes essential.
 
 # The Problem
 
@@ -43,8 +41,8 @@ Each component gets its **own state**, so clicking the button doesn’t update t
 
 Use Context when:
 
-✔ State must be shared across distant components
-✔ Prop drilling becomes messy
+✔ State must be shared across distant components.   
+✔ Prop drilling becomes messy.   
 ✔ You want implicit sharing (e.g. themes, auth, locale)
 
 # Sharing State with Context

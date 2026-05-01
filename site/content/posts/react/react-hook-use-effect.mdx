@@ -1,0 +1,42 @@
+---
+title: "React Hook - useEffect()"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHook']
+date: 2025-07-27
+thumbnailText: React Hook
+---
+
+# `useEffect`
+
+> `useEffect` runs side effects after React renders, and you use it when your component needs to sync with something outside React like APIs, timers, or event listeners.
+
+```jsx id="6h1e8e"
+useEffect(() => {
+  const id = setInterval(() => {
+    console.log("tick");
+  }, 1000);
+}, []);
+```
+
+# Effect Cleanup
+
+> Some effects start work that keeps running after render, like event listeners or timers. The cleanup function stops that work when it’s no longer needed.
+
+```jsx id="m65r6n"
+useEffect(() => {
+  const handleResize = () => {
+    console.log(window.innerWidth);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
+```
+
+In this example, the effect adds a `resize` listener when the component mounts.
+
+The cleanup function removes it when the component unmounts, preventing duplicate listeners, memory leaks, and unexpected behavior caused by stale effects still running.

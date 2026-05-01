@@ -1,15 +1,15 @@
 ---
-title: "useImperativeHandle() for Imperative Handles"
+title: "Advanced Hook: useImperativeHandle()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
+tags: ['#ReactAdvancedHooks']
 date: 2025-07-29
-thumbnailText: React Fundamentals
+thumbnailText: Advanced Hook
 ---
 
 Sometimes you need to step outside and interact with components **imperatively**, for example:
 
-* Focusing an input
+* Focusing an input.   
 * Scrolling a container
 
 This is where **imperative handles** come in.
@@ -70,7 +70,7 @@ Why?
 * They don’t change across renders
 * Including them is unnecessary
 
-### 🧠 Summary
+### Summary
 
 * `useImperativeHandle` lets child components expose custom APIs to parents
 * React 19 allows direct access to `ref` via props (no `forwardRef`)

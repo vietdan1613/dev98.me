@@ -1,18 +1,18 @@
 ---
-title: "flushSync() for Focus Management"
+title: "Advanced Hook: flushSync()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
+tags: ['#ReactAdvancedHooks']
 date: 2025-07-29
-thumbnailText: React Fundamentals
+thumbnailText: Advanced Hook
 ---
 
-When building interactive UIs with forms and dynamic components, **focus management** is critical—not just for UX, but also for accessibility and keyboard navigation.
+> When building interactive UIs with forms and dynamic components, **focus management** is critical—not just for UX, but also for accessibility and keyboard navigation.
 
 Good focus management ensures:
 
-* Smooth keyboard navigation
-* A predictable and seamless user experience
+* Smooth keyboard navigation.   
+* A predictable and seamless user experience.   
 
 # Problem
 
@@ -76,9 +76,9 @@ function MyComponent() {
 
 # Key Takeaways
 
-* React batches updates → new elements aren’t immediately focusable
-* Use `ref + focus()` to control focus explicitly
-* Prefer `useEffect` when focus isn’t urgent
-* Use `flushSync` only when DOM must update synchronously
-* Always support keyboard interactions
-* Focus management is a core accessibility requirement
+* React batches updates → new elements aren’t immediately focusable.    
+* Use `ref + focus()` to control focus explicitly.    
+* Prefer `useEffect` when focus isn’t urgent.    
+* Use `flushSync` only when DOM must update synchronously.    
+* Always support keyboard interactions.    
+* Focus management is a core accessibility requirement.    

@@ -1,0 +1,72 @@
+---
+title: "React Hook - useRef()"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHook']
+date: 2025-07-27
+thumbnailText: React Hook
+---
+
+> Sometimes React isn’t enough on its own — you need direct access to the DOM. This usually happens when: integrating a DOM-based library, focusing an input...
+
+# `useRef`
+
+`useRef` gives you a persistent object whose `.current` points to a DOM element.
+
+```jsx
+import { useEffect, useRef } from "react";
+
+export default function Chart() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const chart = createChart(containerRef.current);
+
+    return () => chart.destroy();
+  }, []);
+
+  return <div ref={containerRef} />;
+}
+```
+
+# Avoid overusing `useRef`
+
+### It bypasses React
+
+React is built around **state → UI**. When you use `useRef` to manually change the DOM, React doesn’t know about it.
+
+```jsx
+inputRef.current.value = "Hello";
+```
+
+### It makes components harder to debug
+
+State changes are visible in React DevTools. Ref changes are not. That means:
+
+* harder to inspect.  
+* harder to trace.  
+* easier to hide bugs
+
+# Primitive Dependencies
+
+> In React, dependency arrays work best with **primitive values** like: strings, numbers, booleans. These values are compared by **value**, which makes them stable and predictable.
+
+Primitive dependencies are safe because they don’t change unless their actual value changes.
+
+For primitives, that means:
+
+```js
+1 === 1 // true
+"hi" === "hi" // true
+true === true // true
+```
+
+So React can reliably tell whether something changed.
+
+```jsx
+const userId = user.id;
+
+useEffect(() => {
+  fetchUser(userId);
+}, [userId]);
+```

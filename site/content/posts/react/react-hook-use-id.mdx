@@ -1,0 +1,75 @@
+---
+title: "React Hook - useId()"
+category: React
+author: Daniel Nguyen
+tags: ['#ReactHook']
+date: 2025-07-27
+thumbnailText: React Hook
+---
+
+> Form inputs need unique IDs so labels, help text, and accessibility attributes can correctly connect to the right element. But in reusable components, hardcoding IDs quickly breaks down. That’s exactly what `useId` solves.
+
+# The Problem
+
+A label connects to an input using `htmlFor` and `id`.
+
+```jsx
+function TextField() {
+  return (
+    <>
+      <label htmlFor="email">Email</label>
+      <input id="email" />
+    </>
+  );
+}
+```
+
+This works fine once. But reusable components are meant to be rendered many times:
+
+```jsx
+<TextField />
+<TextField />
+```
+
+Now both inputs use the same `id="email"`. That creates duplicate IDs in the DOM, which is invalid HTML and can confuse screen readers.
+
+# The Solution
+
+React provides the `useId` hook to generate a unique, stable ID for each component instance.
+
+```jsx
+import { useId } from "react";
+
+function TextField({ label, hint }) {
+  const id = useId();
+  const hintId = `${id}-hint`;
+
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} aria-describedby={hintId} />
+      <p id={hintId}>{hint}</p>
+    </div>
+  );
+}
+```
+
+Now every rendered `TextField` gets its own unique ID automatically.
+
+```jsx
+<TextField label="Email" />
+<TextField label="Password" />
+```
+
+# Not to Use It
+
+`useId` is only for DOM relationships. Do **not** use it for:
+
+* React list keys.   
+* database IDs.   
+* random values
+
+```jsx
+// ❌ Wrong
+items.map(item => <Row key={useId()} />)
+```

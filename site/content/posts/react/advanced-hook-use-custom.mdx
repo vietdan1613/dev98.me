@@ -1,13 +1,13 @@
 ---
-title: "Custom Hooks"
+title: "Advanced Hook: customHooks()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
-date: 2025-07-28
-thumbnailText: React Fundamentals
+tags: ['#ReactAdvancedHooks']
+date: 2025-07-29
+thumbnailText: Advanced Hook
 ---
 
-# What?
+# What
 
 > A custom hook is simply a **function that uses other hooks**.
 
@@ -41,7 +41,7 @@ useEffect(() => {
 
 Problem: Even if `increment` does the same thing, its **reference changes every render**, causing:
 
-* Effect cleanup & re-run
+* Effect cleanup & re-run.    
 * Performance overhead
 
 ### Fix with `useCallback`
@@ -52,13 +52,13 @@ Problem: Even if `increment` does the same thing, its **reference changes every 
 function useCount() {
   const [count, setCount] = useState(0)
   const increment = useCallback(() => setCount(c => c + 1), [])
-  return { count, increment }
+  return { count,    }
 }
 ```
 
 > Now `increment` is **stable across renders**.
 
-# Memoization?
+# Memoization
 
 Memoization stores results so they can be reused instead of recalculated.
 
@@ -88,12 +88,3 @@ Equivalent:
 useCallback(fn, deps)
 useMemo(() => fn, deps)
 ```
-
-# Key Takeaways
-
-* Custom hooks encapsulate reusable logic
-* Memoization preserves performance and reference stability
-* `useCallback` stabilizes functions
-* Use it intentionally, not everywhere
-* Reusable hooks should consider referential equality
-

@@ -1,10 +1,10 @@
 ---
-title: "use() for Suspense"
+title: "Advanced Hook: use()"
 category: React
 author: Daniel Nguyen
-tags: ['#ReactTesting']
+tags: ['#ReactAdvancedHooks']
 date: 2025-07-29
-thumbnailText: React Fundamentals
+thumbnailText: Advanced Hook
 ---
 
 > React now provides a declarative model for async rendering through **Suspense**, **Error Boundaries**, and the new **`use()` hook**.
@@ -18,9 +18,9 @@ const data = await res.json()
 
 You’re forced to manually manage:
 
-* Loading states
-* Error states
-* Retry logic
+* Loading states.   
+* Error states.   
+* Retry logic.   
 
 > React solves this structurally using **Suspense + Error Boundaries**.
 
@@ -42,8 +42,8 @@ function App() {
 
 When `PhoneDetails` suspends:
 
-* React renders the fallback
-* Automatically retries when data resolves
+* React renders the fallback.   
+* Automatically retries when data resolves.   
 
 # Error Boundaries
 
