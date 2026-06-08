@@ -1,0 +1,139 @@
+---
+title: "CI/CD with Git and Vercel"
+category: React
+author: Daniel Nguyen
+tags: ['#redux']
+date: 2025-12-13
+thumbnailText: Redux Toolkit
+---
+
+> CI/CD is a DevOps practice that automates building, testing, and deploying code so teams can deliver changes faster, safer, and with confidence
+
+# What Is CI/CD?
+
+### Continuous Integration (CI)
+
+Developers frequently push code to a shared Git repository (such as GitHub or GitLab). Each push triggers automated checks such as:
+
+* Installing dependencies
+* Running unit or integration tests
+* Building the application
+
+### Continuous Delivery (CD)
+
+Once the code passes CI, it is automatically prepared for release. The application is always in a **deployable state**, and releases can happen safely at any time.
+
+### Continuous Deployment
+
+The final step: every change that passes automated checks is **deployed automatically** to production — no manual steps required.
+
+# Why Git + Vercel?
+
+Git and Vercel form a lightweight yet production-ready CI/CD setup.
+
+**Git provides:**
+
+* Version control
+* Collaboration through pull requests
+* A trigger point for CI pipelines
+
+**Vercel provides:**
+
+* Automatic deployments on every push
+* Preview deployments for pull requests
+* Built-in build and runtime optimizations
+* Easy rollbacks
+
+Together, they enable a seamless developer experience.
+
+### High-Level CI/CD Flow
+
+Here’s a typical workflow using Git and Vercel:
+
+1. Developer pushes code to GitHub
+2. GitHub Actions (CI) runs tests and builds the project
+3. If CI passes, Vercel automatically deploys the app
+4. A preview URL is generated for pull requests
+5. Production is updated on merge to `main`
+
+# Setup Guide
+
+### Step 1: Set Up Your Git Repository
+
+1. Create a GitHub repository
+2. Push your project code
+3. Create a `main` branch for production
+4. (Optional) Create a `develop` branch for staging
+
+Use pull requests to merge changes safely.
+
+### Step 2: Add a CI Pipeline with GitHub Actions
+
+Create a file: `.github/workflows/ci.yml`
+
+```yaml
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build project
+        run: npm run build
+```
+
+This workflow:
+
+* Runs on every push and pull request
+* Installs dependencies
+* Runs tests
+* Builds the app
+
+If any step fails, the pipeline stops.
+
+### Step 3: Connect Your Repo to Vercel
+
+1. Go to [https://vercel.com](https://vercel.com)
+2. Import your GitHub repository
+3. Choose your framework (Next.js, React, etc.)
+4. Set environment variables if needed
+5. Deploy
+
+Vercel will now:
+
+* Deploy every push to `main` to production
+* Create preview deployments for pull requests
+
+### Step 4: Configure Vercel for CI/CD
+
+You can let GitHub Actions handle CI and let Vercel handle CD.
+
+Or you can add deployment steps into GitHub Actions using the Vercel CLI.
+
+Example:
+
+```yaml
+- name: Deploy to Vercel
+  run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+```

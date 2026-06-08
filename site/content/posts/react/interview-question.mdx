@@ -1,0 +1,889 @@
+---
+title: "Interviewing"
+category: React
+author: Daniel Nguyen
+tags: ['#Daily']
+date: 2020-01-02
+thumbnailText: Daily
+---
+
+# HR Questions
+
+### 1. **Can you introduce yourself?**
+
+> Who you are, your role, and your core skills
+
+### 2. **What do you know about our company?**
+
+> Company product/domain + why it interests you
+
+### 3. project you’ve been working
+
+#### 3.1 Can you walk me through the architecture of your KIC Automation Testing project?
+
+> system thinking, ownership, and ability to explain complexity clearly.
+> * Frontend (React, feature-based structure)
+> * Backend (.NET Core APIs)
+> * Selenium automation layer
+> * Data flow: trigger test → backend → execution → results → dashboard
+
+> Why did you use Redux-Saga instead of Redux Thunk or only React Query?
+> (decision-making and async complexity handling)
+> * Controlled concurrency
+> * Cancellation, retries
+> * Sequencing dependent requests
+> * Why Thunk wasn’t enough
+> * Why React Query alone wasn’t enough
+
+> How did Redux-Saga and React Query work together without overlapping responsibilities?
+> (real-world state architecture maturity)
+> * Saga for orchestration / workflows
+> * React Query for server state + caching
+> * Avoiding duplication
+> * When data lived in Redux vs Query cache
+
+> What performance problems did you face and how did you fix them?
+> (Senior engineers are judged on this)
+> * Unnecessary re-renders
+> * Large datasets (test results)
+> * Query caching
+> * Memoization, pagination, virtualization
+> * Reduced API calls
+
+> What technical decisions did you personally own?
+> (leadership and seniority)
+> * Feature-based structure
+> * Redux-Saga adoption
+> * React Query integration
+> * Testing strategy
+> * Integration approach with automation backend
+
+#### 3.2 How did you design the communication between the React UI and Selenium automation?
+
+> * API triggers
+> * Long-running jobs
+> * Polling or WebSocket
+> * Error handling
+> * Status tracking
+
+> How did you handle long-running test executions?
+> * Async job IDs
+> * Progress tracking
+> * Polling
+> * UI states
+> * Timeouts / retries
+
+> How did you structure your frontend codebase for scalability?”
+> * Feature-based folders
+> * Shared components
+> * Domain boundaries
+> * Avoiding tight coupling
+
+> What kind of tests did you write and what was hard to test?
+> * Jest + Testing Library
+> * Mock APIs
+> * Async flows
+> * Automation integration edge cases
+
+> What would you redesign if you started over?
+> * Honest trade-offs
+> * Technical debt
+> * Tooling improvements
+> * What you learned
+
+#### 3.2 How did you integrate MetaMask?
+
+> * Wallet connection
+> * Provider detection
+> * Network changes
+> * Session handling
+
+> How did you handle failed blockchain transactions?
+> * UI error states
+> * Reverts
+> * User feedback
+> * Retry logic
+
+> Why Redux + Thunk for the Web3 project?
+> * Simpler async needs
+> * Team maturity at the time
+> * Trade-offs vs Saga
+
+### 4. **What interests you about this position?**
+
+> Alignment between the role, your skills, and growth goals
+
+### 5. **When you get stuck and can’t solve a problem, how do you proceed?**
+
+> Break down the problem → research → ask for help clearly
+
+### 6. **How do you learn and improve your skills?**
+
+> Practice, documentation, feedback, and continuous learning
+
+### 7. **How do you handle working on a challenging feature?**
+
+> Understand requirements → split into small tasks → iterate
+
+### 8. **What tools do you use to manage your work?**
+
+> - They help automate tasks, improve code quality, and streamline workflows.
+> - Examples: 
+>   - VScode for code editing
+>   - Git for version control
+>   - Vite or Webpack for build tools
+>   - Jest and React Testing Library for testing frameworks
+>   - Jira for project management
+
+> What is Vite, and why would you choose it over Webpack?
+> - Webpack is a powerful but complex module bundler that can have slower build times and requires more configuration.
+> - Vite is a modern build tool that offers faster development startup and hot module replacement (HMR) using native ES modules.
+
+### 9. **When starting a project, how do you plan and organize your work to ensure completion?**
+
+> Clarify requirements → plan tasks → set priorities and milestones
+
+### 10. **How do you handle stress and pressure at work?**
+
+> Prioritization, communication, and staying organized
+
+### 11. **What are your strengths?**
+
+> Problem-solving, responsibility, and willingness to learn
+
+### 12. **What are your weaknesses?**
+
+> A real but manageable weakness + improvement effort
+
+### 13. **What is your preferred working or management style?**
+
+> Clear goals, open communication, and collaboration
+
+### 14. **Have you ever mentored a junior team member? What is your leadership style?**
+
+> Supportive, knowledge-sharing, and collaborative
+
+### 15. **Where do you see yourself in five years?**
+
+> Growth into a stronger, more impactful engineer
+
+### 16. **What are your salary expectations?**
+
+> Market-based range + openness to discussion
+
+### 17.Can you describe your **CI/CD experience**?
+
+> -  Step 1: Set Up Your Git Repository
+> -  Step 2: Configure GitHub Actions for CI
+> -  Step 3: Set Up Vercel for CD
+
+### 18. How you improve web accessibility in your projects?
+
+> - Use semantic HTML elements
+> - Ensure keyboard navigability
+> - Provide alt text for images
+> - Use ARIA roles and attributes appropriately
+> - Ensure sufficient color contrast
+> - Test with screen readers
+
+### 19. Can you walk me through your typical software development process from requirements and planning to release and maintenance?
+
+> 1. Requirements Gathering: Understand project goals.
+> 2. Planning: Break down requirements into tasks, estimate effort.
+> 3. Design: create a wireframe, folder architecture, data flow.
+> 4. Development: Write code following best practices
+> 5. Testing: Perform unit, integration, and end-to-end testing to catch bugs and ensure functionality.
+> 6. Deployment: Use CI/CD pipelines to automate build, test, and deployment processes.
+> 7. Maintenance: Monitor performance, fix bugs
+
+### 20. what is Agile methodology?
+
+> - Agile is an iterative approach to software development that emphasizes collaboration, customer feedback, and small, rapid releases.
+
+
+> How Agile methodologies improve software development processes in your team? 
+> - They promote adaptability to change, enhance communication, and deliver value incrementally.
+> - They encourage continuous improvement through regular retrospectives and feedback loops.
+> - They foster a collaborative environment where cross-functional teams work together effectively.
+
+> What are some common Agile frameworks or practices you have experience with?
+> - Scrum: roles (Scrum Master, Product Owner), ceremonies (sprints, stand-ups, retrospectives)
+> - User stories: capturing requirements from the user perspective
+
+### 21. How do you structure a large React application for scalability and maintainability?
+
+> - Use a modular folder structure (components, pages, services, hooks, utils)
+> - Follow component-driven development
+> - Use state management (Redux, Context API) appropriately
+> - Implement code splitting and lazy loading
+> - Write comprehensive tests (unit, integration, e2e)
+> - API layer for data fetching and caching
+
+#  React Technical
+
+### 1. Can you explain the React component lifecycle?
+
+> Mounting      
+> Updating      
+> Unmounting        
+
+> What causes a component to re-render?     
+> - State changes, prop changes, or parent re-renders
+
+> What is controlled vs uncontrolled components
+> - Controlled components have their state managed by React (via props/state)
+> - Uncontrolled components manage their own state (via refs/DOM)
+
+> What is a Pure Component?
+> - A component that renders the same output for the same props/state.
+
+> What is a Higher Order Component (HOC)?
+> - A function that takes a component and returns a new component with enhanced behavior.
+
+> What is reconciliation in React?     
+> - React’s process of diffing the virtual DOM and updating the real DOM efficiently.
+
+> What is the difference between `useEffect()` and `useLayoutEffect()`?       
+> - `useEffect` → runs after paint (non-blocking)     
+> - `useLayoutEffect` → runs before paint (blocking)
+
+> Why is useLayoutEffect considered dangerous if misused?     
+> - It can block rendering and cause performance issues if it contains heavy computations.
+
+> Give a real-world use case for useLayoutEffect     
+> - Measuring DOM elements before paint (e.g., calculating sizes for animations)
+
+> How does Concurrent Rendering affect lifecycle behavior?     
+> - It allows React to interrupt rendering, which can change when effects run and improve responsiveness.
+
+### What is your error-handling strategy in production apps?
+
+> - Use Error Boundaries to catch rendering errors.   
+> - try/catch in async code.      
+
+> What are Error Boundaries?      
+> - React components that catch JavaScript errors in their child component tree.      
+
+> What errors do Error Boundaries NOT catch?      
+> - Event handlers, async code, server-side rendering.        
+
+> How do you handle errors in event handlers?     
+> - Use try/catch blocks within the event handler functions.      
+
+> How do you handle errors with React Query?      
+> - Use onError callbacks and error states provided by React Query hooks.     
+
+> Different between isError, error?   
+> - isError is a boolean flag;    
+> - error contains the actual error object/details.   
+
+### 3. How do you render a list in React?
+
+> - Use `Array.map()` to create elements from data arrays.        
+> - Use unique `key` props for each item.
+
+> Why are keys important in React lists?        
+> - Keys help React identify which items have changed, added, or removed for efficient updates.
+
+> What makes a good key?        
+> - Unique, stable identifiers (e.g., IDs). Avoid using indexes if the list can change
+
+> Can you use array index as a key?        
+> - Only if the list is static and won’t change order or have items added/removed.
+
+> What happens if you don’t provide keys?        
+> - React will use indexes by default, which can lead to inefficient updates and bugs.
+
+> How do you optimize large lists?        
+> - Use virtualization libraries (e.g., react-window) to render only visible items.
+
+> How useId() differs from key?
+> -`useId` generates a new value per render
+> - Keys must be stable across renders
+
+### 4. What is the Context API?
+
+> - A way to share state globally without prop drilling.        
+> - Use `React.createContext()`, `Provider`, and `useContext()`.
+
+> When should you use Context?        
+> - For global state like themes, auth, or settings.
+
+> How Context Works        
+> - Create a context with `React.createContext()`. Wrap components with `Provider` to supply values. Use `useContext()` to consume values.
+
+> Performance Considerations        
+> - Context updates re-render all consumers. Optimize by splitting contexts or memoizing values.        
+
+### 5. What causes performance issues in React apps?
+
+> - Unnecessary re-renders, large component trees, heavy computations in render.
+
+> How do you optimize it?
+> - Memoization (`React.memo`, `useMemo`, `useCallback`)    
+> - Split components & state    
+> - Virtualize large lists    
+> - Optimize Context usage    
+
+> How do you detect and diagnose **unnecessary re-renders**?        
+> - React DevTools Profiler        
+> - Console logging renders        
+
+> The different between `React.memo()`, `useMemo()`, and `useCallback()`?        
+> - `React.memo` → memoizes entire components        
+> - `useMemo` → memoizes computed values        
+> - `useCallback` → memoizes functions        
+
+> When should you use `React.memo()` and when should you avoid it?        
+> - Use it when re-renders are expensive and props are stable        
+> - Avoid when renders are cheap or props change frequently        
+
+> How would you optimize **rendering a list with thousands of items**?        
+> - List virtualization (`react-window`)        
+> - Memoized row components        
+
+> When would you use `useDeferredValue()` or `useTransition()`?       
+> - For deferring non-urgent updates to keep the UI responsive during heavy rendering.        
+> - `useDeferredValue` delay rendering non-urgent derived values. Example: filtering a large list while typing.   
+> - `useTransition` mark updates as low-priority. Example: switching tabs while fetching/rendering data.    
+
+### 6. What is React Testing Library (RTL)?
+
+> - A testing library focused on testing React components via the DOM, simulating real user interactions.
+
+> How do you find elements in RTL?
+> - Use accessible queries like `getByRole`, `getByLabelText`, `getByText`.
+
+> Why is getByRole preferred?
+> - It reflects how users interact with the app and improves test reliability.
+
+> What’s the difference between getBy, queryBy, and findBy?
+> - `getBy` throws an error if not found (synchronous)    
+> - `queryBy` returns null if not found (synchronous)    
+> - `findBy` returns a promise and waits for the element (asynchronous)
+
+> Why prefer userEvent over fireEvent?
+> - `userEvent` simulates real user interactions more accurately (e.g., typing, clicking).
+
+> Why do we avoid testing implementation details?
+> - Tests should focus on user-visible behavior, not internal component structure.
+
+> When should you mock and when not?
+> - Mock external dependencies (APIs, timers) but avoid mocking DOM/browser APIs unless necessary.
+
+> Why use MSW instead of mocking fetch?
+> - MSW mocks at the network level, providing realistic responses and reusable mocks across tests.
+
+> What’s the biggest mistake people make with RTL?
+> - Testing implementation details instead of user behavior.
+> - Manual ReactDOM testing
+
+> What is JSDOM?
+> - JSDOM is a JavaScript implementation of the DOM and HTML standards, used for testing React components in a Node.js environment without a real browser.
+
+> Which browser APIs are missing or incomplete in **JSDOM**?
+> - `ResizeObserver`, `matchMedia`, `Clipboard`
+
+> Why is mocking browser APIs called **“poking a hole in reality”**?
+> - Mocks reduce realism; **integration/e2e tests should minimize mocking** to better reflect real user environments.
+
+> When testing forms, what user behaviors should be simulated?
+> - Typing, clicking, focusing, submitting, and validation feedback, not direct state manipulation.
+
+> Which matcher do you use?
+> - `toBeInTheDocument()` to check presence in the DOM.
+> - `toHaveTextContent()` to verify text content.
+> - `toHaveAttribute()` to check element attributes.
+> - `toBeVisible()` to ensure element visibility.
+
+### 7. What patterns do you apply in your React project?
+
+> - Composition -> avoid prop drilling
+> - Latest ref -> store the latest value
+> - Compound components -> shared state
+> - Prop collection -> full control
+
+> Why use Component Composition instead of inheritance?
+> - It lets components receive behavior and UI via children instead of passing props deeply, improving flexibility and reuse.
+> - Example use cases: tabs, layouts, dropdowns.
+
+> Why store the latest value in useRef instead of state for async logic?
+> - Refs update without triggering re-renders, making them ideal for async callbacks that need the latest value.
+> - Example use cases: timers, debounce, async callbacks.
+
+> What are Compound Components in React?
+> - A pattern where related components share state via Context, allowing flexible APIs without prop drilling.
+> - Example use cases: tabs, accordions, dropdowns.
+
+> How does the **state reducer pattern** customize behavior?
+> - **It lets consumers intercept and modify state transitions without changing internal component logic.**
+
+> Advantage of a Prop Getter over prop collection?
+> - Prop getters give consumers full control while still applying required logic, preventing accidental overrides.
+> - Example use cases: custom inputs, dropdowns, modals.
+
+#  State Management
+
+### 1. **How do you decide whether a piece of state belongs in Redux, React Query, or local component state?**
+
+> * UI state -> Local state
+> * Global state -> Redux 
+> * Server data ->	React Query
+> * Auth -> Context + storage
+
+### 2. What is Redux Toolkit?
+
+> * UI → Action → Middleware → Reducer → Store → UI
+> * Redux Toolkit is recommended way to write Redux that reduces boilerplate and enforces best practices.
+
+> What does createSlice do?   
+> - Combines state, reducers, and actions in one place
+
+> How can RTK allow “mutating” state?     
+> - Uses Immer to convert mutations to immutable updates
+
+> What is configureStore?     
+> - Sets up the Redux store with good defaults (DevTools, middleware)
+
+> How you use middleware in RTK?      
+> - Use with libraries redux-logger
+
+> What is createAsyncThunk?       
+> - Simplifies async logic (CRUD, single API calls)
+
+> Can one slice respond to actions from another slice?        
+> - Yes, using extraReducers
+
+> extraReducers vs reducers?      
+> - reducers handle this slice’s actions; extraReducers handle external actions
+
+### 3. What is Redux Saga?
+
+> * Middleware for handling complex async side effects in Redux applications.
+
+> Why does Redux-Saga use generator functions?        
+> - Generators allow pausing and resuming async logic.
+
+> What is a saga?     
+> - A saga is a generator function that handles side effects.
+
+> Difference between call and put and fork?       
+> - call runs a function, put dispatches an action.
+> - call is blocking—the saga waits for the function to complete. 
+> - fork is non-blocking and runs the task in the background, allowing concurrent execution.
+
+> What does takeLatest do?        
+> - Runs only the latest action, cancels previous ones.
+
+> Difference between takeEvery, takeLatest, and takeLeading?      
+> - takeEvery runs for every action.      
+> - takeLatest runs only the latest action, cancelling previous ones.     
+> - takeLeading runs only the first action, ignoring subsequent ones until it completes.      
+
+> How do you run multiple API calls in parallel?      
+> - Use yield all([...]) to run effects concurrently.     
+
+> How do you handle errors in Redux-Saga?     
+> - Use try/catch blocks inside sagas.        
+
+> How do you cancel a running saga?       
+> - Using takeLatest or cancel.       
+
+> What is race and when would you use it?     
+> - race runs multiple effects and completes when the first one finishes.     
+
+> Why should reducers remain pure when using Redux-Saga?      
+> - To ensure predictable state updates and maintainability.
+
+### 4. **What is React Query?**
+
+> Data-fetching library for React that simplifies server state management.    
+> - React Query manages server state—fetching, caching, and syncing data with the server.
+
+> What is a mutation?     
+> - A mutation is an operation that modifies server data (POST, PUT, DELETE).
+
+> What are query keys and why are they important?     
+> - Query keys uniquely identify queries for caching and refetching.
+
+> How does React Query handle caching?        
+> - Caches data based on query keys and provides stale-while-revalidate behavior.
+
+> What is staleTime?      
+> - Duration data is considered fresh before being marked stale.
+
+> What is cacheTime / gcTime?     
+> - Duration unused data remains in cache before garbage collection.
+
+> When does React Query refetch automatically?        
+> - On window focus, network reconnect, or interval-based refetching.
+
+> What does enabled do?       
+> - Controls whether a query should automatically run.
+
+> Difference between isLoading and isFetching?        
+> - isLoading is true on the initial fetch; isFetching is true on any fetch (initial or subsequent).
+
+> How do you invalidate queries?      
+> - Use queryClient.invalidateQueries(queryKey) to refetch data.
+
+> How do you perform optimistic updates?      
+> - Update the UI immediately, then roll back if the mutation fails.
+
+> How do you handle pagination and infinite scrolling?        
+> - Use useInfiniteQuery for fetching paginated data.
+
+> How do you handle mutation errors?      
+> - Use onError callback in useMutation to handle errors.
+
+#  JavaScript
+
+### 1. Scope, Closures & Hoisting
+
+> **What is a closure in JavaScript?**
+> - A closure is when a function remembers and can access variables from its outer (lexical) scope even after the outer function has finished executing.
+
+> **What is hoisting?**
+> - Hoisting is JavaScript’s behavior of moving variable and function declarations to the top of their scope.
+> * `var`: hoisted and initialized as `undefined`
+> * `let` / `const`: hoisted but in the temporal dead zone
+> * Function declarations: fully hoisted
+> * Function expressions: not fully hoisted
+
+> **Q13. How does scope work in JavaScript?**
+> - Scope determines where variables are accessible. JavaScript has global, function, and block scope.
+ 
+> **Q16. What is lexical scope?**
+> - Lexical scope means a variable’s scope is determined by where it is written in the code, not where it is called.
+
+> **Q18. What is the difference between `var`, `let`, and `const`?**
+> * `var`: function-scoped, can be redeclared
+> * `let`: block-scoped, cannot be redeclared
+> * `const`: block-scoped, cannot be reassigned
+
+### 2. `this` Binding & Function Context
+
+> **Q3. How does `this` work in JavaScript?**
+> * Regular functions: depends on how the function is called
+> * Arrow functions: inherit `this` from their surrounding scope
+> * Methods: `this` refers to the object
+> * Event handlers: `this` refers to the element
+
+> **Q20. What is the difference between `call`, `apply`, and `bind`?**
+> * `call`: invokes with arguments listed
+> * `apply`: invokes with arguments as an array
+> * `bind`: returns a new function with fixed `this`
+
+> **Q14. What happens when you use `new` with a function?**
+> It creates a new object, sets its prototype, binds `this` to it, and returns it.
+
+### 3. Asynchronous JavaScript & Event Loop
+
+> **Q4. What is the JavaScript event loop?**
+> - The event loop handles execution of synchronous code, then microtasks, then macrotasks.
+
+> **Q5. What are microtasks vs macrotasks?**
+> - Microtasks (Promises) run before macrotasks (`setTimeout`).
+
+> **Q6. What are common async patterns?**
+> - Callbacks, Promises, and `async/await`.
+
+> **Q21. Difference between `setTimeout` and `setInterval`?**
+> * `setTimeout`: runs once after a delay
+> * `setInterval`: runs repeatedly
+
+### 4. Objects, Prototypes & Inheritance
+
+> **Q9. What is prototype inheritance?**
+> - Objects inherit properties from their prototype via the prototype chain.
+
+### 5. Equality, Types & Coercion
+
+> **Q8. Difference between `==` and `===`?**
+> * `==`: allows type coercion
+> * `===`: strict comparison
+
+> **Q10. Difference between `null` and `undefined`?**
+> * `null`: assigned “no value”
+> * `undefined`: declared but not assigned
+
+> **Q17. What are JavaScript data types?**
+> * Primitive: string, number, boolean, null, undefined, symbol, bigint
+> * Non-primitive: object, array, function
+
+### 6. Immutability & Copying
+
+> **Q11. Shallow copy vs deep copy?**
+> * Shallow: copies references
+> * Deep: copies nested objects
+
+> **Q12. What is immutability?**
+> - Not changing existing data; instead creating new data. Important for predictable state updates.
+
+### 7. Events & DOM Handling
+
+> **Q19. What is event delegation?**
+> - Using one parent listener to handle child events via bubbling.
+
+> **How do you stop event propagation?**
+> - Use `event.stopPropagation()`.
+
+> **Q7. What is debouncing and throttling?**
+> * Debouncing: delays execution until activity stops
+> * Throttling: limits execution rate
+
+## 8. Memory & Performance
+
+> ** What is a memory leak in JavaScript?**
+> - When memory that is no longer needed is not released, causing the app to slow down or crash over time.
+
+> **What are common causes of memory leaks?**
+> * Unremoved event listeners
+> * Forgotten timers (`setInterval`, `setTimeout`)
+> * Closures holding references
+> * Global variables
+
+> **How can you prevent memory leaks?**
+> * Remove event listeners when not needed
+> * Clear timers
+> * Avoid unnecessary global variables
+> * Clean up in framework lifecycles (e.g., React `useEffect` cleanup)
+
+> **What is garbage collection?**
+> Automatic memory management that frees objects no longer reachable from the root.
+
+
+> **How do you improve JavaScript performance?**
+> * Minimize DOM operations
+> * Use debouncing/throttling
+> * Cache expensive computations
+> * Use web workers for heavy tasks
+
+> **What is memoization?**
+> - Caching function results to avoid repeated computations.
+
+#  TypeScript
+
+### 1. What are the **main differences between TypeScript and JavaScript**?
+
+> * TypeScript catches type errors at compile time.
+> * type, interfaces, enums.
+> * deriving and narrowing types.
+> * keyof and typeof operators.
+> * generics types.
+> * Record, Partial, Pick, Omit utility types.
+> * satisfies operator for type checking without changing inferred type.
+> * any vs unknown vs never
+
+> difference between type and interface and enum.
+> - interfaces can be extended or merged, while type aliases cannot.
+> - type can represent more complex types like unions and intersections.
+> - enums define a set of named constants.
+
+> how unions and intersections work.
+> - unions allow a variable to hold multiple types (A | B), while intersections combine types (A & B).
+
+> how deriving and narrowing types work.
+> - TypeScript can infer types based on usage, and you can narrow types using type guards.
+
+> what are keyof and typeof operators, how you use them?
+> - keyof gets the keys of a type as a union of string literals.
+> - typeof gets the type of a variable or expression.
+> - use them for dynamic type manipulation.
+
+> what are Record, Partial, Pick, and Omit. how do you use them?
+> - Record creates an object type with specified keys and value types.
+> - Partial makes all properties of a type optional.
+> - Pick selects specific properties from a type.
+> - Omit removes specific properties from a type.
+
+> what is genneric types in TypeScript? how do you use them?
+> - Generics allow you to create reusable components and functions that work with any data type while maintaining type safety.
+
+> what is the satisfies operator? when would you use it?
+> - The satisfies operator checks that an expression matches a specific type without changing its inferred type. 
+> - It’s useful for validating complex objects while preserving their specific types.
+
+> what is any vs unknown vs never?
+> - any disables type checking, allowing any value.    
+> - unknown is a safer alternative to any, requiring type checks before usage.    
+> - never represents values that never occur, useful for functions that always throw or never return.
+
+> what are optional properties and readonly?
+> - Optional properties may or may not be present in an object (using ?).
+> - Readonly properties cannot be modified after initialization.
+
+> how TypeScript work with third-party JS libraries?
+> - Use type declaration files (.d.ts) to provide type information for libraries without built-in TypeScript support.
+
+# HTML
+
+### 1. What are semantic HTML elements, and why are they important?
+
+> Semantic HTML elements clearly describe their meaning in a human- and machine-readable way. They improve accessibility, SEO, and maintainability.
+> - Examples include `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, and `<footer>`.
+> - section: groups related content
+> - article: self-contained content
+
+> How do semantic elements improve accessibility?
+> - Screen readers and assistive technologies can better understand the structure and purpose of content.
+
+> What is the difference between div and span?
+> - `<div>` is a block-level element used for grouping larger sections of content.
+> - `<span>` is an inline element used for styling or grouping small pieces of text within
+
+> What is the difference between inline, inline-block, and block?
+> - Inline elements do not start on a new line and only take up as much width as necessary (e.g., `<span>`, `<a>`).
+> - Block elements start on a new line and take up the full width available (e.g., `<div>`, `<p>`).
+> - Inline-block elements are similar to inline but allow setting width and height (e.g., `<img>`, `<button>`).
+
+> What are data attributes?
+> Data attributes allow you to store extra information on HTML elements using attributes prefixed with `data-` (e.g., `data-user-id="123"`). They are useful for storing custom data without affecting the element's presentation or behavior.
+
+# React Live Codinng
+
+### 1. Todo List
+ 
+> Build a simple **Todo List** using React.
+> 
+> ### ✅ Requirements
+>
+> * Display an input field and an **Add** button
+> * Users can add a todo item
+> * Display the list of todos
+> * Each todo should have a **Delete** button
+> * Do not allow empty todos
+> * Mark a todo as completed
+> * Persist todos after page refresh
+> * Clear all todos
+
+### 2. Fetch Users from API 
+
+> Fetch and display a list of users from an API.
+> 
+> ### ✅ Requirements
+>
+> * Fetch users from this endpoint: `https://jsonplaceholder.typicode.com/users`
+> * Fetch data when the component mounts
+> * Show a **loading indicator**
+> * Show an **error message** if the request fails
+> * Display user **name** and **email**
+
+### 3. Create a React component that manages an array of values.
+
+> Requirements:
+>
+> * Use React functional components and hooks
+> * Store the values in component state
+> * Each input must be a controlled component
+> * Updating one input should not affect others
+> * Update state immutably
+> * Add a button to append a new value
+> * Add a button to remove a value by index
+
+# System Design
+
+### 1. **How would you design a scalable, performant dashboard web application?**
+
+> Focus areas interviewers expect:
+
+> * Component architecture
+> * State management
+> * Data fetching & caching
+> * Performance optimization
+> * Accessibility and responsiveness
+
+### 2. **How would you design a real-time chat application for the web?**
+
+> Focus areas interviewers expect:
+>
+> * UI architecture
+> * Real-time data handling (WebSockets)
+> * Message state & synchronization
+> * Performance for large message lists
+> * Error handling and offline support
+
+
+### 3. **How would you design a reusable, accessible, and scalable modal component for a large frontend application?**
+
+> **Focus areas interviewers expect you to cover:**
+> 
+> * API design (props, controlled vs uncontrolled)
+> * Accessibility (focus trap, ARIA roles, keyboard handling)
+> * Portal usage (`createPortal`)
+> * Styling and theming support
+> * Performance and stacking multiple modals
+
+# CSS
+
+1. How you using css in your React project?
+
+> - Tailwind CSS for utility-first styling
+
+> Difference between Flexbox and Grid?
+> - Flexbox is one-dimensional (row or column) for aligning items along a single axis.
+> - Grid is two-dimensional for controlling both rows and columns.
+
+> Position values in CSS?
+> - static: default position
+> - relative: positioned relative to its normal position
+> - absolute: positioned relative to the nearest positioned ancestor
+> - fixed: positioned relative to the viewport
+> - sticky: toggles between relative and fixed based on scroll position
+
+> What is the box model in CSS?
+> - Content: the actual content of the element
+> - Padding: space between content and border
+> - Border: the border surrounding the padding (if any)
+> - Margin: space outside the border
+
+> What is the difference between display: none and visibility: hidden?
+> - display: none removes the element from the document flow, and it does not take up space.
+> - visibility: hidden hides the element but it still takes up space in the layout.
+
+### 2. What are CSS pre-processors?
+
+> - CSS pre-processors like Sass and Less extend CSS with features like variables, nesting, mixins, and functions.
+
+> when would you use a pre-processor?
+> - For large projects needing modular, maintainable, and reusable styles.
+
+> How do variables work in Sass?
+> - Variables store values (colors, fonts) for reuse throughout stylesheets.
+
+> How does nesting work in Sass?
+> - Nesting allows writing CSS rules inside other rules, reflecting the HTML structure.
+
+> How do mixins work in Sass?
+> - Mixins are reusable blocks of styles that can be included in other selectors.
+
+> How do functions work in Sass?
+> - Functions perform calculations and return values for use in styles.
+
+### 3. what is Tailwind CSS?
+
+> - Tailwind CSS is a utility-first CSS framework that provides low-level utility classes for building custom designs without writing custom CSS.
+
+> When would you choose Tailwind over SCSS or CSS Modules?
+> - For rapid development, consistent design, and reduced CSS bloat.
+
+> What is meant by utility-first framework?
+> - It emphasizes using small, single-purpose classes to build components directly in the markup.
+
+> How does Tailwind CSS handle responsive design?
+> - Tailwind uses mobile-first breakpoints with utility classes prefixed by screen sizes (e.g., `sm:`, `md:`).
+
+> How does dark mode work in Tailwind CSS?
+> - Dark mode can be implemented using media queries or a class strategy (e.g., adding a `dark` class to the root element).
+
+> What is @apply, and when should (or shouldn’t) you use it?
+> - `@apply` allows you to compose utility classes into custom CSS classes. Use it sparingly to avoid losing the benefits of utility-first styling.
+
+> What problems can misuse of @apply cause?
+> - It can lead to larger CSS files and reduced maintainability if overused.
+
+> How do you manage reusable components and consistency in Tailwind?
+> - Use utility composition for small components, component abstraction for larger ones, and design tokens for consistent theming.
+
+> How do you optimize Tailwind CSS for production?
+> - Use PurgeCSS to remove unused styles and enable tree-shaking in the build process.

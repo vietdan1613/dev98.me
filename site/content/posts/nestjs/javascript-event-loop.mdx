@@ -1,0 +1,80 @@
+---
+title: "JavaScript Event Loop"
+category: NestJS
+author: Daniel Nguyen
+tags: ['#Javascript']
+date: 2024-04-11
+thumbnailText: JavaScript
+---
+
+JavaScript is single-threaded, but it can still handle things like API calls, timers, and user actions without freezing the app.
+
+## What?
+
+The **event loop** is a system that decides:
+
+* What code runs now
+* What runs later
+
+It helps JavaScript handle **asynchronous tasks** smoothly.
+
+## Queues
+
+### Microtask Queue (high priority)
+
+* `Promise.then`
+* `async/await`
+
+### Macrotask Queue (low priority)
+
+* `setTimeout`
+* `setInterval`
+
+### How It Works
+
+The event loop runs like this:
+
+1. Run all synchronous code
+2. Run all microtasks
+3. Run one macrotask
+4. Repeat
+
+👉 Just remember:
+
+```
+Sync → Microtasks → Macrotasks
+```
+
+## Example
+
+```js
+console.log("A");
+
+setTimeout(() => { console.log("B");}, 0);
+
+Promise.resolve()
+  .then(() => { console.log("C");})
+  .then(() => { console.log("D"); });
+
+queueMicrotask(() => { console.log("E");});
+
+(async function () {
+  console.log("F");
+  await null;
+  console.log("G");
+})();
+
+console.log("H");
+```
+
+### Output
+
+```A
+F
+H
+C
+E
+D
+G
+B
+```

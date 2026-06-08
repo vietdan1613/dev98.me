@@ -1,0 +1,202 @@
+---
+title: "Frontend System Design: Chat App"
+category: React
+author: Daniel Nguyen
+tags: ['#Daily']
+date: 2025-01-09
+thumbnailText: Daily
+---
+
+## 🧩 Problem Statement
+
+**Design a scalable frontend for a real-time chat application (like WhatsApp / Slack).**
+
+---
+
+## 1️⃣ Clarify requirements (say this first in interview)
+
+💬 **Interview-style opening**
+
+> “Before designing, I’d like to clarify the requirements.”
+
+### Functional
+
+* 1-to-1 chat & group chat
+* Real-time messages
+* Message history
+* Online / offline status
+* Read receipts (optional)
+
+### Non-functional
+
+* Low latency
+* Scalable to millions of users
+* Works on desktop & mobile
+* Good UX even with slow network
+
+---
+
+## 2️⃣ High-level Frontend Architecture
+
+![Image](https://cdn.prod.website-files.com/625350933660db97afa01913/67b2cfeeb3571bc309d6bad0_c0b842af.png)
+
+![Image](https://media.enlabsoftware.com/wp-content/uploads/2021/03/23170235/Real-time-chat-architecture.png)
+
+![Image](https://javatechonline.com/wp-content/uploads/2025/07/Chat_App_architecture_diagram-1.jpg)
+
+### Overview
+
+* **SPA** (React)
+* **WebSocket** for real-time messaging
+* **REST API** for history & metadata
+* **CDN** for static assets
+* **Local cache** for messages
+
+💬 Interview line:
+
+> “The frontend is a SPA served via CDN, using REST APIs for initial data and WebSocket for real-time updates.”
+
+---
+
+## 3️⃣ Communication Strategy
+
+### REST API (initial load)
+
+* Fetch conversations
+* Load message history (pagination)
+
+### WebSocket (real-time)
+
+* Send / receive messages
+* Typing indicators
+* Online status
+
+💬 Strong answer:
+
+> “I use REST for predictable data fetching and WebSocket only for real-time events.”
+
+---
+
+## 4️⃣ App Structure (Frontend Architecture)
+
+```
+/features
+  /chat
+    ChatList.tsx
+    ChatWindow.tsx
+    MessageItem.tsx
+    chat.service.ts
+  /auth
+/shared
+  /components
+  /hooks
+  /utils
+```
+
+Why?
+
+* Feature isolation
+* Easier scaling
+* Better maintainability
+
+💬 Interview sentence:
+
+> “Feature-based structure helps the chat module scale independently.”
+
+---
+
+## 5️⃣ State Management Design (VERY IMPORTANT)
+
+| Data Type               | Tool                   |
+| ----------------------- | ---------------------- |
+| UI state (modal, input) | Local state            |
+| Server state (messages) | React Query            |
+| Real-time events        | WebSocket + store      |
+| Auth user               | Context / global store |
+
+💬 Interview gold:
+
+> “Messages are server state, so I avoid storing them entirely in Redux.”
+
+---
+
+## 6️⃣ Message Flow (Explain clearly)
+
+![Image](https://www.researchgate.net/publication/333590475/figure/fig2/AS%3A767168669048837%401559918672699/Message-flow-from-a-BackEnd-back-to-the-FrontEnd-through-a-number-of-Brokers-and-Bridges.png)
+
+![Image](https://docs.oracle.com/cd/E65459_01/dev.1112/e65461/content/images/general/websocket_sequence.png)
+
+![Image](https://miro.medium.com/v2/da%3Atrue/resize%3Afit%3A1200/0%2AQEB7BzTo5hLd9F9Y)
+
+### Sending message
+
+1. User types → optimistic UI update
+2. Message sent via WebSocket
+3. Server confirms → update status (sent/read)
+
+### Receiving message
+
+1. WebSocket receives message
+2. Update cache
+3. UI re-renders automatically
+
+💬 Interview line:
+
+> “I use optimistic updates to make the chat feel instant.”
+
+---
+
+## 7️⃣ Performance Optimizations
+
+![Image](https://getsdeready.com/wp-content/uploads/2025/03/Performance-Optimization-Techniques-visual-selection-1024x465.png)
+
+![Image](https://miro.medium.com/v2/resize%3Afit%3A1400/1%2AXBDF9THkk7sBgOhBTanUuA.png)
+
+![Image](https://i.sstatic.net/WITRF.png)
+
+* Virtualized message list (large chats)
+* Infinite scroll (load older messages)
+* Memoized message components
+* Debounced typing events
+
+💬 Say this:
+
+> “For large chat histories, virtualization prevents performance issues.”
+
+---
+
+## 8️⃣ Offline & Network Handling
+
+* Cache recent messages (memory / indexedDB)
+* Retry failed messages
+* Show message states: sending / failed / sent
+
+💬 Interview sentence:
+
+> “Even with unstable network, users can continue chatting.”
+
+---
+
+## 9️⃣ Error Handling & UX
+
+* Global error boundary
+* Reconnect WebSocket automatically
+* Skeleton loaders
+* Toasts for failures
+
+---
+
+## 🔐 10️⃣ Security (Frontend scope)
+
+* HTTPS + WSS
+* Auth token via HTTP-only cookies
+* No sensitive data in localStorage
+* XSS prevention
+
+---
+
+## 🧠 1-Minute Final Summary (MEMORIZE THIS)
+
+> “I design the chat app as a SPA using REST APIs for initial data and WebSocket for real-time updates. The codebase is structured by features, messages are treated as server state using React Query, and WebSocket handles live events. I optimize performance with virtualization and optimistic updates, handle offline scenarios gracefully, and ensure security through proper token handling and HTTPS.”
+
+---

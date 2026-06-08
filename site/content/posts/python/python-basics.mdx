@@ -1,0 +1,216 @@
+---
+title: "Python Basics: Top Concepts"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-05-25
+thumbnailText: Python
+---
+
+# 1. Variables and Data Types
+
+Variables are used to store information in Python.
+
+```python
+name = "Daniel"
+age = 25
+height = 1.75
+is_student = True
+```
+
+Common Python data types:
+
+* `int` → Integer numbers
+* `float` → Decimal numbers
+* `str` → Text
+* `bool` → True or False
+* `list` → Ordered collection
+* `dict` → Key-value collection
+
+# 2. Input and Output
+
+Programs become interactive when users can provide input.
+
+```python
+name = input("Enter your name: ")
+print("Hello", name)
+```
+
+`input()` receives user data.
+`print()` displays output.
+
+# 3. Conditional Statements
+
+Conditional statements allow programs to make decisions.
+
+```python
+age = 18
+
+if age >= 18:
+    print("Adult")
+else:
+    print("Child")
+```
+
+Important keywords:
+
+* `if`
+* `elif`
+* `else`
+
+# 4. Loops
+
+Loops repeat actions automatically.
+
+## For Loop
+
+```python
+for i in range(5):
+    print(i)
+```
+
+## While Loop
+
+```python
+count = 0
+
+while count < 5:
+    print(count)
+    count += 1
+```
+
+# 5. Functions
+
+Functions help organize reusable code.
+
+```python
+def greet(name):
+    return f"Hello {name}"
+
+print(greet("Daniel"))
+```
+
+Benefits of functions:
+
+* Cleaner code
+* Reusability
+* Easier debugging
+* Better scalability
+
+# 6. Lists and Dictionaries
+
+Python collections help store multiple values.
+
+## List Example
+
+```python
+fruits = ["apple", "banana", "orange"]
+print(fruits[0])
+```
+
+## Dictionary Example
+
+```python
+user = {
+    "name": "Daniel",
+    "age": 25
+}
+
+print(user["name"])
+```
+
+# 7. Object-Oriented Programming (OOP)
+
+OOP organizes code using classes and objects.
+
+```python
+class Dog:
+    def __init__(self, name):
+        self.name = name
+
+    def bark(self):
+        print("Woof!")
+
+dog = Dog("Buddy")
+dog.bark()
+```
+
+Key OOP concepts:
+
+* Class
+* Object
+* Method
+* Constructor
+* Inheritance
+
+# 8. Error Handling
+
+Programs should handle errors gracefully.
+
+```python
+try:
+    num = int(input("Enter number: "))
+    print(num)
+except:
+    print("Invalid input")
+```
+
+
+# 9. Modules and Packages
+
+Python provides many built-in and external libraries.
+
+```python
+import math
+
+print(math.sqrt(16))
+```
+
+Install packages using pip:
+
+```bash
+pip install requests
+```
+
+Popular beginner libraries:
+
+* requests
+* pandas
+* numpy
+* selenium
+* gradio
+
+# 10. File Handling
+
+Python can read and write files.
+
+```python
+with open("test.txt", "w") as file:
+    file.write("Hello Python")
+```
+
+File handling is useful for:
+
+* Saving logs
+* Reading datasets
+* Generating reports
+* Automation workflows
+
+# 11. with ... as
+
+The with ... as statement is used for safe resource management in Python.
+
+It is commonly used with:
+
+* Files
+* Database connections
+* Network connections
+* Thread locks
+
+## File Example
+
+```python
+with open("test.txt", "r") as file:
+    content = file.read()
+    print(content)
+```

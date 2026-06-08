@@ -1,0 +1,171 @@
+---
+title: "Get Started with React + Vite"
+category: Lumin
+author: Daniel Nguyen
+tags: ['#Lumin']
+date: 2026-06-08
+thumbnailText: Apryse WebViewer
+---
+
+Apryse WebViewer is a browser-based document viewing and annotation SDK that supports PDFs, Office documents, 
+images, and more. It runs entirely on the client side and provides features such as:
+
+* PDF viewing and navigation
+* Text highlighting and annotations
+* Form filling
+* Document collaboration
+* Search and text extraction
+* Customizable user interface
+
+Combined with React and Vite, WebViewer provides a fast and modern development experience.
+
+## Step 1: Create a React Project with Vite
+
+If you don't already have a React application, create one using Vite:
+
+```bash
+npx create-vite@latest
+```
+
+During setup:
+
+* Choose a project name
+* Select **React**
+* Select **JavaScript** (or TypeScript if preferred)
+
+Then navigate into the project directory:
+
+```bash
+cd my-react-app
+```
+
+## Step 2: Install WebViewer
+
+Install the Apryse WebViewer package:
+
+```bash
+npm install @pdftron/webviewer
+```
+
+This package contains everything needed to integrate WebViewer into your React application.
+
+## Step 3: Copy Required Static Assets
+
+WebViewer requires static assets that must be publicly accessible.
+
+Create the following directory:
+
+```text
+public/lib/webviewer
+```
+
+Then copy these folders from:
+
+```text
+node_modules/@pdftron/webviewer/public
+```
+
+into the new directory:
+
+```text
+core
+ui
+```
+
+Your project structure should look like:
+
+```text
+public
+└── lib
+    └── webviewer
+        ├── core
+        └── ui
+```
+
+## Step 4: Add WebViewer to Your React Component
+
+Replace the contents of `src/App.jsx` with the following:
+
+```jsx
+import { useRef, useEffect } from 'react';
+import WebViewer from '@pdftron/webviewer';
+
+function App() {
+  const viewer = useRef(null);
+
+  useEffect(() => {
+    WebViewer(
+      {
+        path: 'lib/webviewer',
+        licenseKey: 'YOUR_LICENSE_KEY',
+        initialDoc:
+          'https://pdftron.s3.amazonaws.com/downloads/pl/demo-annotated.pdf',
+      },
+      viewer.current
+    );
+  }, []);
+
+  return (
+    <div className="webviewer" ref={viewer}></div>
+  );
+}
+
+export default App;
+```
+
+### Understanding the Code
+
+* `useRef()` creates a reference to the container element.
+* `useEffect()` initializes WebViewer when the component mounts.
+* `path` points to the copied WebViewer assets.
+* `licenseKey` activates the SDK.
+* `initialDoc` specifies the document loaded when the viewer starts.
+
+## Step 5: Add Basic Styling
+
+Update `src/index.css`:
+
+```css
+body {
+  place-items: center;
+}
+
+.webviewer {
+  width: 80vw;
+  height: 80vh;
+}
+```
+
+This ensures the viewer has enough space to render properly.
+
+## Step 6: Handle React Strict Mode
+
+When using React 18+, Vite enables Strict Mode by default during development.
+
+This causes React to execute `useEffect()` twice, which may result in multiple WebViewer instances being created.
+
+For a quick prototype, remove the `StrictMode` wrapper from `src/main.jsx`.
+
+```jsx
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <App />
+);
+```
+
+For production applications, consider implementing a proper initialization guard rather than disabling Strict Mode entirely.
+
+## Step 7: Run the Application
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open the URL displayed in your terminal, usually:
+
+```text
+http://localhost:5173
+```
+
+You should now see WebViewer displaying the sample PDF document directly inside your React application.

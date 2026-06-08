@@ -1,0 +1,88 @@
+---
+title: "System Design"
+category: React
+author: Daniel Nguyen
+tags: ['#Daily']
+date: 2026-01-09
+thumbnailText: Daily
+---
+
+> **“Design a scalable frontend for a large web application (e.g. dashboard, e-commerce, chat app)”**
+
+## 1. Clarify requirements
+
+> “Before jumping into the design, I’d like to clarify the requirements.”
+
+* Who are the users?
+* Core features?
+* Real-time? Offline?
+* Desktop / mobile / both?
+* Scale? (10k users vs millions)
+
+
+### 2. High-level architecture
+
+> “The app is a SPA served via CDN. It communicates with backend services through APIs, and we cache data on the client to reduce unnecessary requests.”
+
+* **SPA** (React / Vue)
+* **CDN** for static assets
+* **API layer** (REST / GraphQL)
+* **Client-side caching**
+* **State management**
+
+### 3. App structure
+
+> “I prefer feature-based architecture because it scales better and reduces coupling.”
+
+**Feature-based structure**
+
+```
+/features
+  /auth
+  /dashboard
+  /settings
+/shared
+  /components
+  /hooks
+```
+
+### 4. State management strategy
+
+> “I separate server state from UI state to avoid overusing global stores.”
+
+| Type         | Solution          |
+| ------------ | ----------------- |
+| UI state     | Local state       |
+| Global state | Redux / Zustand   |
+| Server data  | React Query / SWR |
+| Auth         | Context + storage |
+
+### 5. Performance optimization
+
+> “Initial load is optimized using code splitting and lazy loading, while frequently used data is cached.”
+
+* Code splitting
+* Lazy loading
+* Memoization
+* Virtualization (large lists)
+* Image optimization
+
+### 6. Security considerations 
+
+> “Sensitive tokens are stored securely and never exposed directly to JavaScript.”
+
+* XSS protection
+* CSRF tokens
+* HTTPS
+* Secure storage (no sensitive data in localStorage)
+* Content Security Policy (CSP)
+
+
+### 7. Error handling & UX
+
+> “Even when APIs fail, the UI should fail gracefully and guide the user.”
+
+* Global error boundary
+* Loading skeletons
+* Retry logic
+* Graceful degradation

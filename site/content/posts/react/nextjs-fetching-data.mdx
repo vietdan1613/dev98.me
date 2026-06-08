@@ -1,0 +1,135 @@
+---
+title: "NextJS - Data Fetching"
+category: React
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2023-09-06
+thumbnailText: NextJS
+---
+
+# Server Components
+
+Server Components are the default in the App Router. Because they run on the server, they allow secure and efficient data access.
+
+### Simply make your component `async`:
+
+```tsx
+export default async function Page() {
+  const data = await fetch('https://api.vercel.app/blog')
+  const posts = await data.json()
+
+  return (
+    <ul>
+      {posts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+* `fetch` responses are **not cached by default**
+* However, Next.js **pre-renders and caches route output**
+
+```ts
+fetch(url, { cache: 'no-store' })
+```
+
+### Using Database
+
+> No API route required. No client bundle increase. Fully secure.
+
+Because Server Components run on the server, you can directly query your database:
+
+```tsx
+import { db, posts } from '@/lib/db'
+
+export default async function Page() {
+  const allPosts = await db.select().from(posts)
+
+  return (
+    <ul>
+      {allPosts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+# Client Components
+
+Sometimes you need to fetch data on the client (e.g., user interactions, polling, or real-time updates).
+
+There are two main approaches:
+
+* React’s `use()` API (for streaming)
+* Community libraries like SWR or React Query
+
+### Streaming Data with React’s `use()` API
+
+Instead of awaiting the data in the Server Component, pass the promise to a Client Component.
+
+```tsx
+//Server Component
+import Posts from '@/app/ui/posts'
+import { Suspense } from 'react'
+
+export default function Page() {
+  const posts = getPosts() // Don’t await
+
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Posts posts={posts} />
+    </Suspense>
+  )
+}
+```
+
+```tsx
+//Client Component
+'use client'
+import { use } from 'react'
+
+export default function Posts({ posts }) {
+  const allPosts = use(posts)
+
+  return (
+    <ul>
+      {allPosts.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
+
+Because the component is wrapped in `<Suspense>`, the fallback UI appears while the promise resolves.
+
+### Using Community Libraries (Example: React Query)
+
+These libraries provide advanced features like caching, background revalidation, and refetching.
+
+```tsx
+'use client'
+
+const fetcher = (url) => fetch(url).then((r) => r.json())
+
+export default function BlogPage() {
+  const { data, error, isLoading } = useQuery(
+    'https://api.vercel.app/blog',
+    fetcher
+  )
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
+  return (
+    <ul>
+      {data.map((post) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  )
+}
+```
