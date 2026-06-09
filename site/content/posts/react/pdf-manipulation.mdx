@@ -1,0 +1,82 @@
+---
+title: "Manipulation"
+category: React
+author: Daniel Nguyen
+tags: ['#Lumin']
+date: 2026-06-15
+thumbnailText: PDF
+---
+
+Modern web applications often need more than just PDF viewing—they require the ability to modify documents directly. 
+With WebViewer's JavaScript PDF library, developers can perform powerful PDF page manipulations entirely on the client side.
+
+## Modify PDF Files Without a Server
+
+When running in client-only mode, WebViewer can make permanent changes to PDF documents, including:
+
+* Inserting pages
+* Deleting pages
+* Rotating pages
+* Cropping pages
+* Reordering pages
+* Splitting PDFs
+* Merging multiple PDFs
+
+Unlike temporary viewer adjustments, these changes are applied directly to the PDF data. When users download the file or export it using `getFileData()`, the modified document can be opened in any PDF viewer with all changes preserved.
+
+## Quick Example: Rotate a PDF Page
+
+With just a few lines of code, you can rotate a page in a PDF document:
+
+```javascript
+WebViewer({
+  path: '/webviewer/lib',
+  initialDoc: '/files/sample.pdf'
+}, document.getElementById('viewer')).then(async (instance) => {
+  const { documentViewer } = instance.Core;
+
+  documentViewer.addEventListener('documentLoaded', async () => {
+    const doc = documentViewer.getDocument();
+
+    // Rotate page 1 by 90 degrees
+    await doc.rotatePages([1], 90);
+
+    // Export the updated PDF
+    const data = await doc.getFileData();
+  });
+});
+```
+
+The updated PDF will retain the page rotation when downloaded or opened in another PDF viewer.
+
+## Key Benefits
+
+WebViewer enables a wide range of document assembly and editing workflows:
+
+* Split and combine PDF documents
+* Merge and append pages from multiple files
+* Replicate and reorder pages
+* Create new documents from existing PDFs
+* Remove unwanted pages
+* Crop, rotate, and resize pages
+* Adjust media, crop, and bleed boxes
+* Reposition page content
+* Manage PDF page labels
+* Edit PDF text directly (experimental)
+
+## Working with Office Documents
+
+Page manipulation features are designed for PDFs. If you're working with Office files such as DOCX, XLSX, or PPTX, enable the `loadAsPDF: true` option to automatically convert them to PDF before editing.
+
+For WebViewer Server deployments, use `forceClientSideInit: true` to switch processing to the client and enable page manipulation capabilities.
+
+## Common Use Cases
+
+PDF page manipulation is ideal for:
+
+* Document assembly workflows
+* Report generation
+* Contract management
+* Digital publishing
+* Batch PDF processing
+* Custom document editing applications

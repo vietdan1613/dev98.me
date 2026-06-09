@@ -1,0 +1,191 @@
+---
+title: "DocumentViewer"
+category: React
+author: Daniel Nguyen
+tags: ['#Lumin']
+date: 2026-06-10
+thumbnailText: PDF
+---
+
+When working with documents in the WebViewer SDK, the **DocumentViewer** is the central object that 
+manages document display, navigation, interaction, and rendering. It acts as a bridge between your application 
+and the loaded document, making common tasks straightforward.
+
+## Why DocumentViewer Matters
+
+Once WebViewer is initialized, a DocumentViewer instance becomes available and provides access to essential document operations such as:
+
+* Detecting when a document loads
+* Navigating between pages
+* Retrieving document information
+* Reading selected text
+* Managing zoom and display modes
+* Working with annotation and editing tools
+
+```javascript
+WebViewer(...)
+  .then(instance => {
+    // The documentViewer is wired to the mounted viewer
+    const { documentViewer } = instance.Core;
+
+    // Change to the second page when a document loads
+    documentViewer.addEventListener('documentLoaded', () => {
+      documentViewer.setCurrentPage(2);
+    });
+  });
+```
+
+## Common Use Cases
+
+### Use case: Resume where the user left off
+
+When a user reopens a 500-page contract, take them back to the last page they viewed.
+
+```javascript
+documentViewer.addEventListener('pageNumberUpdated', () => {
+  localStorage.setItem(
+    'lastPage',
+    documentViewer.getCurrentPage()
+  );
+});
+
+documentViewer.addEventListener('documentLoaded', () => {
+  const lastPage = localStorage.getItem('lastPage');
+
+  if (lastPage) {
+    documentViewer.setCurrentPage(Number(lastPage));
+  }
+});
+```
+
+### Use case: Rotate first page before printing
+
+```javascript
+documentViewer.addEventListener('documentLoaded', () => {
+  const doc = documentViewer.getDocument();
+
+  doc.rotatePages([1], Core.PageRotation.E_90);
+});
+```
+
+### Use case: Highlight selected text
+
+User selects text and clicks "Highlight".
+
+```javascript
+highlightBtn.addEventListener('click', () => {
+  const text = documentViewer.getSelectedText();
+
+  console.log('Selected:', text);
+});
+```
+
+Example output:
+
+```text
+Selected: Payment terms are net 30 days.
+```
+
+### Use case: Create annotation from selected area
+
+```javascript
+const quads = documentViewer.getSelectedTextQuads();
+
+console.log(quads);
+```
+
+Output might look like:
+
+```javascript
+{
+  3: [
+    {
+      x1: 120,
+      y1: 300,
+      x2: 250,
+      y2: 300
+    }
+  ]
+}
+```
+
+This tells you exactly where the selected text is on page 3 so you can place a highlight annotation.
+
+### Use case: Book mode
+
+Show two pages side by side.
+
+```javascript
+manager.setDisplayMode(
+  new Core.DisplayMode(
+    documentViewer,
+    Core.DisplayModes.Facing
+  )
+);
+```
+
+Result:
+
+```text
+📖 Page 4 | Page 5
+```
+
+### Use case: Fit for presentation screen
+
+```javascript
+documentViewer.zoomTo(1.5);
+```
+
+Result:
+
+```text
+150% zoom
+```
+
+### Use case: Switch to annotation editing
+
+```javascript
+documentViewer.setToolMode(
+  documentViewer.getTool(
+    Core.Tools.ToolNames.EDIT
+  )
+);
+```
+
+Result:
+
+```text
+User can move, resize, and delete annotations
+```
+
+### Use case: Toggle between tools
+
+```javascript
+selectBtn.addEventListener('click', () => {
+  documentViewer.setToolMode(
+    documentViewer.getTool(
+      Core.Tools.ToolNames.TEXT_SELECT
+    )
+  );
+});
+
+editBtn.addEventListener('click', () => {
+  documentViewer.setToolMode(
+    documentViewer.getTool(
+      Core.Tools.ToolNames.EDIT
+    )
+  );
+});
+```
+
+This is exactly how a toolbar in a PDF editor works:
+
+```text
+[Select Text] [Edit Annotation]
+
+Click Select Text
+→ User selects text
+
+Click Edit Annotation
+→ User edits annotations
+```

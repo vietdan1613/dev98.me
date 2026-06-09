@@ -1,0 +1,142 @@
+---
+title: "Annotation"
+category: React
+author: Daniel Nguyen
+tags: ['#Lumin']
+date: 2026-06-13
+thumbnailText: PDF
+---
+
+PDF annotations are essential for modern document workflows. Whether you're reviewing contracts, collaborating on 
+technical documents, marking up reports, or collecting feedback, annotations allow users to add comments and visual 
+markups without modifying the original PDF content.
+
+With Apryse WebViewer, developers can create, manage, and customize PDF annotations through both an intuitive user 
+interface and a powerful JavaScript API.
+
+## Supported Annotation Types
+
+WebViewer supports a wide range of annotation types, including:
+
+| Category    | Annotation Types                                   |
+| ----------- | -------------------------------------------------- |
+| Comments    | Sticky Notes, Comments                             |
+| Text Markup | Highlight, Underline, Squiggly, Strikeout          |
+| Shapes      | Rectangle, Ellipse, Polygon, Polyline, Line, Arrow |
+| Drawing     | Ink, Cloud                                         |
+| Text        | FreeText, Callout                                  |
+| Review      | Stamp, Redaction                                   |
+| Security    | Signatures                                         |
+| Attachments | Files, Sound, Movie, 3D                            |
+| Custom      | Developer-defined annotation types                 |
+
+## Introducing the AnnotationManager
+
+The `AnnotationManager` is the primary API used to work with annotations programmatically in WebViewer.
+
+Once WebViewer is initialized, it becomes available through the `Core` namespace:
+
+```javascript
+const { annotationManager } = instance.Core;
+```
+
+The AnnotationManager allows developers to:
+
+* Read existing annotations
+* Create new annotations
+* Update annotations
+* Delete annotations
+* Clone annotations
+* Import and export annotation data
+* Manage annotation selection and events
+
+## Reading Existing Annotations
+
+To retrieve all annotations in a document, use the `getAnnotationsList()` method.
+
+```javascript
+const { annotationManager, Annotations } = instance.Core;
+
+annotationManager.getAnnotationsList().forEach(annot => {
+  if (annot instanceof Annotations.RectangleAnnotation) {
+    console.log('Rectangle annotation found');
+  }
+});
+```
+
+This method returns all annotations, including:
+
+* Standard annotations
+* Link annotations
+* Form widgets and controls
+
+## Getting an Annotation by ID
+
+If you already know an annotation's unique identifier, you can retrieve it directly.
+
+```javascript
+const { annotationManager } = instance.Core;
+
+const annot = annotationManager.getAnnotationById(
+  'fb049fb2-ec3e-4e7b-8e1a-243096e1924e'
+);
+```
+
+This is useful when managing annotations stored in databases or collaborative review systems.
+
+## Detecting Annotations Under the Cursor
+
+For interactive applications, you may need to identify which annotation a user clicked.
+
+WebViewer provides:
+
+* `getAnnotationByMouseEvent()`
+* `getAnnotationsByMouseEvent()`
+
+Example:
+
+```javascript
+const { documentViewer, annotationManager } = instance.Core;
+
+documentViewer.addEventListener('mouseLeftUp', (e) => {
+  const annotations =
+    annotationManager.getAnnotationsByMouseEvent(e);
+
+  annotationManager.selectAnnotations(annotations);
+});
+```
+
+This enables custom annotation selection workflows and contextual menus.
+
+---
+
+## Creating Annotations Programmatically
+
+Although users typically create annotations through the WebViewer UI, developers can generate them programmatically.
+
+### Creating a Rectangle Annotation
+
+```javascript
+const { annotationManager, Annotations } = instance.Core;
+
+const rect = new Annotations.RectangleAnnotation({
+  X: 50,
+  Y: 50,
+  Width: 150,
+  Height: 50,
+  StrokeColor: new Annotations.Color(255, 0, 0, 1),
+});
+
+annotationManager.addAnnotation(rect);
+annotationManager.redrawAnnotation(rect);
+```
+
+### Important Note
+
+Whenever you add an annotation or modify its properties directly, call:
+
+```javascript
+annotationManager.redrawAnnotation(annotation);
+```
+
+This ensures the annotation is rendered correctly in the viewer.

@@ -1,0 +1,52 @@
+---
+title: "Collaborate"
+category: React
+author: Daniel Nguyen
+tags: ['#Lumin']
+date: 2026-06-14
+thumbnailText: PDF
+---
+
+Modern document workflows require more than just viewing files—they demand seamless collaboration. 
+With WebViewer, developers can add real-time commenting, user mentions, role-based permissions, and 
+annotation support across PDFs, DOCX, XLSX, PPTX, images, videos, and more.
+
+## How Real-Time Collaboration Works
+
+WebViewer provides APIs to export and import annotations as XFDF, making it easy to build collaborative experiences. While Apryse doesn't provide a collaboration server, you can implement your own workflow using a backend, database, and real-time communication layer.
+
+### 1. Capture Annotation Changes
+
+Listen for annotation events in WebViewer and sync changes to your server:
+
+* **Add** annotations
+* **Modify** annotations
+* **Delete** annotations
+
+Each change can be exported as XFDF and stored alongside a unique document ID.
+
+### 2. Store Annotations on the Server
+
+Your backend should:
+
+* Authenticate users
+* Save annotation XFDF data
+* Associate annotations with users and documents
+* Broadcast updates to connected users
+
+Any database or ORM can be used, including SQLite, Firebase, or Prisma.
+
+### 3. Enable Real-Time Updates
+
+For a true collaborative experience, use WebSockets to notify users when annotations change.
+
+The typical flow:
+
+1. Users subscribe to a document-specific channel.
+2. Annotation changes are sent to the server.
+3. The server broadcasts updates to all connected users.
+4. Clients import the updated XFDF into WebViewer instantly.
+
+### 4. Load Existing Annotations
+
+When a document opens, fetch all stored annotations for that document and import them into the viewer. This ensures every user sees the latest collaborative state.
