@@ -1,0 +1,137 @@
+---
+title: "Flutter Fundamentals: Widgets"
+category: Flutter
+author: Daniel Nguyen
+tags: ['#Flutter']
+date: 2026-08-13
+thumbnailText: Flutter
+---
+
+Everything you see in a Flutter app is a widget. These four ideas are the foundation of the UI.
+
+# 1. Widget
+
+A widget is a **blueprint** for a piece of UI. It is immutable: you do not change a widget after you create it. You create a new one instead.
+
+```dart
+const Text("Hello Flutter");
+const Icon(Icons.home);
+const Padding(
+  padding: EdgeInsets.all(16),
+  child: Text("Hello"),
+);
+```
+
+Flutter compares the new widget tree with the old one and updates only what changed.
+
+Common widget types:
+
+* Layout → `Column`, `Row`, `Padding`, `Center`
+* Display → `Text`, `Image`, `Icon`
+* Input → `TextField`, `ElevatedButton`
+* Your own → `StatelessWidget` or `StatefulWidget`
+
+# 2. StatelessWidget
+
+Use `StatelessWidget` when the UI depends only on the data it receives. It has no internal state that changes over time.
+
+```dart
+class Greeting extends StatelessWidget {
+  final String name;
+
+  const Greeting({super.key, required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text("Hello $name");
+  }
+}
+
+// usage
+const Greeting(name: "Daniel");
+```
+
+It rebuilds when:
+
+* the parent rebuilds and passes new data
+* `InheritedWidget` data it depends on changes (for example `Theme`)
+
+If the UI never needs to change by itself, start with `StatelessWidget`.
+
+# 3. StatefulWidget
+
+Use `StatefulWidget` when the UI must change after the widget is created — taps, typing, loading, animation.
+
+A stateful widget is two classes:
+
+* `StatefulWidget` → the configuration (immutable, like any widget)
+* `State` → the mutable data and the `build()` method
+
+```dart
+class Counter extends StatefulWidget {
+  const Counter({super.key});
+
+  @override
+  State<Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<Counter> {
+  int count = 0;
+
+  void increment() {
+    setState(() {
+      count++;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text("Count: $count"),
+        ElevatedButton(
+          onPressed: increment,
+          child: const Text("Add"),
+        ),
+      ],
+    );
+  }
+}
+```
+
+`setState()` tells Flutter: data changed, call `build()` again.
+
+Rules:
+
+* Put changing data in `State`, not in the `StatefulWidget`
+* Call `setState()` only when the UI should update
+* Do not call `setState()` after `dispose()`
+
+# 4. build()
+
+`build()` describes the UI **for the current configuration**. Flutter calls it when the widget is first shown and whenever it needs to rebuild.
+
+```dart
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text("Home")),
+    body: const Center(
+      child: Text("Hello"),
+    ),
+  );
+}
+```
+
+`BuildContext` is the location of this widget in the tree. You use it to read theme, size, and inherited data:
+
+```dart
+final color = Theme.of(context).primaryColor;
+final width = MediaQuery.sizeOf(context).width;
+```
+
+Keep `build()` simple:
+
+* Return widgets. Do not start network calls or animations here
+* It may run often, so keep it fast
+* Use `const` constructors when the child does not change

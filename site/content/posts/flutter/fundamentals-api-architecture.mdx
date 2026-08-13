@@ -1,0 +1,207 @@
+---
+title: "Flutter Fundamentals: API + Architecture"
+category: Flutter
+author: Daniel Nguyen
+tags: ['#Flutter']
+date: 2026-08-13
+thumbnailText: Flutter
+---
+
+Keep UI out of networking. Data flows in one direction:
+
+```
+UI
+ ↓
+ViewModel / State
+ ↓
+Repository
+ ↓
+API
+ ↓
+JSON
+ ↓
+Model
+```
+
+The UI asks the ViewModel. The ViewModel asks the Repository. The Repository talks to the API. JSON becomes a Model before it reaches the screen.
+
+# 1. Model
+
+A model is a Dart object. Parse JSON here — nowhere else.
+
+```dart
+class User {
+  final int id;
+  final String name;
+  final String email;
+
+  const User({
+    required this.id,
+    required this.name,
+    required this.email,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json["id"] as int,
+      name: json["name"] as String,
+      email: json["email"] as String,
+    );
+  }
+}
+```
+
+The rest of the app uses `User`, not `Map<String, dynamic>`.
+
+# 2. API
+
+The API layer sends HTTP requests and returns raw JSON (or already-decoded maps). It does not know about widgets.
+
+```dart
+class UserApi {
+  UserApi(this._client);
+
+  final http.Client _client;
+  static const _base = "https://jsonplaceholder.typicode.com";
+
+  Future<List<dynamic>> fetchUsers() async {
+    final response = await _client.get(Uri.parse("$_base/users"));
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load users");
+    }
+
+    return jsonDecode(response.body) as List<dynamic>;
+  }
+}
+```
+
+Keep URLs, headers, and status-code checks here.
+
+# 3. Repository
+
+The repository sits between the app and the API. It turns JSON into models and can add cache or mapping later without touching the UI.
+
+```dart
+class UserRepository {
+  UserRepository(this._api);
+
+  final UserApi _api;
+
+  Future<List<User>> getUsers() async {
+    final json = await _api.fetchUsers();
+    return json
+        .map((item) => User.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+}
+```
+
+The ViewModel never sees JSON. It only sees `List<User>`.
+
+# 4. ViewModel / State
+
+The ViewModel holds screen state and calls the repository. It does not build widgets.
+
+```dart
+class UserListViewModel extends ChangeNotifier {
+  UserListViewModel(this._repository);
+
+  final UserRepository _repository;
+
+  List<User> users = [];
+  bool loading = false;
+  String? error;
+
+  Future<void> load() async {
+    loading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      users = await _repository.getUsers();
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
+  }
+}
+```
+
+This is the same `ChangeNotifier` idea from the State post: `notifyListeners()` rebuilds the UI.
+
+# 5. UI
+
+The widget reads the ViewModel and draws loading, error, or data. No `http` calls in `build()`.
+
+```dart
+class UserListPage extends StatefulWidget {
+  const UserListPage({super.key, required this.viewModel});
+
+  final UserListViewModel viewModel;
+
+  @override
+  State<UserListPage> createState() => _UserListPageState();
+}
+
+class _UserListPageState extends State<UserListPage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.viewModel.load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: widget.viewModel,
+      builder: (context, _) {
+        final vm = widget.viewModel;
+
+        if (vm.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (vm.error != null) {
+          return Center(child: Text(vm.error!));
+        }
+
+        return ListView.builder(
+          itemCount: vm.users.length,
+          itemBuilder: (context, index) {
+            final user = vm.users[index];
+            return ListTile(
+              title: Text(user.name),
+              subtitle: Text(user.email),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+```
+
+Wire the layers once at the top of the app:
+
+```dart
+final api = UserApi(http.Client());
+final repository = UserRepository(api);
+final viewModel = UserListViewModel(repository);
+
+UserListPage(viewModel: viewModel);
+```
+
+# Why this split
+
+| Layer | Knows about | Does not know about |
+| --- | --- | --- |
+| UI | widgets, ViewModel | HTTP, JSON keys |
+| ViewModel | repository, loading / error | `BuildContext`, JSON |
+| Repository | API + Model | widgets |
+| API | URLs, status codes | models, widgets |
+| Model | JSON shape | HTTP, UI |
+
+You can swap the API (fake data in tests, a new backend) without rewriting the screen.

@@ -1,0 +1,226 @@
+---
+title: "Flutter Fundamentals: Navigation"
+category: Flutter
+author: Daniel Nguyen
+tags: ['#Flutter']
+date: 2026-08-13
+thumbnailText: Flutter
+---
+
+Flutter navigation is a **stack of routes**. The `Navigator` pushes screens on and pops them off.
+
+# 1. Navigator
+
+`Navigator` manages the stack. `MaterialApp` already provides one.
+
+```dart
+MaterialApp(
+  home: const HomePage(),
+)
+```
+
+You talk to it through `context`:
+
+```dart
+Navigator.of(context).push(...);
+Navigator.of(context).pop();
+```
+
+`Navigator.push` / `Navigator.pop` are shortcuts for the same calls.
+
+# 2. Route
+
+A `Route` is one entry on the stack — usually a full screen.
+
+```dart
+MaterialPageRoute(
+  builder: (context) => const DetailsPage(),
+)
+```
+
+* `MaterialPageRoute` → Material slide transition
+* `CupertinoPageRoute` → iOS transition
+* `PageRouteBuilder` → custom animation
+* `DialogRoute` / `ModalBottomSheetRoute` → overlays, still routes
+
+Named routes map a string to a screen:
+
+```dart
+MaterialApp(
+  initialRoute: "/",
+  routes: {
+    "/": (context) => const HomePage(),
+    "/details": (context) => const DetailsPage(),
+  },
+)
+```
+
+# 3. push
+
+`push` adds a route on top. The previous screen stays in memory underneath.
+
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => const DetailsPage(),
+  ),
+);
+```
+
+Named version:
+
+```dart
+Navigator.pushNamed(context, "/details");
+```
+
+Other useful methods:
+
+* `pushReplacement` → swap the current route
+* `pushAndRemoveUntil` → push and clear routes below
+* `pushNamedAndRemoveUntil` → same, with a name
+
+# 4. pop
+
+`pop` removes the top route and returns to the one below.
+
+```dart
+Navigator.pop(context);
+```
+
+Return a result to the previous screen:
+
+```dart
+// details page
+Navigator.pop(context, "saved");
+
+// home page
+final result = await Navigator.push<String>(
+  context,
+  MaterialPageRoute(builder: (context) => const DetailsPage()),
+);
+print(result); // "saved"
+```
+
+`maybePop` pops only if the navigator can pop. `canPop` checks first.
+
+# 5. arguments
+
+Pass data **into** a screen when you push it.
+
+Constructor (preferred for type safety):
+
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => DetailsPage(id: 42),
+  ),
+);
+
+class DetailsPage extends StatelessWidget {
+  final int id;
+  const DetailsPage({super.key, required this.id});
+  // ...
+}
+```
+
+Named routes use `arguments`:
+
+```dart
+Navigator.pushNamed(
+  context,
+  "/details",
+  arguments: 42,
+);
+
+// on the details page
+final id = ModalRoute.of(context)!.settings.arguments as int;
+```
+
+Or read them in `onGenerateRoute`:
+
+```dart
+onGenerateRoute: (settings) {
+  if (settings.name == "/details") {
+    final id = settings.arguments as int;
+    return MaterialPageRoute(
+      builder: (context) => DetailsPage(id: id),
+    );
+  }
+  return null;
+},
+```
+
+# 6. Nested navigation
+
+Each `Navigator` has its own stack. Put a second navigator inside a tab or a shell so inner screens do not replace the bottom bar.
+
+```dart
+class ShopTab extends StatelessWidget {
+  const ShopTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => const ProductListPage(),
+        );
+      },
+    );
+  }
+}
+```
+
+* Outer navigator → app-level screens (login, settings)
+* Inner navigator → screens inside a tab
+* `Navigator.of(context)` finds the **nearest** navigator
+* `Navigator.of(context, rootNavigator: true)` uses the root one — use this for dialogs and full-screen flows
+
+A `GlobalKey<NavigatorState>` lets you pop or push a nested stack from outside it.
+
+# 7. Deep linking
+
+A deep link opens a screen from a URL, for example `myapp://details/42` or `https://example.com/details/42`.
+
+With the built-in navigator, parse the path in `onGenerateRoute`:
+
+```dart
+MaterialApp(
+  initialRoute: "/",
+  onGenerateRoute: (settings) {
+    final uri = Uri.parse(settings.name ?? "/");
+
+    if (uri.path == "/") {
+      return MaterialPageRoute(builder: (context) => const HomePage());
+    }
+
+    if (uri.pathSegments.length == 2 && uri.pathSegments[0] == "details") {
+      final id = int.parse(uri.pathSegments[1]);
+      return MaterialPageRoute(builder: (context) => DetailsPage(id: id));
+    }
+
+    return MaterialPageRoute(builder: (context) => const NotFoundPage());
+  },
+)
+```
+
+For production apps, `go_router` maps URLs to screens and handles web, Android, and iOS:
+
+```dart
+GoRouter(
+  routes: [
+    GoRoute(path: "/", builder: (context, state) => const HomePage()),
+    GoRoute(
+      path: "/details/:id",
+      builder: (context, state) {
+        final id = state.pathParameters["id"]!;
+        return DetailsPage(id: int.parse(id));
+      },
+    ),
+  ],
+)
+```
+
+Enable it in `AndroidManifest.xml` (`intent-filter`) and iOS (`CFBundleURLTypes` / associated domains) so the OS forwards the URL to Flutter.
