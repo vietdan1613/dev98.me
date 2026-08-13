@@ -1,0 +1,366 @@
+---
+title: "Dart Basics: Top Concepts"
+category: Flutter
+author: Daniel Nguyen
+tags: ['#Flutter', '#Dart']
+date: 2026-08-13
+thumbnailText: Dart
+---
+
+Dart is the language behind Flutter. These are the core concepts you need before building widgets.
+
+# 1. Variables and Types
+
+Dart is statically typed. You can declare types explicitly or let the compiler infer them.
+
+```dart
+String name = "Daniel";
+int age = 25;
+double height = 1.75;
+bool isStudent = true;
+
+var city = "Hanoi"; // type inferred as String
+```
+
+Common Dart types:
+
+* `int` → Integer numbers
+* `double` → Decimal numbers
+* `num` → Parent of `int` and `double`
+* `String` → Text
+* `bool` → true or false
+* `List` → Ordered collection
+* `Map` → Key-value collection
+* `Set` → Unique unordered collection
+
+# 2. var, final, const, and late
+
+How you declare a variable controls whether it can change.
+
+```dart
+var count = 0;          // can be reassigned
+final createdAt = DateTime.now(); // set once at runtime
+const pi = 3.14159;     // compile-time constant
+late String token;      // assigned later, before first use
+
+token = "abc123";
+```
+
+Rules:
+
+* `var` → mutable, type is inferred
+* `final` → assigned once, value can be computed at runtime
+* `const` → compile-time constant
+* `late` → delayed initialization (useful for non-nullable fields)
+
+# 3. Null Safety
+
+By default, variables cannot be `null`. Add `?` to allow it.
+
+```dart
+String title = "Hello";
+String? subtitle; // can be null
+
+print(subtitle ?? "No subtitle");
+print(subtitle?.length);
+
+subtitle ??= "Default";
+```
+
+Important operators:
+
+* `?` → nullable type
+* `??` → fallback if null
+* `?.` → call only if not null
+* `??=` → assign only if currently null
+* `!` → assert the value is not null
+
+# 4. Strings
+
+Dart strings support interpolation and multi-line text.
+
+```dart
+final firstName = "Daniel";
+final lastName = "Nguyen";
+
+print("Hello, $firstName");
+print("Full name: ${firstName} ${lastName}");
+
+final message = """
+Welcome to Dart.
+This is a multi-line string.
+""";
+```
+
+# 5. Conditional Statements
+
+```dart
+final age = 18;
+
+if (age >= 18) {
+  print("Adult");
+} else if (age >= 13) {
+  print("Teen");
+} else {
+  print("Child");
+}
+
+final label = age >= 18 ? "Adult" : "Child";
+```
+
+Dart also has `switch` with pattern matching:
+
+```dart
+final status = "loading";
+
+switch (status) {
+  case "loading":
+    print("Please wait");
+  case "success":
+    print("Done");
+  case "error":
+    print("Something went wrong");
+  default:
+    print("Unknown");
+}
+```
+
+# 6. Loops
+
+## For Loop
+
+```dart
+for (var i = 0; i < 5; i++) {
+  print(i);
+}
+
+final fruits = ["apple", "banana", "orange"];
+for (final fruit in fruits) {
+  print(fruit);
+}
+```
+
+## While Loop
+
+```dart
+var count = 0;
+
+while (count < 5) {
+  print(count);
+  count++;
+}
+```
+
+Collection helpers are common in Flutter:
+
+```dart
+final numbers = [1, 2, 3, 4, 5];
+final doubled = numbers.map((n) => n * 2).toList();
+final evens = numbers.where((n) => n.isEven).toList();
+```
+
+# 7. Functions
+
+```dart
+String greet(String name) {
+  return "Hello $name";
+}
+
+int add(int a, int b) => a + b;
+
+void log(String message, {String level = "info"}) {
+  print("[$level] $message");
+}
+
+log("App started");
+log("Crash", level: "error");
+```
+
+Function styles:
+
+* Positional parameters: `greet("Daniel")`
+* Named parameters: `{String level = "info"}`
+* Required named: `{required String name}`
+* Arrow functions: `=>` for one-line returns
+
+# 8. Lists, Sets, and Maps
+
+## List
+
+```dart
+final fruits = ["apple", "banana", "orange"];
+print(fruits[0]);
+fruits.add("mango");
+```
+
+## Set
+
+```dart
+final tags = {"dart", "flutter", "dart"};
+print(tags.length); // 2 — duplicates are removed
+```
+
+## Map
+
+```dart
+final user = {
+  "name": "Daniel",
+  "age": 25,
+};
+
+print(user["name"]);
+user["city"] = "Hanoi";
+```
+
+# 9. Classes and Objects
+
+```dart
+class Dog {
+  final String name;
+
+  Dog(this.name);
+
+  void bark() {
+    print("Woof!");
+  }
+}
+
+final dog = Dog("Buddy");
+dog.bark();
+```
+
+Useful class features:
+
+* Constructor: `Dog(this.name)`
+* Named constructor: `Dog.stray() : name = "Unknown"`
+* Getters and setters
+* `this` refers to the current instance
+
+```dart
+class User {
+  final String name;
+  final int age;
+
+  User({required this.name, required this.age});
+
+  factory User.guest() {
+    return User(name: "Guest", age: 0);
+  }
+
+  String get label => "$name ($age)";
+}
+```
+
+# 10. Inheritance, Implements, and Mixins
+
+```dart
+class Animal {
+  void eat() => print("Eating");
+}
+
+class Cat extends Animal {
+  void meow() => print("Meow");
+}
+
+mixin Logger {
+  void log(String message) => print(message);
+}
+
+class Service with Logger {
+  void run() {
+    log("Service started");
+  }
+}
+```
+
+Key ideas:
+
+* `extends` → inherit one class
+* `implements` → fulfill an interface
+* `with` → reuse mixin behavior
+* `abstract class` → cannot be instantiated directly
+
+# 11. Error Handling
+
+```dart
+try {
+  final num = int.parse("abc");
+  print(num);
+} on FormatException catch (e) {
+  print("Invalid number: $e");
+} catch (e) {
+  print("Unexpected error: $e");
+} finally {
+  print("Done");
+}
+```
+
+Throw your own errors:
+
+```dart
+void withdraw(int amount) {
+  if (amount <= 0) {
+    throw ArgumentError("Amount must be positive");
+  }
+}
+```
+
+# 12. Async Programming
+
+Flutter apps wait for network, storage, and animation work. Dart uses `Future` and `async` / `await`.
+
+```dart
+Future<String> fetchUser() async {
+  await Future.delayed(Duration(seconds: 1));
+  return "Daniel";
+}
+
+void main() async {
+  print("Loading...");
+  final name = await fetchUser();
+  print("Hello $name");
+}
+```
+
+Streams emit multiple values over time:
+
+```dart
+Stream<int> countDown() async* {
+  for (var i = 3; i >= 1; i--) {
+    await Future.delayed(Duration(seconds: 1));
+    yield i;
+  }
+}
+```
+
+You will use these constantly in Flutter:
+
+* `Future` → one result later
+* `async` / `await` → write async code like sync code
+* `Stream` → sequence of values (e.g. user input, snapshots)
+
+# 13. Enums and Records
+
+```dart
+enum Status { loading, success, error }
+
+final current = Status.loading;
+
+final point = (x: 10, y: 20); // record
+print(point.x);
+```
+
+# 14. Extension Methods
+
+Add methods to existing types without subclassing.
+
+```dart
+extension StringX on String {
+  String get capitalized =>
+      isEmpty ? this : "${this[0].toUpperCase()}${substring(1)}";
+}
+
+print("dart".capitalized); // Dart
+```
+
+This pattern is common in Flutter helper code.
