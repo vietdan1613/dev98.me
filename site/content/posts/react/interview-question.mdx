@@ -19,95 +19,11 @@ thumbnailText: Daily
 
 ### 3. project you’ve been working
 
-#### 3.1 Can you walk me through the architecture of your KIC Automation Testing project?
-
 > system thinking, ownership, and ability to explain complexity clearly.
 > * Frontend (React, feature-based structure)
 > * Backend (.NET Core APIs)
 > * Selenium automation layer
 > * Data flow: trigger test → backend → execution → results → dashboard
-
-> Why did you use Redux-Saga instead of Redux Thunk or only React Query?
-> (decision-making and async complexity handling)
-> * Controlled concurrency
-> * Cancellation, retries
-> * Sequencing dependent requests
-> * Why Thunk wasn’t enough
-> * Why React Query alone wasn’t enough
-
-> How did Redux-Saga and React Query work together without overlapping responsibilities?
-> (real-world state architecture maturity)
-> * Saga for orchestration / workflows
-> * React Query for server state + caching
-> * Avoiding duplication
-> * When data lived in Redux vs Query cache
-
-> What performance problems did you face and how did you fix them?
-> (Senior engineers are judged on this)
-> * Unnecessary re-renders
-> * Large datasets (test results)
-> * Query caching
-> * Memoization, pagination, virtualization
-> * Reduced API calls
-
-> What technical decisions did you personally own?
-> (leadership and seniority)
-> * Feature-based structure
-> * Redux-Saga adoption
-> * React Query integration
-> * Testing strategy
-> * Integration approach with automation backend
-
-#### 3.2 How did you design the communication between the React UI and Selenium automation?
-
-> * API triggers
-> * Long-running jobs
-> * Polling or WebSocket
-> * Error handling
-> * Status tracking
-
-> How did you handle long-running test executions?
-> * Async job IDs
-> * Progress tracking
-> * Polling
-> * UI states
-> * Timeouts / retries
-
-> How did you structure your frontend codebase for scalability?”
-> * Feature-based folders
-> * Shared components
-> * Domain boundaries
-> * Avoiding tight coupling
-
-> What kind of tests did you write and what was hard to test?
-> * Jest + Testing Library
-> * Mock APIs
-> * Async flows
-> * Automation integration edge cases
-
-> What would you redesign if you started over?
-> * Honest trade-offs
-> * Technical debt
-> * Tooling improvements
-> * What you learned
-
-#### 3.2 How did you integrate MetaMask?
-
-> * Wallet connection
-> * Provider detection
-> * Network changes
-> * Session handling
-
-> How did you handle failed blockchain transactions?
-> * UI error states
-> * Reverts
-> * User feedback
-> * Retry logic
-
-> Why Redux + Thunk for the Web3 project?
-> * Simpler async needs
-> * Team maturity at the time
-> * Trade-offs vs Saga
 
 ### 4. **What interests you about this position?**
 
