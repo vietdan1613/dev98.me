@@ -1,0 +1,6 @@
+{
+  "name": "Web",
+  "icon": "web.svg",
+  "color": "#38B2AC",
+  "description": "General web topics — system design, security, auth, accessibility, and delivery."
+}
