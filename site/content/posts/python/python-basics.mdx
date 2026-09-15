@@ -1,216 +1,136 @@
 ---
-title: "Python Basics: Top Concepts"
+title: "Python Basics: A Practical Guide for Beginners"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python']
-date: 2026-05-25
+date: 2026-09-15
 thumbnailText: Python
 ---
 
-# 1. Variables and Data Types
+If you're getting into **Backend Development, FastAPI, Automation, or AI**, Python is a great language to start with.
 
-Variables are used to store information in Python.
+# 1. Variables & Data Types
+
+A variable stores a value. Python is dynamically typed, but type hints help in backend work.
 
 ```python
-name = "Daniel"
-age = 25
-height = 1.75
-is_student = True
+name: str = "Daniel"
+age: int = 25
+price: float = 99.99
+is_active: bool = True
+data = None
 ```
 
-Common Python data types:
-
-* `int` → Integer numbers
-* `float` → Decimal numbers
-* `str` → Text
-* `bool` → True or False
-* `list` → Ordered collection
-* `dict` → Key-value collection
-
-# 2. Input and Output
-
-Programs become interactive when users can provide input.
+`input()` always returns a string — convert when needed:
 
 ```python
-name = input("Enter your name: ")
-print("Hello", name)
+age = int(input("Enter your age: "))
+message = f"My name is {name} and I am {age}."
 ```
 
-`input()` receives user data.
-`print()` displays output.
+# 2. Operators & Control Flow
 
-# 3. Conditional Statements
-
-Conditional statements allow programs to make decisions.
+Use `=` to assign and `==` to compare.
 
 ```python
-age = 18
+a + b, a - b, a * b, a / b, a // b, a % b, a ** b
+age >= 18 and is_active
+```
 
-if age >= 18:
-    print("Adult")
+```python
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
 else:
-    print("Child")
+    grade = "C"
+
+message = "Adult" if age >= 18 else "Minor"
 ```
 
-Important keywords:
-
-* `if`
-* `elif`
-* `else`
-
-# 4. Loops
-
-Loops repeat actions automatically.
-
-## For Loop
-
 ```python
-for i in range(5):
+for user in users:
+    print(user)
+
+for i in range(1, 10, 2):
     print(i)
-```
-
-## While Loop
-
-```python
-count = 0
 
 while count < 5:
-    print(count)
     count += 1
 ```
 
-# 5. Functions
+`break` stops a loop. `continue` skips the current iteration.
 
-Functions help organize reusable code.
+# 3. Collections
 
-```python
-def greet(name):
-    return f"Hello {name}"
-
-print(greet("Daniel"))
-```
-
-Benefits of functions:
-
-* Cleaner code
-* Reusability
-* Easier debugging
-* Better scalability
-
-# 6. Lists and Dictionaries
-
-Python collections help store multiple values.
-
-## List Example
+**List** — ordered, mutable:
 
 ```python
-fruits = ["apple", "banana", "orange"]
-print(fruits[0])
+users = ["Daniel", "John", "Anna"]
+users.append("Michael")
+users[0], users[-1], len(users), "Daniel" in users
+numbers[1:4]
 ```
 
-## Dictionary Example
+**Dict** — key-value (like JSON):
 
 ```python
-user = {
-    "name": "Daniel",
-    "age": 25
-}
+user = {"id": 1, "name": "Daniel", "age": 25}
+user["name"]
+user.get("email", "No email")
 
-print(user["name"])
+for key, value in user.items():
+    print(key, value)
 ```
 
-# 7. Object-Oriented Programming (OOP)
-
-OOP organizes code using classes and objects.
+**Set** — unique values, no indexing:
 
 ```python
-class Dog:
-    def __init__(self, name):
-        self.name = name
-
-    def bark(self):
-        print("Woof!")
-
-dog = Dog("Buddy")
-dog.bark()
+unique = set([1, 2, 2, 3])
+a & b, a | b, a - b
 ```
 
-Key OOP concepts:
+**Tuple** — fixed, unpackable:
 
-* Class
-* Object
-* Method
-* Constructor
-* Inheritance
+```python
+name, age, role = ("Daniel", 25, "admin")
+```
 
-# 8. Error Handling
+# 4. Functions
 
-Programs should handle errors gracefully.
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+
+def greet(name: str = "Guest") -> str:
+    return f"Hello, {name}"
+```
+
+`print()` displays. `return` sends a value back.
+
+# 5. Exceptions
 
 ```python
 try:
-    num = int(input("Enter number: "))
-    print(num)
-except:
-    print("Invalid input")
+    age = int(input("Enter your age: "))
+except ValueError:
+    print("Invalid age")
+finally:
+    print("Finished")
+
+if age < 18:
+    raise ValueError("User must be at least 18")
 ```
 
+Don't hide errors — handle them intentionally.
 
-# 9. Modules and Packages
+# 6. Modules
 
-Python provides many built-in and external libraries.
+Split reusable code into files and import what you need.
 
 ```python
-import math
-
-print(math.sqrt(16))
+from math_utils import add
+import math as m
 ```
 
-Install packages using pip:
-
-```bash
-pip install requests
-```
-
-Popular beginner libraries:
-
-* requests
-* pandas
-* numpy
-* selenium
-* gradio
-
-# 10. File Handling
-
-Python can read and write files.
-
-```python
-with open("test.txt", "w") as file:
-    file.write("Hello Python")
-```
-
-File handling is useful for:
-
-* Saving logs
-* Reading datasets
-* Generating reports
-* Automation workflows
-
-# 11. with ... as
-
-The with ... as statement is used for safe resource management in Python.
-
-It is commonly used with:
-
-* Files
-* Database connections
-* Network connections
-* Thread locks
-
-## File Example
-
-```python
-with open("test.txt", "r") as file:
-    content = file.read()
-    print(content)
-```
+Avoid `from module import *`. Prefer clear imports as the project grows (routers, services, models).
