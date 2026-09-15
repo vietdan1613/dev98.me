@@ -1,0 +1,358 @@
+---
+title: "FastAPI Foundations"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-09-15
+thumbnailText: FastAPI
+---
+
+FastAPI is a modern Python framework for building REST APIs.
+
+It is fast, easy to use, and provides automatic validation and API documentation.
+
+This guide covers 5 essential concepts you need to get started.
+
+---
+
+# Final Picture
+
+The 5 concepts work together:
+
+```text
+Map
+                FastAPI
+                   │
+        ┌──────────┼──────────┐
+        ↓          ↓          ↓
+      HTTP      Pydantic    Router
+        │          │          │
+        └──────────┼──────────┘
+                   ↓
+              Business Logic
+                   ↓
+               Database
+                   ↓
+                Response
+                   ↓
+                Testing
+                   ↓
+               Deployment
+```
+
+---
+
+# 1. First Steps
+
+### What is it?
+
+A FastAPI app starts with a `FastAPI` instance and defines API endpoints using decorators.
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def root():
+    return {"message": "Hello FastAPI"}
+```
+
+### When to use it?
+
+Whenever you need to create an API endpoint.
+
+For example:
+
+```text
+GET /products
+GET /products/1
+POST /products
+```
+
+---
+
+# 2. Pydantic Models
+
+### What is it?
+
+Pydantic models define the structure of your API data and automatically validate it.
+
+```python
+from pydantic import BaseModel
+
+
+class ProductCreate(BaseModel):
+    name: str
+    price: float
+```
+
+Now FastAPI knows what the request body should look like.
+
+```json
+{
+  "name": "Coconut",
+  "price": 100000
+}
+```
+
+### When to use it?
+
+Use Pydantic models when receiving or returning structured data.
+
+```python
+@app.post("/products")
+def create_product(product: ProductCreate):
+    return product
+```
+
+If the data is invalid, FastAPI automatically returns a validation error.
+
+### Response Models
+
+You can also define the response:
+
+```python
+class ProductResponse(BaseModel):
+    id: int
+    name: str
+    price: float
+```
+
+```python
+@app.get(
+    "/products/{product_id}",
+    response_model=ProductResponse
+)
+def get_product(product_id: int):
+    return {
+        "id": product_id,
+        "name": "Coconut",
+        "price": 100000
+    }
+```
+
+---
+
+# 3. Database
+
+### What is it?
+
+FastAPI handles the API layer, while a database stores persistent data.
+
+A typical application looks like:
+
+```text
+Next.js
+   ↓
+FastAPI
+   ↓
+PostgreSQL
+```
+
+FastAPI receives the request, performs business logic, and communicates with the database.
+
+### When to use it?
+
+Use a database when data needs to persist after the application restarts.
+
+For example:
+
+```text
+Products
+Users
+Orders
+Categories
+Payments
+```
+
+A common stack is:
+
+```text
+FastAPI
++
+SQLAlchemy
++
+PostgreSQL
++
+Alembic
+```
+
+Example flow:
+
+```text
+POST /products
+      ↓
+FastAPI
+      ↓
+Validate with Pydantic
+      ↓
+Service
+      ↓
+SQLAlchemy
+      ↓
+PostgreSQL
+```
+
+Pydantic models and database models have different purposes:
+
+```text
+Pydantic Model
+→ API data
+
+SQLAlchemy Model
+→ Database data
+```
+
+---
+
+# 4. HTTP & Authentication
+
+### HTTP
+
+HTTP defines how the client and server communicate.
+
+Common methods:
+
+```text
+GET     → Read
+POST    → Create
+PUT     → Replace
+PATCH   → Update
+DELETE  → Delete
+```
+
+Common status codes:
+
+```text
+200 → OK
+201 → Created
+204 → No Content
+
+400 → Bad Request
+401 → Not Authenticated
+403 → Forbidden
+404 → Not Found
+422 → Validation Error
+
+500 → Server Error
+```
+
+### Authentication
+
+Authentication answers:
+
+> Who are you?
+
+For example, a user logs in:
+
+```text
+Next.js
+   ↓
+POST /login
+   ↓
+FastAPI
+   ↓
+Verify credentials
+   ↓
+Create token
+   ↓
+Browser
+```
+
+A common approach is:
+
+```text
+JWT
++
+HttpOnly Cookie
+```
+
+Authentication is especially important for protected endpoints:
+
+```text
+/admin
+/users
+/orders
+/profile
+```
+
+---
+
+# 5. Testing & Deployment
+
+### Testing
+
+Testing verifies that your API works as expected.
+
+FastAPI works well with:
+
+```text
+pytest
++
+TestClient
+```
+
+Example:
+
+```python
+from fastapi.testclient import TestClient
+
+from main import app
+
+
+client = TestClient(app)
+
+
+def test_get_products():
+    response = client.get("/products")
+
+    assert response.status_code == 200
+```
+
+Run tests:
+
+```bash
+pytest
+```
+
+Important things to test:
+
+```text
+Authentication
+Validation
+CRUD
+Business Logic
+Error Handling
+```
+
+### Deployment
+
+A common production setup is:
+
+```text
+Internet
+   ↓
+Reverse Proxy
+   ↓
+FastAPI
+   ↓
+PostgreSQL
+```
+
+Docker makes it easier to package and run the application:
+
+```text
+Docker
+├── FastAPI
+└── PostgreSQL
+```
+
+For example:
+
+```bash
+docker compose up --build
+```
+
+This builds the containers and starts the application.
