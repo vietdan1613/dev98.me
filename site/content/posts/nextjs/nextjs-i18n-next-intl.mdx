@@ -1,185 +1,186 @@
 ---
-title: "Next.js i18n with next-intl: A Practical Setup"
+title: "next-intl simple i18n"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
-date: 2026-09-12
+date: 2026-09-16
 thumbnailText: Next.js
 ---
 
-Supporting multiple languages in a Next.js application doesn't mean creating separate pages for each language. With `next-intl`, we can use the same components and pages while using the locale as part of the URL.
+Supporting multiple languages in Next.js can become complicated when you manage routing, translations, and navigation yourself.
 
-## 1. What is next-intl?
+`next-intl` helps simplify this process.
 
-`next-intl` is an internationalization library for Next.js that provides locale-based routing, translations, and locale-aware navigation.
+![next-intl config, translation, routing, and navigation producing localized routes](./imgs/next-intl-big-picture.jpg)
 
-For example:
-
-```text
-/vi/plants
-/en/plants
-```
-
-Both URLs can use the same page:
-
-```text
-app/[locale]/plants/page.tsx
-```
-
-The locale comes directly from the URL, so `/vi` means Vietnamese and `/en` means English.
-
----
-
-## 2. Define Locales and Translations
-
-First, install `next-intl`:
+## 1. Install
 
 ```bash
 npm install next-intl
 ```
 
-Define supported locales:
+---
+
+## 2. Create Translation Files
+
+Create one JSON file for each language:
+
+```text
+messages/
+├── en.json
+└── vi.json
+```
+
+**en.json**
+
+```json
+{
+  "Home": {
+    "title": "Welcome to Green Garden"
+  }
+}
+```
+
+**vi.json**
+
+```json
+{
+  "Home": {
+    "title": "Chào mừng đến Green Garden"
+  }
+}
+```
+
+---
+
+## 3. Config
+
+Define the supported locales and the default locale.
 
 ```ts
 // src/i18n/routing.ts
 
-export const routing = {
-  locales: ['vi', 'en'],
-  defaultLocale: 'vi',
-};
+export const routing = defineRouting({
+  locales: ["en", "vi"],
+  defaultLocale: "vi",
+});
 ```
 
-Then create translation files:
+Now `next-intl` knows:
 
 ```text
-messages/
-├── vi.json
-└── en.json
+Locales: en, vi
+Default: vi
+```
+
+---
+
+## 4. Request Config
+
+Load the correct translation file based on the current locale.
+
+```ts
+// src/i18n/request.ts
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  const locale = await requestLocale;
+
+  return {
+    locale,
+    messages: (
+      await import(`../../messages/${locale}.json`)
+    ).default,
+  };
+});
 ```
 
 For example:
 
-```json
-// vi.json
-{
-  "common": {
-    "addToCart": "Thêm vào giỏ"
-  }
-}
+```text
+/vi
+ ↓
+locale = vi
+ ↓
+messages/vi.json
 ```
-
-```json
-// en.json
-{
-  "common": {
-    "addToCart": "Add to cart"
-  }
-}
-```
-
-These files should contain **UI translations**, not dynamic product or blog content.
 
 ---
 
-## 3. Use One Page for All Locales
+## 5. Use Translations
 
-Move storefront routes under a dynamic `[locale]` segment:
+In a component:
+
+```tsx
+import { useTranslations } from "next-intl";
+
+export default function HomePage() {
+  const t = useTranslations("Home");
+
+  return <h1>{t("title")}</h1>;
+}
+```
+
+With `vi`:
+
+```text
+Chào mừng đến Green Garden
+```
+
+With `en`:
+
+```text
+Welcome to Green Garden
+```
+
+---
+
+## 6. Locale Routing
+
+Use `[locale]` in the App Router:
 
 ```text
 app/
 └── [locale]/
-    └── (store)/
-        ├── plants/
-        ├── cart/
-        ├── checkout/
-        └── blog/
+    ├── page.tsx
+    ├── plants/
+    │   └── page.tsx
+    └── categories/
+        └── page.tsx
 ```
 
-Now:
+This gives you:
 
 ```text
 /vi/plants
 /en/plants
+
+/vi/categories
+/en/categories
 ```
-
-both render:
-
-```text
-app/[locale]/(store)/plants/page.tsx
-```
-
-Inside a component, translations can be accessed with:
-
-```tsx
-const t = useTranslations('common');
-
-t('addToCart');
-```
-
-The same component automatically displays the correct language based on the current locale.
 
 ---
 
-## 4. Handle Navigation and Language Switching
+## 7. Navigation
 
-Use `next-intl`'s locale-aware navigation instead of manually building URLs.
+`next-intl` can provide locale-aware navigation.
 
 ```tsx
-import {Link} from '@/i18n/navigation';
+import { Link } from "@/i18n/navigation";
 
 <Link href="/plants">
-  Shop
+  Plants
 </Link>
 ```
 
-The language switcher can then change:
+The locale is handled automatically:
 
 ```text
 /vi/plants
-      ↓
 /en/plants
 ```
 
-while preserving dynamic routes such as:
+You don't need to manually write:
 
-```text
-/vi/blog/monstera
-      ↓
-/en/blog/monstera
+```tsx
+`/${locale}/plants`
 ```
-
-There is no need to use `window.location`, `localStorage`, or hard-coded `/vi` and `/en` paths.
-
----
-
-## 5. Dynamic Content Comes from the Backend
-
-`next-intl` should handle **UI translations**. Products, categories, and blog posts should remain backend data.
-
-The current locale can be passed to the API:
-
-```text
-/vi/plants
-    ↓
-GET /plants?locale=vi
-```
-
-or:
-
-```text
-/en/plants
-    ↓
-GET /plants?locale=en
-```
-
-This creates a clean separation:
-
-```text
-next-intl
-→ UI translations
-
-Backend
-→ Products, categories, blog content
-```
-
-As a result, adding another language only requires adding a new locale and its UI translation file. **Pages and components do not need to be duplicated.**
