@@ -25,28 +25,7 @@ module.exports = {
     {
       resolve: 'gatsby-plugin-sitemap',
       options: {
-        output: '/',
-        excludes: ['/dev-404-page', '/404', '/404.html'],
-        query: `
-          {
-            site {
-              siteMetadata {
-                siteUrl
-              }
-            }
-            allSitePage {
-              nodes {
-                path
-              }
-            }
-          }
-        `,
-        resolveSiteUrl: () => siteUrl,
-        serialize: ({ path }) => ({
-          url: path,
-          changefreq: path === '/' ? 'daily' : 'weekly',
-          priority: path === '/' ? 1.0 : 0.7
-        })
+        excludes: ['/dev-404-page/', '/404/', '/404.html']
       }
     }
   ],
