@@ -1,0 +1,103 @@
+---
+title: "Next.js Project Structure Explained"
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2026-09-21
+thumbnailText: Next.js
+---
+
+When you create a Next.js project, you will see several folders and files. At first, the structure may look confusing, but you only need to understand a few important concepts.
+
+Let's use a simple **Plant Shop** as an example:
+
+```text
+plant-shop/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── plants/
+│   │   ├── page.tsx
+│   │   └── loading.tsx
+│   └── api/
+│       └── plants/
+│           └── route.ts
+├── components/
+├── lib/
+├── public/
+├── next.config.ts
+├── package.json
+└── tsconfig.json
+```
+
+## The app folder &  `page.tsx`
+
+The `app` folder is where you build your pages and routes. The folder structure usually maps to the URL. For example, `app/page.tsx` creates the homepage `/`, while `app/plants/page.tsx` creates `/plants`.
+
+A `page.tsx` file represents a page that users can visit. For example, `app/plants/page.tsx` could contain a list of all plants.
+
+```tsx
+export default function PlantsPage() {
+  return <h1>Our Plants</h1>
+}
+```
+
+---
+
+## layout.tsx
+
+A layout is used for UI that should be shared across multiple pages, such as a Header, Navigation, or Footer.
+
+For example, your website might have a Header at the top, the current page in the middle, and a Footer at the bottom. Instead of adding these elements to every page, you can put them in `layout.tsx`.
+
+Think of `layout.tsx` as the common frame around your pages.
+
+---
+
+## loading.tsx
+
+A `loading.tsx` file shows a loading UI while a page is preparing its content.
+
+For example, `app/plants/loading.tsx` can show a spinner or skeleton while the plant list is being fetched:
+
+```tsx
+export default function Loading() {
+  return <p>Loading plants...</p>
+}
+```
+
+When users visit `/plants`, they see this loading UI first, then the real page when it's ready.
+
+---
+
+## components & lib
+
+The `components` folder is usually used for reusable UI.
+
+The `lib` folder is commonly used for reusable application logic. For example, `lib/plants.ts` could contain functions for fetching plants from an API or database.
+
+---
+
+## route.ts
+
+Next.js can also create API endpoints inside the `app` folder. For example:
+
+```text
+app/api/plants/route.ts
+```
+
+creates the `/api/plants` endpoint.
+
+---
+
+## public
+
+The `public` folder is used for static files such as images, icons, and other assets.
+
+For example:
+
+```text
+public/images/monstera.jpg
+```
+
+can be accessed from `/images/monstera.jpg`.
