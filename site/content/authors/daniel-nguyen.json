@@ -1,21 +1,25 @@
 {
-  "name": "John Doe",
-  "title": "Web Developer",
-  "description": "Sed commodo, est quis maximus fermentum, massa ipsum euismod neque, in varius risus tellus quis lacus. Sed ac bibendum odio.",
-  "thumbnail": "john-doe.png",
+  "name": "Daniel Nguyen",
+  "title": "Frontend Developer",
+  "description": "Frontend developer specializing in React, Next.js, and JavaScript. Writing practical guides on modern web development at Dev98.",
+  "thumbnail": "daniel-nguyen.png",
   "social": [
     {
-      "name": "Instagram",
-      "url": "https://instagram.com/instagram"
+      "name": "Github",
+      "url": "https://github.com/danielnguyen5070"
     },
     {
-      "name": "Twitter",
-      "url": "https://twitter.com/twitter"
+      "name": "Linkedin",
+      "url": "https://www.linkedin.com/in/daniel-nguyen-1998y/"
+    },
+    {
+      "name": "Youtube",
+      "url": "https://www.youtube.com/@Dev98-n2w"
     },
     {
       "name": "Website",
-      "url": "https://example.com"
+      "url": "https://www.dev98.me"
     }
   ],
-  "skills": ["NodeJS", "ASP.NET", "PHP"]
+  "skills": ["React", "Next.js", "JavaScript", "TypeScript", "Python"]
 }

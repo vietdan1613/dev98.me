@@ -1,5 +1,7 @@
 require('dotenv').config()
 
+const siteUrl = process.env.URL || process.env.VERCEL_URL || 'https://www.dev98.me'
+
 module.exports = {
   plugins: [
     {
@@ -14,25 +16,50 @@ module.exports = {
     {
       resolve: '@elegantstack/gatsby-theme-flexiblog-education',
       options: {
-        // Add theme options here. Check documentation for available options.
-        siteUrl: process.env.URL || process.env.VERCEL_URL,
+        siteUrl,
         services: {
           algolia: true
         }
       }
     },
+    {
+      resolve: 'gatsby-plugin-sitemap',
+      options: {
+        output: '/',
+        excludes: ['/dev-404-page', '/404', '/404.html'],
+        query: `
+          {
+            site {
+              siteMetadata {
+                siteUrl
+              }
+            }
+            allSitePage {
+              nodes {
+                path
+              }
+            }
+          }
+        `,
+        resolveSiteUrl: () => siteUrl,
+        serialize: ({ path }) => ({
+          url: path,
+          changefreq: path === '/' ? 'daily' : 'weekly',
+          priority: path === '/' ? 1.0 : 0.7
+        })
+      }
+    }
   ],
-  // Customize your site metadata:
   siteMetadata: {
-    //General Site Metadata
-    title: 'FlexiBlog Theme',
-    name: 'FlexiBlog',
-    description: 'My site description...',
-    address: 'New York, NY',
-    email: 'email@example.com',
-    phone: '+1 (888) 888-8888',
+    title: 'Dev98',
+    name: 'Dev98',
+    siteUrl,
+    description:
+      'Frontend developer blog by Daniel Nguyen — practical guides on React, Next.js, JavaScript, Python, and modern web development.',
+    address: 'Vietnam',
+    email: 'danielnguyen5070@gmail.com',
+    phone: '',
 
-    //Site Social Media Links
     social: [
       {
         name: 'Github',
@@ -48,31 +75,17 @@ module.exports = {
       }
     ],
 
-    //Header Menu Items
     headerMenu: [
       {
         name: 'Home',
         slug: '/'
-      },
-      // {
-      //   name: 'Tutors',
-      //   slug: '/authors'
-      // },
-      // {
-      //   name: 'Contact',
-      //   slug: '/contact'
-      // }
+      }
     ],
 
-    //Footer Menu Items (2 Sets)
     footerMenu: [
       {
         title: 'Quick Links',
         items: [
-          {
-            name: 'Advertise with us',
-            slug: '/contact'
-          },
           {
             name: 'About Us',
             slug: '/about'
@@ -84,19 +97,19 @@ module.exports = {
         ]
       },
       {
-        title: 'Legal Stuff',
+        title: 'Learn',
         items: [
           {
-            name: 'Privacy Notice',
-            slug: '/'
+            name: 'React',
+            slug: '/category/react/'
           },
           {
-            name: 'Cookie Policy',
-            slug: '/'
+            name: 'Next.js',
+            slug: '/category/next-js/'
           },
           {
-            name: 'Terms Of Use',
-            slug: '/'
+            name: 'Python',
+            slug: '/category/python/'
           }
         ]
       }

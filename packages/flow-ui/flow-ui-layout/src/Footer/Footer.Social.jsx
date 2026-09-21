@@ -1,15 +1,28 @@
 import React from 'react'
-import { Heading } from 'theme-ui'
 import Navigation from '@components/Navigation'
 import useSiteMetadata from '@helpers-blog/useSiteMetadata'
 import attachSocialIcons from '@helpers/attachSocialIcons'
 
 const styles = {
   social: {
-    mb: [3, 0]
-  },
-  navHeader: {
-    display: [`none`, `block`]
+    mb: 0,
+    justifyContent: `center`,
+    a: {
+      display: `inline-flex !important`,
+      alignItems: `center`,
+      justifyContent: `center`,
+      size: 36,
+      p: 0,
+      lineHeight: 0,
+      '+a': {
+        ml: 2
+      },
+      svg: {
+        display: `block`,
+        size: 18,
+        m: 0
+      }
+    }
   }
 }
 
@@ -17,15 +30,10 @@ export const FooterSocial = () => {
   const { social } = useSiteMetadata()
 
   return (
-    <>
-      <Heading variant='h4' as='p' sx={styles.navHeader}>
-        Social Media
-      </Heading>
-      <Navigation
-        items={attachSocialIcons(social)}
-        variant={[`horizontal`, `vertical`]}
-        wrapperStyle={styles.social}
-      />
-    </>
+    <Navigation
+      items={attachSocialIcons(social)}
+      iconOnly
+      wrapperStyle={styles.social}
+    />
   )
 }

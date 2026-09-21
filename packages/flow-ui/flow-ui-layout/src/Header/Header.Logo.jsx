@@ -33,8 +33,9 @@ const logoQuery = graphql`
     ) {
       childImageSharp {
         gatsbyImageData(
-          width: 150
-          layout: CONSTRAINED
+          width: 80
+          height: 80
+          layout: FIXED
           quality: 100
           placeholder: NONE
         )
@@ -46,8 +47,9 @@ const logoQuery = graphql`
     ) {
       childImageSharp {
         gatsbyImageData(
-          width: 150
-          layout: CONSTRAINED
+          width: 80
+          height: 80
+          layout: FIXED
           quality: 100
           placeholder: NONE
         )

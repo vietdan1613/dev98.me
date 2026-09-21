@@ -4,6 +4,7 @@ import {
   FaInstagram,
   FaLinkedinIn,
   FaFacebook,
+  FaYoutube,
   FaEnvelope,
   FaLink,
   FaGlobe
@@ -33,6 +34,10 @@ export default {
   facebook: {
     Icon: FaFacebook,
     color: '#4267B2'
+  },
+  youtube: {
+    Icon: FaYoutube,
+    color: '#FF0000'
   },
   email: {
     Icon: FaEnvelope,
