@@ -1,6 +1,11 @@
 require('dotenv').config()
 
-const siteUrl = process.env.URL || process.env.VERCEL_URL || 'https://www.dev98.me'
+// VERCEL_URL is hostname-only (no protocol); Gatsby requires a valid URI.
+const rawSiteUrl =
+  process.env.URL || process.env.VERCEL_URL || 'https://www.dev98.me'
+const siteUrl = /^https?:\/\//i.test(rawSiteUrl)
+  ? rawSiteUrl
+  : `https://${rawSiteUrl}`
 
 module.exports = {
   plugins: [
