@@ -1,0 +1,228 @@
+---
+title: "GSAP in Next.js: A Practical Guide"
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2026-09-29
+thumbnailText: Next.js
+---
+
+GSAP works great with Next.js, but there is one important thing to understand: **GSAP animations run in the browser, while Next.js can render components on the server.**
+
+The `@gsap/react` package provides `useGSAP()` to make this integration much easier.
+
+![GSAP in Next.js — animate a better web](./imgs/gsap-nextjs.jpg)
+
+## 1. Install GSAP
+
+Install both GSAP and its React integration:
+
+```bash
+npm install gsap @gsap/react
+```
+
+Then import them into your component:
+
+```tsx
+"use client"
+
+import { useRef } from "react"
+import gsap from "gsap"
+import { useGSAP } from "@gsap/react"
+
+gsap.registerPlugin(useGSAP)
+```
+
+## 2. Use a Client Component
+
+When using the Next.js App Router, the component that runs GSAP should be a Client Component.
+
+Add this at the top of the file:
+
+```tsx
+"use client"
+```
+
+This is important because GSAP interacts with browser APIs and the DOM. `useGSAP()` is designed to work safely with SSR, but it needs to execute on the client.
+
+## 3. Animate with `useGSAP()`
+
+Instead of manually managing GSAP inside `useEffect()`, you can use `useGSAP()`:
+
+```tsx
+const container = useRef(null)
+
+useGSAP(() => {
+  gsap.to(".box", {
+    x: 300,
+    duration: 1,
+  })
+}, {
+  scope: container,
+})
+```
+
+Then:
+
+```tsx
+return (
+  <div ref={container}>
+    <div className="box">Hello</div>
+  </div>
+)
+```
+
+`useGSAP()` automatically handles GSAP cleanup when the component is unmounted.
+
+## 4. Why use `scope`?
+
+`scope` limits selector-based animations to the current component.
+
+```tsx
+useGSAP(() => {
+  gsap.to(".box", {
+    x: 300,
+  })
+}, {
+  scope: container,
+})
+```
+
+Without `scope`, `.box` can potentially match elements elsewhere on the page.
+
+With `scope`, GSAP searches within:
+
+```text
+container
+└── .box
+```
+
+This becomes especially useful when you build reusable components that use the same class names.
+
+## 5. Animations triggered by events
+
+There's an important difference between animations created inside `useGSAP()` and animations created later.
+
+This is automatically tracked:
+
+```tsx
+useGSAP(() => {
+  gsap.to(".box", {
+    x: 300,
+  })
+})
+```
+
+But this isn't:
+
+```tsx
+const handleClick = () => {
+  gsap.to(".box", {
+    rotation: 180,
+  })
+}
+```
+
+The click handler runs after `useGSAP()` has executed, so that animation isn't automatically recorded in the GSAP context.
+
+## 6. Use `contextSafe()`
+
+For event-driven animations, use `contextSafe()`:
+
+```tsx
+const container = useRef(null)
+
+const { contextSafe } = useGSAP({
+  scope: container,
+})
+
+const handleClick = contextSafe(() => {
+  gsap.to(".box", {
+    rotation: 180,
+  })
+})
+```
+
+Now GSAP knows that the animation belongs to the component's context and can clean it up when the component unmounts.
+
+This is useful for animations triggered by:
+
+* `onClick`
+* `onMouseEnter`
+* `onMouseLeave`
+* `setTimeout()`
+* custom event listeners
+
+## 7. A reusable Next.js pattern
+
+For most Next.js components, this is a good starting point:
+
+```tsx
+"use client"
+
+import { useRef } from "react"
+import gsap from "gsap"
+import { useGSAP } from "@gsap/react"
+
+gsap.registerPlugin(useGSAP)
+
+export default function Hero() {
+  const container = useRef<HTMLDivElement>(null)
+
+  const { contextSafe } = useGSAP(
+    () => {
+      gsap.from(".title", {
+        y: 40,
+        opacity: 0,
+        duration: 1,
+      })
+    },
+    {
+      scope: container,
+    }
+  )
+
+  const handleClick = contextSafe(() => {
+    gsap.to(".title", {
+      rotation: 5,
+      duration: 0.3,
+    })
+  })
+
+  return (
+    <section ref={container}>
+      <h1 className="title">GSAP + Next.js</h1>
+
+      <button onClick={handleClick}>
+        Animate
+      </button>
+    </section>
+  )
+}
+```
+
+## 8. The mental model
+
+When working with GSAP in Next.js, remember:
+
+```text
+"use client"
+     ↓
+useGSAP()
+     ↓
+scope
+     ↓
+contextSafe()
+     ↓
+automatic cleanup
+```
+
+`"use client"` tells Next.js that the component runs on the client.
+
+`useGSAP()` connects GSAP with React's lifecycle.
+
+`scope` keeps selector-based animations inside the component.
+
+`contextSafe()` makes animations created later by events safe for cleanup.
+
+That's the core setup you need before moving into more advanced GSAP features such as `ScrollTrigger`, timelines, draggable interactions, SplitText, and complex page transitions.
