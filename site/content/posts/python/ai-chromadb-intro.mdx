@@ -1,0 +1,136 @@
+---
+title: "ChromaDB vector databases"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#AI']
+date: 2026-10-03
+thumbnailText: AI
+---
+
+ChromaDB is an open-source vector database designed to store embeddings and perform similarity search.
+
+![ChromaDB — documents in, semantic search out](./imgs/chromadb-intro.jpg)
+
+The basic flow looks like this:
+
+```text
+Document
+   ↓
+Embedding
+   ↓
+ChromaDB
+   ↓
+Similarity Search
+   ↓
+Relevant Documents
+```
+
+ChromaDB stores documents together with their embeddings, IDs, and optional metadata. When we search, the query is converted into an embedding and ChromaDB finds documents with similar vectors.
+
+This makes ChromaDB useful for **semantic search, RAG, recommendation systems, and AI applications**.
+
+## Getting Started
+
+Install ChromaDB with:
+
+```bash
+pip install chromadb
+```
+
+Then create a client and collection:
+
+```python
+import chromadb
+
+client = chromadb.Client()
+
+collection = client.create_collection(
+    name="documents"
+)
+```
+
+A collection is simply a place where we store related documents and their embeddings.
+
+## Adding Documents
+
+Let's add a few documents:
+
+```python
+collection.add(
+    documents=[
+        "React is a JavaScript library for building user interfaces.",
+        "FastAPI is a Python web framework.",
+        "PostgreSQL is a relational database."
+    ],
+    ids=[
+        "doc-1",
+        "doc-2",
+        "doc-3"
+    ]
+)
+```
+
+ChromaDB generates embeddings for these documents using the configured embedding function.
+
+Conceptually, each document contains:
+
+```text
+doc-1
+ ├── document
+ ├── embedding
+ └── metadata
+```
+
+The embedding is what allows ChromaDB to compare the meaning of different pieces of text.
+
+## Searching by Meaning
+
+Now let's search for:
+
+```python
+results = collection.query(
+    query_texts=[
+        "What can I use to build a Python API?"
+    ],
+    n_results=2
+)
+
+print(results["documents"])
+```
+
+The query goes through the same embedding process:
+
+```text
+"What can I use to build a Python API?"
+                ↓
+             Embedding
+                ↓
+            ChromaDB
+                ↓
+        Similarity Search
+                ↓
+"FastAPI is a Python web framework."
+```
+
+Notice that the query doesn't contain the word `FastAPI`. ChromaDB can still find the document because their meanings are similar.
+
+## Updating and Deleting Data
+
+If a document changes, we can use `update()`:
+
+```python
+collection.update(
+    ids=["doc-2"],
+    documents=[
+        "FastAPI is a modern Python web framework for building APIs."
+    ]
+)
+```
+
+To remove a document:
+
+```python
+collection.delete(
+    ids=["doc-2"]
+)
+```
