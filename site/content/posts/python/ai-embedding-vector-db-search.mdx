@@ -1,0 +1,189 @@
+---
+title: "Embedding + Vector Database"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#AI']
+date: 2026-10-01
+thumbnailText: AI
+---
+
+Embedding allows us to represent text as vectors. When words have similar meanings, an embedding model tends to place their vectors close to each other in vector space.
+
+For example:
+
+```text
+Kitten → Embedding → Vector A
+Cat    → Embedding → Vector B
+```
+
+Because `Kitten` and `Cat` have similar meanings, their vectors will tend to point in similar directions. We can measure this using **Cosine Similarity**.
+
+This allows us to search by **meaning**, instead of only matching exact keywords.
+
+## 1. Create a Simple Vector Database
+
+First, let's create a simple Vector Database to store items and their corresponding embeddings:
+
+```python
+import numpy as np
+
+
+class SimpleVectorDB:
+    def __init__(self):
+        self.items = []
+        self.embeddings = []
+
+    def add_item(self, item: str, embedding: np.ndarray):
+        self.items.append(item)
+        self.embeddings.append(embedding)
+
+    def find_similar(
+        self,
+        query_embedding: np.ndarray,
+        top_k: int = 3
+    ):
+        if not self.embeddings:
+            return []
+
+        embeddings = np.array(self.embeddings)
+
+        similarities = np.dot(
+            embeddings,
+            query_embedding
+        ) / (
+            np.linalg.norm(embeddings, axis=1)
+            * np.linalg.norm(query_embedding)
+        )
+
+        top_indices = np.argsort(similarities)[::-1][:top_k]
+
+        return [
+            (self.items[i], similarities[i])
+            for i in top_indices
+        ]
+```
+
+The `find_similar()` function calculates **Cosine Similarity** between the query vector and all vectors stored in the database, then returns the `top_k` most similar results.
+
+For example:
+
+```text
+Kitten
+  ↓
+Query Vector
+  ↓
+┌───────────────┐
+│ Cat     0.84  │
+│ Bird    0.35  │
+│ Dog     0.33  │
+└───────────────┘
+```
+
+Since `Cat` has the highest similarity score, it is returned first.
+
+## 2. Create Embeddings and Store Them
+
+We'll use `sentence-transformers` to generate embeddings.
+
+Install the required libraries:
+
+```bash
+pip install numpy sentence-transformers
+```
+
+Initialize the embedding model:
+
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer(
+    "paraphrase-MiniLM-L6-v2"
+)
+
+db = SimpleVectorDB()
+```
+
+Here is our dictionary:
+
+```python
+dictionary = [
+    "Cat",
+    "Dog",
+    "Fish",
+    "Bird",
+    "Elephant",
+    "King",
+    "Knight",
+    "Man",
+    "Woman",
+]
+```
+
+Now we generate an embedding for each word and store it in the database:
+
+```python
+for item in dictionary:
+    embedding = model.encode(item)
+
+    db.add_item(
+        item,
+        embedding
+    )
+```
+
+For example:
+
+```text
+"Cat"
+ ↓
+Embedding Model
+ ↓
+[0.48, -0.25, -0.18, ...]
+```
+
+The `paraphrase-MiniLM-L6-v2` model generates a **384-dimensional vector**.
+
+The important part is that the embedding model has learned semantic relationships between words. Therefore, words such as `Cat` and `Kitten` tend to have similar vector representations.
+
+## 3. Create the Search Function
+
+When a user enters a query, we also need to convert the query into an embedding:
+
+```python
+def search(query: str):
+    # Convert the query into an embedding
+    query_embedding = model.encode(query)
+
+    # Find similar vectors
+    results = db.find_similar(query_embedding)
+
+    print(f"Query: {query}")
+    print("Similar items:")
+
+    for item, similarity in results:
+        print(
+            f"  {item}: {similarity:.4f}"
+        )
+```
+
+## 4. Run the Application
+
+Let's try a queriy.
+
+```python
+search("Kitten")
+```
+
+Possible output:
+
+```text
+Query: Kitten
+Similar items:
+  Cat: 0.8422
+  Bird: 0.3590
+  Dog: 0.3309
+```
+
+Notice that neither `Kitten` exists in our dictionary, but the system can still find `Cat`.
+
+That's because we are **not comparing the text directly**. Instead, we convert the text into vectors and compare their positions in vector space.
