@@ -1,0 +1,538 @@
+---
+title: "Deploying a FastAPI + PostgreSQL Application to a VPS"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-06
+thumbnailText: FastAPI
+---
+
+This guide documents the production deployment flow for a **FastAPI + PostgreSQL** application using **Docker Compose, Nginx, and Let's Encrypt**.
+
+The architecture is:
+
+```text
+Frontend (Vercel)
+       │
+       │ HTTPS
+       ▼
+api.ngocnganbentre.vn
+       │
+       ▼
+    Nginx :443
+       │
+       ▼
+127.0.0.1:8000
+       │
+       ▼
+ FastAPI (Docker)
+       │
+       ▼
+ PostgreSQL (Docker)
+```
+
+![Deploy to VPS — Nginx, Docker, Let's Encrypt](./imgs/fastapi-vps-deploy.jpg)
+
+The PostgreSQL database and FastAPI port are not exposed directly to the Internet.
+
+## 1. Prepare the VPS
+
+SSH into the server:
+
+```bash
+ssh root@YOUR_SERVER_IP
+```
+
+Update Ubuntu:
+
+```bash
+apt update && apt upgrade -y
+```
+
+Install basic packages:
+
+```bash
+apt install -y ca-certificates curl git nginx ufw
+```
+
+## 2. Configure Firewall
+
+Only expose SSH, HTTP, and HTTPS:
+
+```bash
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+ufw status
+```
+
+Do **not** expose:
+
+```text
+5432  PostgreSQL
+8000  FastAPI
+```
+
+FastAPI will only listen on:
+
+```text
+127.0.0.1:8000
+```
+
+## 3. Install Docker
+
+Install Docker Engine and Compose plugin using the official Docker repository:
+
+```bash
+apt install -y ca-certificates curl
+
+install -m 0755 -d /etc/apt/keyrings
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+
+chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+https://download.docker.com/linux/ubuntu \
+$(. /etc/os-release && echo $VERSION_CODENAME) stable" \
+> /etc/apt/sources.list.d/docker.list
+
+apt update
+
+apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+```
+
+Verify:
+
+```bash
+docker --version
+docker compose version
+```
+
+## 4. Clone the Repository
+
+Create a deployment directory:
+
+```bash
+mkdir -p /opt
+cd /opt
+```
+
+Clone the backend:
+
+```bash
+git clone git@github.com:YOUR_USERNAME/green-garden-api.git
+cd green-garden-api
+```
+
+If using a private GitHub repository, configure an SSH key on the VPS and add the public key to GitHub.
+
+## 5. Production Environment Variables
+
+Create the production `.env`:
+
+```bash
+nano .env
+```
+
+Example:
+
+```env
+APP_ENV=production
+DEBUG=false
+
+POSTGRES_DB=green_garden
+POSTGRES_USER=green_garden
+POSTGRES_PASSWORD=CHANGE_ME
+
+POSTGRES_PORT=5432
+
+DATABASE_URL=postgresql+psycopg://green_garden:CHANGE_ME@db:5432/green_garden
+
+JWT_SECRET_KEY=CHANGE_ME
+JWT_ALGORITHM=HS256
+
+AUTH_COOKIE_SECURE=true
+AUTH_COOKIE_SAMESITE=none
+AUTH_COOKIE_DOMAIN=.ngocnganbentre.vn
+
+CORS_ORIGINS=https://www.ngocnganbentre.vn,https://ngocnganbentre.vn
+```
+
+Generate secrets instead of using simple passwords:
+
+```bash
+openssl rand -hex 32
+```
+
+Never commit `.env` to Git.
+
+`.env.example` can contain:
+
+```env
+AUTH_COOKIE_DOMAIN=
+```
+
+For local development the value can remain empty. Production uses:
+
+```env
+AUTH_COOKIE_DOMAIN=.ngocnganbentre.vn
+```
+
+This allows authentication cookies to work across:
+
+```text
+www.ngocnganbentre.vn
+api.ngocnganbentre.vn
+```
+
+## 6. Production Docker Compose
+
+Use a production-oriented `docker-compose.yml`:
+
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  api:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+```
+
+Notice that PostgreSQL has **no `ports` section**.
+
+FastAPI is only accessible from the VPS:
+
+```text
+127.0.0.1:8000
+```
+
+Validate the Compose file without printing environment secrets:
+
+```bash
+docker compose config --quiet
+```
+
+## 7. Configure the API Subdomain
+
+Create an **A record** at your DNS provider:
+
+```text
+Type:   A
+Name:   api
+Value:  YOUR_VPS_IP
+TTL:    3600
+```
+
+For example:
+
+```text
+api.ngocnganbentre.vn → 180.93.115.67
+```
+
+Verify:
+
+```bash
+dig api.ngocnganbentre.vn
+```
+
+The result should contain:
+
+```text
+api.ngocnganbentre.vn.  3600  IN  A  YOUR_VPS_IP
+```
+
+## 8. Configure Nginx
+
+Create an Nginx site:
+
+```bash
+nano /etc/nginx/sites-available/green-garden-api
+```
+
+Example:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+
+    server_name api.ngocnganbentre.vn;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Enable it:
+
+```bash
+ln -s /etc/nginx/sites-available/green-garden-api \
+      /etc/nginx/sites-enabled/green-garden-api
+```
+
+Test:
+
+```bash
+nginx -t
+```
+
+Reload:
+
+```bash
+systemctl reload nginx
+```
+
+Check:
+
+```bash
+systemctl status nginx --no-pager
+```
+
+## 9. Start the Application
+
+Build the API:
+
+```bash
+docker compose build api
+```
+
+Start the services:
+
+```bash
+docker compose up -d
+```
+
+Check:
+
+```bash
+docker compose ps
+```
+
+Expected:
+
+```text
+api   Up
+db    Up (healthy)
+```
+
+Check API logs:
+
+```bash
+docker compose logs --tail=100 api
+```
+
+Test locally on the VPS:
+
+```bash
+curl http://127.0.0.1:8000/docs
+```
+
+Test through Nginx:
+
+```bash
+curl -I http://api.ngocnganbentre.vn
+```
+
+A `404` from `/` can be normal if FastAPI does not define a `/` route. The important thing is that Nginx can reach FastAPI.
+
+## 10. Enable HTTPS with Certbot
+
+Install Certbot:
+
+```bash
+apt install -y certbot python3-certbot-nginx
+```
+
+Run:
+
+```bash
+sudo certbot --nginx -d api.ngocnganbentre.vn
+```
+
+Certbot will configure the Let's Encrypt certificate and HTTPS.
+
+Choose HTTP → HTTPS redirect when prompted.
+
+Verify:
+
+```bash
+curl -I https://api.ngocnganbentre.vn
+```
+
+Then open:
+
+```text
+https://api.ngocnganbentre.vn/docs
+```
+
+FastAPI Swagger should be available.
+
+## 11. Database Migrations
+
+If the project uses Alembic, after deploying a new migration:
+
+```bash
+git pull origin master
+```
+
+Build the updated API:
+
+```bash
+docker compose build api
+```
+
+Start/recreate the container:
+
+```bash
+docker compose up -d
+```
+
+Then run:
+
+```bash
+docker compose exec api alembic upgrade head
+```
+
+Check:
+
+```bash
+docker compose logs --tail=50 api
+```
+
+### Important
+
+Never run:
+
+```bash
+docker compose down -v
+```
+
+on a production database unless you intentionally want to delete the PostgreSQL volume and its data.
+
+## 12. Updating the API Later
+
+The normal deployment workflow becomes:
+
+```text
+Local development
+      ↓
+Run tests
+      ↓
+git commit
+      ↓
+git push
+      ↓
+GitHub
+      ↓
+VPS: git pull
+      ↓
+docker compose build api
+      ↓
+docker compose up -d
+      ↓
+alembic upgrade head
+      ↓
+Check logs
+```
+
+On the VPS:
+
+```bash
+cd /opt/green-garden-api
+
+git status
+git pull origin master
+
+docker compose build api
+docker compose up -d
+
+docker compose exec api alembic upgrade head
+
+docker compose ps
+docker compose logs --tail=100 api
+```
+
+If `docker-compose.yml` itself changes, `docker compose up -d` will recreate the affected services as needed.
+
+## 13. Connect the Vercel Frontend
+
+In Vercel → **Project → Settings → Environment Variables**, configure:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.ngocnganbentre.vn
+```
+
+Use **Config**, not Secret, because `NEXT_PUBLIC_*` values are exposed to the browser.
+
+Redeploy the frontend after changing the variable.
+
+The final architecture is:
+
+```text
+                    Internet
+                       │
+              ┌────────┴────────┐
+              │                 │
+              ▼                 ▼
+     www.ngocnganbentre.vn   api.ngocnganbentre.vn
+              │                 │
+           Vercel              VPS
+                                │
+                              Nginx
+                                │
+                         127.0.0.1:8000
+                                │
+                             FastAPI
+                                │
+                             Docker
+                                │
+                           PostgreSQL
+```
+
+This gives you a repeatable deployment process: **GitHub is the source of code/config, `.env` stays only on the server, Nginx handles HTTPS, FastAPI stays behind Nginx, and PostgreSQL stays private.**
