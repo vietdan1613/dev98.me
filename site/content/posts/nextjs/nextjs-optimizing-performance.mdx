@@ -1,0 +1,178 @@
+---
+title: "Optimizing Performance"
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2026-10-02
+thumbnailText: Next.js
+---
+
+Performance optimization in Next.js 16 is not just about making pages load faster. It is about sending less JavaScript to the browser, loading resources at the right time, and using the server whenever possible.
+
+![Faster by design — less JS, right timing, prefer server](./imgs/nextjs-performance.jpg)
+
+## 1. Optimize Images
+
+Images are often one of the largest resources on a webpage. Instead of using a regular `<img>`, use `next/image`:
+
+```tsx
+import Image from "next/image"
+
+<Image
+  src="/plants/monstera.jpg"
+  alt="Monstera"
+  fill
+  width={800}
+  height={800}
+/>
+```
+
+For responsive layouts, `fill` and `sizes` are especially useful. This allows Next.js and the browser to select an appropriate image resource instead of downloading unnecessarily large images.
+
+## 2. Optimize Fonts
+
+Loading fonts directly from external providers can add extra network requests. Next.js provides `next/font` to optimize and self-host fonts.
+
+```tsx
+import { Inter } from "next/font/google"
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+})
+```
+
+Then:
+
+```tsx
+<html className={inter.className}>
+```
+
+Only load the font weights you actually use. If your application uses four weights, there is no reason to load nine.
+
+## 3. Use `next/link` for Internal Navigation
+
+For internal routes, use `Link` instead of regular anchor navigation:
+
+```tsx
+import Link from "next/link"
+
+<Link href="/plants">
+  Plants
+</Link>
+```
+
+`next/link` enables Next.js navigation behavior and can prefetch routes when appropriate. This makes navigation feel faster without requiring a full document reload.
+
+For external websites, continue using a normal `<a>` element.
+
+## 4. Control Third-party Scripts
+
+Analytics, tracking tools, chat widgets, and other third-party scripts can add significant JavaScript to your application.
+
+Use `next/script` instead of manually inserting scripts:
+
+```tsx
+import Script from "next/script"
+
+<Script
+  src="https://example.com/analytics.js"
+  strategy="afterInteractive"
+/>
+```
+
+Choose the loading strategy based on how important the script is. Critical scripts may need early loading, while analytics and widgets can usually be loaded later.
+
+The goal is simple: **don't let third-party JavaScript block the critical rendering path.**
+
+## 5. Prefer Server Components
+
+One of the biggest performance advantages of the App Router is React Server Components.
+
+If a component doesn't need browser interaction, keep it on the server:
+
+```tsx
+export default async function Products() {
+  const products = await getProducts()
+
+  return (
+    <div>
+      {products.map((product) => (
+        <div key={product.id}>{product.name}</div>
+      ))}
+    </div>
+  )
+}
+```
+
+Avoid adding:
+
+```tsx
+"use client"
+```
+
+unless the component actually needs client-side features such as `useState`, event handlers, browser APIs, or other client-only functionality.
+
+## 6. Use Code Splitting for Heavy Components
+
+Some components don't need to be included in the initial JavaScript bundle.
+
+For example, a large chart or editor can be loaded dynamically:
+
+```tsx
+import dynamic from "next/dynamic"
+
+const Chart = dynamic(() => import("./Chart"))
+```
+
+This allows heavy code to be loaded only when it is needed.
+
+A useful rule is:
+
+> If a feature is expensive and not required for the initial page, consider loading it dynamically.
+
+## 7. Add Loading and Error States
+
+Next.js App Router provides special files for async UI states:
+
+```text
+app/
+└── plants/
+    ├── page.tsx
+    ├── loading.tsx
+    └── error.tsx
+```
+
+For example:
+
+```tsx
+export default function Loading() {
+  return <div>Loading plants...</div>
+}
+```
+
+This gives users immediate feedback instead of leaving them with a blank screen while content is loading.
+
+## 8. Use ISR for Data That Doesn't Change Frequently
+
+Not every page needs to fetch fresh data on every request. For content such as blogs, product catalogs, or other data that can tolerate some caching, ISR can be useful:
+
+```tsx
+export const revalidate = 3600
+```
+
+The page can be cached and regenerated periodically instead of performing the same expensive work for every request.
+
+Think of ISR as:
+
+```text
+Request
+   ↓
+Cached content
+   ↓
+Revalidation
+   ↓
+Fresh content
+```
+
+This can reduce server work and improve response times.
