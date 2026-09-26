@@ -1,0 +1,219 @@
+---
+title: "Interview: NextJS"
+category: Web
+author: Daniel Nguyen
+tags: ['#Daily', '#Interview']
+date: 2000-01-11
+thumbnailText: Daily
+---
+
+# Next.js
+
+### 1. What is Next.js?
+
+> React framework · app structure around React
+> Routing · SSR/SSG · RSC · data · metadata · route handlers · image/font · deploy
+
+### 2. What is the App Router?
+
+> `app/` · segments · `page`/`layout` · RSC/client · loading/error · handlers · metadata · cache
+> Prefer App Router answers; Pages Router only for `getStaticProps` / `getServerSideProps` comparisons
+
+### 3. How does file-system routing work?
+
+> Folders = segments · `page.tsx` = public route
+> `app/page` → `/` · `products/page` → `/products` · `[id]/page` → `/products/:id`
+
+### 4. What is the difference between page.tsx and layout.tsx?
+
+> `page` = route UI
+> `layout` = shared shell (nav, sidebar, providers) across children
+
+### 5. What are dynamic routes?
+
+> `[id]` `[slug]` `[...slug]` `[[...slug]]`
+> `params` (often async) · missing → `notFound()`
+
+### 6. What are Server Components?
+
+> Render on server · no client JS for that code
+> Data/DB/secrets/SEO · less bundle
+> No browser APIs · no events · no `useState`
+
+### 7. What are Client Components?
+
+> `"use client"` · browser
+> Clicks · local state · effects · browser APIs · widgets
+
+### 8. When should you use "use client"?
+
+> Only interactive subtree
+> Mistake: whole page client for one `onClick`
+
+### 9. Can Server Components render Client Components?
+
+> Yes · pass serializable props · interactive islands
+> Client cannot import Server · pass children from server parent
+
+### 10. What is hydration?
+
+> Attach client JS to SSR HTML
+> Mismatch: `Date.now()` · `Math.random()` · locale · `localStorage` on first render
+
+## Routing, metadata, and error handling
+
+### 11. How do you handle a 404 in the App Router?
+
+> `notFound()` + `not-found.tsx`
+> Missing resource = route state · not empty UI
+
+### 12. How do redirects work?
+
+> `redirect()` on server (auth/setup)
+> No protected content flash before redirect
+
+### 13. How do you add metadata?
+
+> Static `metadata` · dynamic `generateMetadata()`
+> Title · description · canonical · OG from server data
+
+### 14. What is loading.tsx?
+
+> Route loading UI + Suspense
+> Stable loading layout · not blank screen
+
+### 15. What is error.tsx?
+
+> Route error boundary · must be Client Component
+> Recoverable errors · not for expected empty states
+
+## Rendering and caching questions
+
+### 16. Static generation versus request-time rendering: how do you choose?
+
+> Static: ahead-of-time · stale OK until revalidate
+> Request-time: user/cookies/headers/permissions/fresh
+> Mixed: cache shell · revalidate price/inventory
+> Reuse vs request-specific + Suspense for uncached
+
+### 17. What is generateStaticParams()?
+
+> Build-time params for dynamic routes
+> Known slugs/catalog/docs/marketing
+
+### 18. How does caching work with fetch()?
+
+> Explicit freshness · don’t recite defaults
+> Public/slow → cache + revalidate
+> User-specific → per-request / private
+> Secrets → never share across users
+
+### 19. What is revalidation?
+
+> Time-based or on-demand (CMS/admin)
+> Name freshness need first
+
+### 20. How do you avoid stale search results?
+
+> Query-driven · not all static
+> Server render · client fetch · or shell + client refine
+
+## Data, mutations, and APIs
+
+### 21. What are Route Handlers?
+
+> `route.ts` · APIs/webhooks · server-only · hide secrets
+
+### 22. Where should secrets live?
+
+> Server only · never Client / `NEXT_PUBLIC_*`
+
+### 23. What are Server Functions?
+
+> Server mutations/work
+> Validate · authorize · secrets · trusted writes
+
+### 24. How do you validate user input?
+
+> Client = UX · Server = trust
+> Pending · no double-submit · errors · a11y messages
+
+### 25. How do you handle authentication?
+
+> Server cookies/headers · redirect before protected UI
+> Proxy = early gate (aka Middleware)
+> Still authorize at data/mutation layer
+
+## Performance and deployment questions
+
+### 26. How do you reduce client JavaScript?
+
+> Prefer RSC · small `"use client"` · avoid heavy shared imports · measure bundles
+
+### 27. How do images work in Next.js?
+
+> `next/image` · sized · reserve space · LCP
+
+### 28. How do fonts work?
+
+> `next/font` · less CLS · perceived perf
+
+### 29. How do you debug a slow route?
+
+> Fetch slow? · blocking data? · JS size? · hydration? · image/LCP? · cache off?
+> Measure: build · DevTools · logs · Web Vitals
+
+### 30. What changes between local development and production?
+
+> Dev = feedback · Prod = optimized users
+> Env · build · runtime · caching differ
+
+## Senior Next.js questions
+
+### 31. How would you design a product detail route?
+
+> Server page + SEO metadata · `notFound` · small client widgets · explicit price/inventory freshness
+
+### 32. How would you design an authenticated dashboard?
+
+> Auth gate · private server fetch · no shared cache · Suspense widgets · URL filters
+
+### 33. How would you migrate from Pages Router to App Router?
+
+> Route-by-route · replace data APIs · layouts · client boundaries
+> Risk: old mental models on RSC/cache
+> Coexist routes · `"use client"` · handlers if needed · test redirects/metadata/404
+
+### 34. How do you prevent hydration mismatches?
+
+> Match first client render to SSR
+> Browser reads in effects · cookies on server · client boundary if unknown
+
+### 35. How do you choose between server and client fetching?
+
+> Server: SEO · secrets · auth · no waterfalls
+> Client: interactive · browser-only · live · after mount
+> Always name loading/error UI
+
+### 36. How do you handle partial failures?
+
+> Route error vs local widget error · degrade optional parts
+> Fatal vs degradable
+
+### 37. How do you keep a route maintainable?
+
+> Split: data · metadata · UI · client widgets · mutations · errors
+> Don’t dump everything in `page.tsx`
+
+### 38. How do you test a Next.js app?
+
+> Unit utils · RTL components · E2E flows
+> Route/integration for redirects · handlers · server boundaries
+
+### 39. How do you review a Next.js PR?
+
+> Secrets · small client · route states · metadata · explicit cache · loading/error/404
+
+### 40. What is a good final interview answer pattern?
+
+> Boundary → freshness → server/client → Next API → one failure mode
