@@ -1,0 +1,478 @@
+---
+title: "Interview: AI"
+category: Web
+author: Daniel Nguyen
+tags: ['#Daily', '#Interview', '#AI']
+date: 2000-01-12
+thumbnailText: Daily
+---
+
+# 1. LLM Fundamentals
+
+### 1. Why do LLMs need huge training data?
+
+**Keywords:** `Billions of tokens` · `language understanding` · `word relationships` · `large models`
+
+**Explanation:**
+LLMs need a huge amount of data to learn language patterns, relationships between words, and more complex concepts.
+
+---
+
+### 2. What are the main stages of LLM training?
+
+**Keywords:** `Pre-train` · `Fine-tune` · `RLHF`
+
+**Explanation:**
+First the model learns from massive data, then it is fine-tuned for specific tasks, and finally RLHF improves the quality of its answers.
+
+---
+
+### 3. Why can LLMs answer situations not in the training data?
+
+**Keywords:** `not memorization` · `learn patterns` · `generalization`
+
+**Explanation:**
+LLMs don't only memorize training data. They learn patterns and can combine that knowledge to generate new answers.
+
+---
+
+### 4. Why do LLMs hallucinate?
+
+**Keywords:** `don't know true/false` · `most likely tokens` · `wrong information`
+
+**Explanation:**
+An LLM predicts the most likely next token rather than checking whether information is actually true, so it can produce incorrect information.
+
+---
+
+### 5. How does context size affect an LLM's memory?
+
+**Keywords:** `max tokens` · `forget earlier turns` · `long books/code`
+
+**Explanation:**
+Context size is the maximum number of tokens the model can process in one context. A larger context allows it to handle longer conversations, books, or code.
+
+---
+
+### 6. Why are LLMs often weak at math?
+
+**Keywords:** `tokenizer` · `next token` · `exact calculation`
+
+**Explanation:**
+LLMs predict tokens and are optimized for language, not exact mathematical calculation.
+
+---
+
+### 7. How does LLM size affect capability?
+
+**Keywords:** `parameter count` · `billion params` · `complex tasks`
+
+**Explanation:**
+Model size refers to the number of parameters. Larger models generally have more learning capacity for complex tasks.
+
+---
+
+### 8. How does knowledge cutoff affect accuracy?
+
+**Keywords:** `train date` · `no awareness` · `stale information`
+
+**Explanation:**
+The model's knowledge is limited by its training data. Information after the training date may be missing or outdated.
+
+---
+
+# 2. Prompt Engineering
+
+### 9. What is Prompt Engineering?
+
+**Keywords:** `crafting/tuning prompts` · `effective LLM interaction` · `better results`
+
+**Explanation:**
+Prompt Engineering means designing and tuning prompts so the LLM better understands the intent and produces useful results.
+
+---
+
+### 10. How do you write a clear, effective prompt?
+
+**Keywords:** `enough context` · `enough info` · `avoid vague asks`
+
+**Explanation:**
+Give the model enough context and information. Avoid vague requests so the model clearly understands the task.
+
+---
+
+### 11. How do you turn a basic prompt into a complete one?
+
+**Keywords:** `content` · `length` · `audience` · `style`
+
+**Explanation:**
+Add details such as what content is needed, expected length, target audience, and writing style.
+
+---
+
+### 12. What does role-playing do in Prompt Engineering?
+
+**Keywords:** `role` · `expert` · `tone` · `approach`
+
+**Explanation:**
+Giving the LLM a role, such as developer or teacher, can change its tone and approach to match that role.
+
+---
+
+### 13. Why separate context/input data from instructions?
+
+**Keywords:** `separate instruction vs data` · `less confusion` · `more accurate`
+
+**Explanation:**
+Separating instructions from input data makes the prompt clearer and reduces confusion for the model.
+
+---
+
+### 14. Zero-shot vs One-shot vs Few-shot?
+
+**Keywords:** `no examples` · `1 example` · `many examples`
+
+**Explanation:**
+Zero-shot gives no examples, One-shot gives one example, and Few-shot provides multiple examples to guide the model.
+
+---
+
+### 15. Why specify output length and format?
+
+**Keywords:** `control length` · `clear format` · `reuse output`
+
+**Explanation:**
+Specifying the format and length makes the response easier to organize, process, and reuse.
+
+---
+
+### 16. Why prefer affirmative instructions over negations?
+
+**Keywords:** `next-token prediction` · `negatives harder` · `say what to do`
+
+**Explanation:**
+Because LLMs predict the next token, positive instructions are generally easier for them to follow than instructions focused on what not to do.
+
+---
+
+# 3. Tokens & Context
+
+### 17. Why do LLMs predict tokens instead of words?
+
+**Keywords:** `ML models` · `numbers` · `token IDs`
+
+**Explanation:**
+Machine-learning models work with numbers. A tokenizer converts text into token IDs that the model can process.
+
+---
+
+### 18. Character vs Word vs Subword tokenizer?
+
+**Keywords:** `Character` · `Word` · `Subword (BPE)` · `best balance`
+
+**Explanation:**
+Character tokenization creates many tokens, word tokenization struggles with rare words, while Subword/BPE provides a useful balance.
+
+---
+
+### 19. What is context size?
+
+**Keywords:** `max tokens` · `short-term memory` · `long text`
+
+**Explanation:**
+Context size is the maximum number of tokens the model can process in a prompt, limiting how much long text it can handle.
+
+---
+
+### 20. How do you handle content exceeding context size?
+
+**Keywords:** `drop early tokens` · `summarize` · `RAG`
+
+**Explanation:**
+You can remove older content, summarize important information, or use RAG to retrieve only the relevant information when needed.
+
+---
+
+# 4. LLM API & Security
+
+### 21. Why never share an API key?
+
+**Keywords:** `auth credential` · `account` · `credit` · `public GitHub`
+
+**Explanation:**
+An API key is an authentication credential. If leaked, someone can use your account and consume your credit.
+
+---
+
+### 22. How do you protect API keys in web/mobile apps?
+
+**Keywords:** `never store on client` · `backend` · `auth user`
+
+**Explanation:**
+Keep the API key on the backend. The client should call your backend instead of directly accessing the LLM provider.
+
+---
+
+### 23. Why use `stream=True`?
+
+**Keywords:** `chunked tokens` · `output immediately` · `better UX`
+
+**Explanation:**
+Streaming sends the response in chunks, allowing users to see the answer immediately instead of waiting for the entire response.
+
+---
+
+### 24. How do you build a long conversation via API?
+
+**Keywords:** `messages array` · `system` · `user` · `assistant`
+
+**Explanation:**
+Keep conversation history in the messages array using the `system`, `user`, and `assistant` roles.
+
+---
+
+### 25. How do you track token usage?
+
+**Keywords:** `prompt_tokens` · `completion_tokens` · `total_tokens`
+
+**Explanation:**
+The API response provides token usage information. You can use it to monitor consumption and control cost.
+
+---
+
+### 26. How does `max_tokens` affect output?
+
+**Keywords:** `max answer length` · `stop` · `token limit`
+
+**Explanation:**
+`max_tokens` controls the maximum length of the generated answer. If it is too low, the response can be cut off.
+
+---
+
+# 5. Function Calling
+
+### 27. Why do LLMs need Function Calling?
+
+**Keywords:** `knowledge limits` · `external world` · `APIs` · `tools`
+
+**Explanation:**
+LLMs cannot directly interact with the external world. Function Calling allows them to use APIs, tools, and external systems.
+
+---
+
+### 28. How does Function Calling work?
+
+**Keywords:** `analyzes intent` · `picks function` · `executes` · `result`
+
+**Explanation:**
+The LLM analyzes the user's intent, chooses a function and arguments, the application executes it, and the result is returned to the LLM.
+
+---
+
+### 29. What are real-world Function Calling use cases?
+
+**Keywords:** `weather` · `scheduling` · `online purchase` · `external APIs`
+
+**Explanation:**
+Function Calling can connect an LLM to real-time services such as weather, scheduling, purchases, and other APIs.
+
+---
+
+### 30. What are the main parts of a function definition?
+
+**Keywords:** `name` · `description` · `parameters`
+
+**Explanation:**
+A function definition tells the LLM what the function is called, what it does, and what parameters it accepts.
+
+---
+
+### 31. How do you handle Function Calling results?
+
+**Keywords:** `content` · `tool_calls` · `arguments` · `json.loads()`
+
+**Explanation:**
+Check whether the response contains normal content or tool calls. If there is a tool call, extract the arguments, parse them, and execute the matching function.
+
+---
+
+### 32. How do you optimize Function Calling?
+
+**Keywords:** `clear names` · `limit functions` · `enums` · `system prompt`
+
+**Explanation:**
+Use clear function and argument names, limit the number of available functions, use enums where appropriate, and give the model guidance in the system prompt.
+
+---
+
+# 6. Embeddings & Vector DB
+
+### 33. How do embeddings capture semantic similarity?
+
+**Keywords:** `text` · `numeric vectors` · `cosine similarity`
+
+**Explanation:**
+Embeddings convert text into numeric vectors. Text with similar meanings tends to have similar vectors, which can be compared using cosine similarity.
+
+---
+
+### 34. Why are embeddings important?
+
+**Keywords:** `text/image/audio` · `vectors` · `search` · `recommendations`
+
+**Explanation:**
+Embeddings turn complex data into vectors that can be used for search, recommendations, clustering, and other AI applications.
+
+---
+
+### 35. Vector DB vs traditional DB?
+
+**Keywords:** `embedding vectors` · `ANN search` · `fast retrieval`
+
+**Explanation:**
+Vector databases are designed to store and efficiently search embedding vectors using methods such as ANN search.
+
+---
+
+### 36. Why does vector similarity get hard as data grows?
+
+**Keywords:** `cosine` · `once per vector` · `heavy compute`
+
+**Explanation:**
+Comparing a query against every vector becomes expensive as the number of vectors increases, so efficient indexing becomes important.
+
+---
+
+### 37. What are key Vector DB features?
+
+**Keywords:** `store` · `index` · `ANN search` · `scalability`
+
+**Explanation:**
+A Vector DB should efficiently store vectors, provide fast approximate nearest-neighbor search, and scale with the dataset.
+
+---
+
+# 7. RAG
+
+### 38. What LLM limits does RAG solve?
+
+**Keywords:** `update knowledge` · `higher accuracy` · `trusted sources` · `no retraining`
+
+**Explanation:**
+RAG allows an application to retrieve updated and trusted information without retraining the model.
+
+---
+
+### 39. What are the basic RAG flow steps?
+
+**Keywords:** `prepare data` · `embed question` · `retrieve chunks` · `LLM`
+
+**Explanation:**
+Prepare and embed the data, embed the user's question, retrieve relevant chunks, and give those chunks to the LLM to generate the answer.
+
+---
+
+### 40. How does RAG help a product advisory chatbot?
+
+**Keywords:** `product info` · `LLM prompt` · `product facts` · `no retraining`
+
+**Explanation:**
+The chatbot retrieves relevant product information and puts it into the LLM prompt, allowing answers based on current product facts.
+
+---
+
+### 41. Is a Vector DB required for RAG?
+
+**Keywords:** `not mandatory` · `alternatives` · `keyword DB query`
+
+**Explanation:**
+A Vector DB is useful but not mandatory. RAG can also retrieve information through other approaches, such as keyword database queries.
+
+---
+
+### 42. Why use RAG when context windows are huge?
+
+**Keywords:** `accuracy` · `security` · `cost/speed`
+
+**Explanation:**
+Sending everything to the LLM can still create accuracy, security, cost, and speed problems. RAG retrieves only relevant information.
+
+---
+
+### 43. RAG vs Function Calling?
+
+**Keywords:** `Function Calling` → `structured tasks` · `APIs`
+
+**Keywords:** `RAG` → `updated knowledge` · `citations`
+
+**Explanation:**
+Function Calling is mainly for performing structured actions through APIs, while RAG is mainly for retrieving relevant and updated knowledge.
+
+---
+
+### 44. How combine RAG and Function Calling?
+
+**Keywords:** `pick action` · `fetch context` · `final answer`
+
+**Explanation:**
+The LLM can choose an action with Function Calling, retrieve relevant information through RAG, and then use that context to produce the final answer.
+
+---
+
+### 45. What are the main challenges of basic RAG?
+
+**Keywords:** `irrelevant retrieval` · `duplicate/noisy info` · `slow`
+
+**Explanation:**
+A basic RAG system can retrieve irrelevant or noisy information and may become slow without proper filtering and ranking.
+
+---
+
+# 8. Chunking
+
+### 46. Why is chunking critical in RAG?
+
+**Keywords:** `chunk size` · `accuracy` · `context`
+
+**Explanation:**
+Chunk size affects retrieval accuracy. Chunks need to be small enough for efficient processing but large enough to preserve useful context.
+
+---
+
+### 47. How do you choose chunk size?
+
+**Keywords:** `small enough` · `large enough` · `data type` · `context window`
+
+**Explanation:**
+The right chunk size depends on the data type and context window. It needs to balance retrieval precision with enough context.
+
+---
+
+### 48. How do `chunk_size` and `chunk_overlap` affect results?
+
+**Keywords:** `max chunk length` · `continuity` · `search quality`
+
+**Explanation:**
+`chunk_size` controls the maximum chunk length, while `chunk_overlap` keeps continuity between chunks and can affect search quality.
+
+---
+
+# 9. Production
+
+### 49. How do you optimize LLM operating cost?
+
+**Keywords:** `right-sized model` · `response caching` · `rate limits`
+
+**Explanation:**
+Use an appropriate model for the task, reuse responses when possible, and limit excessive requests to control operating cost.
+
+---
+
+### 50. How do you protect an LLM application in production?
+
+**Keywords:** `input validation` · `sensitive context` · `layered defense` · `content moderation`
+
+**Explanation:**
+Validate inputs, minimize sensitive information in the context, use multiple security layers, and apply content moderation.
+
+---
