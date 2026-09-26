@@ -1,49 +1,104 @@
 ---
-title: "CSS Questions"
+title: "Interview: CSS"
 category: Web
 author: Daniel Nguyen
-tags: ['#Daily', '#Interview']
+tags: ['#Daily', '#Interview', '#CSS']
 date: 2000-01-10
 thumbnailText: Daily
 ---
 
 # CSS
 
-1. How you using css in your React project?
+## 1. How do you use CSS in a React project?
 
-> - Tailwind CSS for utility-first styling
+**Keywords:** `Tailwind CSS` · `utility-first` · `styling`
 
-> Difference between Flexbox and Grid?
-> - Flexbox is one-dimensional. Grid is two-dimensional
+Use Tailwind CSS for utility-first styling so most UI can be built with small, composable classes in the markup.
 
-> Position values in CSS?
-> - static, relative, absolute, fixed, sticky
+---
 
-> What is the difference between display: none and visibility: hidden?
-> - display: none -> removes the element. visibility hidden -> hides the element
+## 2. Difference between Flexbox and Grid?
 
-### 2. What are CSS pre-processors?
+**Keywords:** `Flexbox` · `one-dimensional` · `Grid` · `two-dimensional`
 
-> - CSS pre-processors like Sass and Less extend CSS with features like variables, nesting, mixins, and functions.
+Flexbox lays out items in one direction (row or column). Grid lays out items in two dimensions (rows and columns).
 
-> when would you use a pre-processor?
-> - For large projects needing modular, maintainable, and reusable styles.
+---
 
-### 3. what is Tailwind CSS?
+## 3. What are the CSS `position` values?
 
-> - Tailwind CSS is a utility-first CSS framework
+**Keywords:** `static` · `relative` · `absolute` · `fixed` · `sticky`
 
-> When would you choose Tailwind over SCSS or CSS Modules?
-> - For rapid development, consistent design, and reduced CSS bloat.
+Common values are `static`, `relative`, `absolute`, `fixed`, and `sticky`. Each controls how an element is placed relative to the normal flow, a positioned ancestor, or the viewport.
 
-> What is meant by utility-first framework?
-> - It emphasizes using small, single-purpose classes to build components directly in the markup.
+---
 
-> How does Tailwind CSS handle responsive design?
-> - Tailwind uses mobile-first breakpoints
+## 4. `display: none` vs `visibility: hidden`?
 
-> How does dark mode work in Tailwind CSS?
-> - adding a `dark` class to the root element
+**Keywords:** `display: none` · `remove from layout` · `visibility: hidden` · `hide but keep space`
 
-> What is @apply, and when should (or shouldn’t) you use it?
-> - `@apply` allows you to compose utility classes into custom CSS classes. 
+`display: none` removes the element from the layout. `visibility: hidden` hides it visually but still reserves its space.
+
+---
+
+## 5. What are CSS pre-processors?
+
+**Keywords:** `Sass` · `Less` · `variables` · `nesting` · `mixins` · `functions`
+
+Pre-processors like Sass and Less extend CSS with variables, nesting, mixins, and functions to make styles more modular and reusable.
+
+---
+
+## 6. When would you use a pre-processor?
+
+**Keywords:** `large projects` · `modular` · `maintainable` · `reusable`
+
+Use a pre-processor on larger projects that need modular, maintainable, and reusable stylesheets.
+
+---
+
+## 7. What is Tailwind CSS?
+
+**Keywords:** `utility-first` · `CSS framework` · `small classes`
+
+Tailwind CSS is a utility-first CSS framework that builds UI from small, single-purpose classes.
+
+---
+
+## 8. When would you choose Tailwind over SCSS or CSS Modules?
+
+**Keywords:** `rapid development` · `consistent design` · `less CSS bloat`
+
+Choose Tailwind when you want faster UI work, consistent design tokens, and less custom CSS to maintain.
+
+---
+
+## 9. What does utility-first mean?
+
+**Keywords:** `single-purpose classes` · `compose in markup`
+
+A utility-first approach builds components by composing small utility classes directly in the markup instead of writing large custom CSS rules first.
+
+---
+
+## 10. How does Tailwind handle responsive design?
+
+**Keywords:** `mobile-first` · `breakpoints` · `responsive prefixes`
+
+Tailwind uses mobile-first breakpoints so styles scale up with prefixes like `sm:`, `md:`, and `lg:`.
+
+---
+
+## 11. How does dark mode work in Tailwind?
+
+**Keywords:** `dark class` · `root element` · `variant`
+
+Dark mode is typically enabled by adding a `dark` class on a root element and using `dark:` variants for alternate styles.
+
+---
+
+## 12. What is `@apply`, and when should you use it?
+
+**Keywords:** `@apply` · `compose utilities` · `custom class` · `use sparingly`
+
+`@apply` lets you compose utility classes into a custom CSS class. Prefer utilities in markup first; use `@apply` sparingly when a repeated pattern needs a named class.

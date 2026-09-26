@@ -1,0 +1,601 @@
+---
+title: "Interview: Python"
+category: Web
+author: Daniel Nguyen
+tags: ['#Daily', '#Interview', '#Python']
+date: 2000-01-14
+thumbnailText: Daily
+---
+
+## 1. What is Python?
+
+**Keywords:** `Readable` · `Interpreted` · `Dynamic Typing` · `Libraries` · `Cross-platform`
+
+Python is a high-level programming language known for its readable syntax, dynamic typing, large ecosystem, and cross-platform support.
+
+---
+
+## 2. List vs Tuple
+
+**Keywords:** `Mutable` · `Immutable` · `Memory` · `Performance`
+
+A **list** is mutable, so its elements can be changed. A **tuple** is immutable, uses less memory, and is generally faster to iterate.
+
+---
+
+## 3. What is `__init__()`?
+
+**Keywords:** `Constructor` · `Initialize` · `Object`
+
+`__init__()` is called when an object is created. It is mainly used to initialize the object's state and properties.
+
+---
+
+## 4. Mutable vs Immutable
+
+**Keywords:** `Mutable = Change` · `Immutable = Cannot Change`
+
+Mutable objects such as `list`, `dict`, and `set` can be modified after creation. Immutable objects such as `string`, `tuple`, and numbers cannot be changed.
+
+---
+
+## 5. What is Comprehension?
+
+**Keywords:** `One-line` · `List` · `Dictionary` · `Generator`
+
+Comprehension provides a concise way to create collections from an iterable.
+
+```python
+squares = [x ** 2 for x in range(5)]
+```
+
+List and dictionary comprehensions are common. `(x for x in ...)` creates a generator expression.
+
+---
+
+## 6. What is the GIL?
+
+**Keywords:** `CPython` · `One Thread` · `CPU-bound` · `I/O-bound`
+
+The Global Interpreter Lock allows only one native thread to execute Python bytecode at a time in CPython. This limits multithreading for CPU-bound tasks but works well for I/O-bound operations.
+
+---
+
+# Intermediate & Advanced Python
+
+## 7. Common Searching and Graph Algorithms
+
+**Keywords:** `Binary Search` · `BFS` · `DFS` · `A*` · `AVL`
+
+* **Binary Search** → search sorted data efficiently.
+* **BFS** → level-by-level traversal, useful for shortest paths.
+* **DFS** → explore deeply before backtracking.
+* **A*** → pathfinding using heuristics.
+* **AVL** → self-balancing search tree.
+
+---
+
+## 8. What is a `KeyError`?
+
+**Keywords:** `Missing Key` · `.get()` · `try/except` · `in`
+
+A `KeyError` occurs when accessing a dictionary key that does not exist.
+
+Common solutions:
+
+```python
+data.get("name")
+```
+
+or use `try/except` or check `if key in data`.
+
+---
+
+## 9. How Does Python Manage Memory?
+
+**Keywords:** `Private Heap` · `Reference Counting` · `Garbage Collection`
+
+Python automatically manages memory using a private heap. Reference counting and garbage collection help remove objects that are no longer needed.
+
+---
+
+## 10. Shallow Copy vs Deep Copy
+
+**Keywords:** `Reference` · `Nested Objects` · `Independent Copy`
+
+A **shallow copy** creates a new outer object but keeps references to nested objects.
+
+A **deep copy** recursively copies nested objects, creating a fully independent structure.
+
+---
+
+## 11. What is the `collections` Module?
+
+**Keywords:** `Counter` · `defaultdict` · `deque` · `OrderedDict`
+
+The `collections` module provides specialized data structures.
+
+For example:
+
+```python
+from collections import Counter
+
+Counter(["a", "b", "a"])
+```
+
+`Counter` is useful for counting elements, while `defaultdict` simplifies dictionary initialization.
+
+---
+
+## 12. What is Monkey Patching?
+
+**Keywords:** `Runtime` · `Modify Behavior` · `Class` · `Module`
+
+Monkey patching means changing or replacing the behavior of a class or module at runtime.
+
+It can be useful in testing, but excessive use can make code harder to understand.
+
+---
+
+## 13. What is the `with` Statement?
+
+**Keywords:** `Resource Management` · `Cleanup` · `File`
+
+The `with` statement manages resources automatically and ensures cleanup.
+
+```python
+with open("file.txt") as file:
+    data = file.read()
+```
+
+The file is automatically closed after the block.
+
+---
+
+## 14. Why Use `else` with `try/except`?
+
+**Keywords:** `No Exception` · `Success`
+
+The `else` block runs only when the `try` block completes without an exception.
+
+```python
+try:
+    result = 10 / 2
+except:
+    print("Error")
+else:
+    print("Success")
+```
+
+---
+
+## 15. What are Decorators?
+
+**Keywords:** `Wrapper` · `Extend Behavior` · `@decorator`
+
+A decorator adds behavior to an existing function without modifying the function itself.
+
+```python
+@my_decorator
+def hello():
+    print("Hello")
+```
+
+Decorators are commonly used for logging, authentication, caching, and timing.
+
+---
+
+## 16. What are Context Managers?
+
+**Keywords:** `__enter__` · `__exit__` · `with` · `Resource`
+
+Context managers control how resources are acquired and released.
+
+The `with` statement uses `__enter__()` when entering the block and `__exit__()` when leaving it.
+
+---
+
+## 17. What are Metaclasses?
+
+**Keywords:** `Class of Classes` · `type` · `Create Classes`
+
+A metaclass is a class that creates other classes.
+
+In simple terms:
+
+**Object → created by Class**
+**Class → created by Metaclass**
+
+---
+
+# Python Data Science
+
+## 18. NumPy vs Python Lists
+
+**Keywords:** `Memory Efficient` · `Fast` · `C` · `Vectorization`
+
+NumPy arrays are more memory-efficient and faster for numerical operations because NumPy uses optimized C implementations and supports vectorized operations.
+
+---
+
+## 19. `merge()` vs `join()` vs `concat()`
+
+**Keywords:** `merge → columns` · `join → index` · `concat → rows/columns`
+
+* `merge()` → combine DataFrames using specified columns.
+* `join()` → combine DataFrames using indexes.
+* `concat()` → combine multiple DataFrames vertically or horizontally.
+
+---
+
+## 20. How Do You Handle Missing Values?
+
+**Keywords:** `isnull()` · `dropna()` · `fillna()` · `replace()` · `interpolate()`
+
+First identify missing values with:
+
+```python
+df.isnull().sum()
+```
+
+Then choose an appropriate strategy such as removing, filling, replacing, or interpolating missing values.
+
+---
+
+## 21. Python Visualization Libraries
+
+**Keywords:** `Matplotlib` · `Seaborn` · `Plotly` · `Bokeh`
+
+* **Matplotlib** → general visualization.
+* **Seaborn** → statistical visualization.
+* **Plotly** → interactive charts and dashboards.
+* **Bokeh** → interactive visualization.
+
+---
+
+## 22. Normalization vs Standardization
+
+**Keywords:** `Normalization → 0–1` · `Standardization → Mean 0, Std 1`
+
+**Normalization** scales values into a specific range, usually `[0, 1]`.
+
+**Standardization** transforms data to have a mean of `0` and a standard deviation of `1`.
+
+---
+
+# Python Coding Questions
+
+## 23. Replace Spaces with a Character
+
+**Keywords:** `str.replace()`
+
+Use Python's built-in `replace()` method.
+
+```python
+text.replace(" ", "-")
+```
+
+---
+
+## 24. Check if a Number is a Perfect Square
+
+**Keywords:** `math.isqrt()` · `Square`
+
+Get the integer square root and square it again:
+
+```python
+root = math.isqrt(num)
+return root * root == num
+```
+
+---
+
+## 25. Count Trailing Zeros in `n!`
+
+**Keywords:** `Factorial` · `Trailing Zeros` · `Count from Right`
+
+Calculate the factorial, then count the zeros from the end.
+
+Example:
+
+```text
+7! = 5040 → 1 trailing zero
+```
+
+---
+
+## 26. Can a String Be Split into Dictionary Words?
+
+**Keywords:** `Recursion` · `String Segmentation` · `Memoization`
+
+Try splitting the string at different positions and check whether each part exists in the dictionary.
+
+Use **memoization** to avoid calculating the same substring repeatedly.
+
+---
+
+## 27. Remove Duplicates from a Sorted Array
+
+**Keywords:** `Sorted` · `In-place` · `Two Pointers`
+
+Because the array is sorted, compare each element with the previous unique value and write unique values into the array.
+
+---
+
+## 28. Find the Missing Number
+
+**Keywords:** `Expected Sum` · `Actual Sum` · `Difference`
+
+Calculate the expected sum from `1` to `n` and subtract the actual array sum.
+
+```python
+missing = expected_sum - actual_sum
+```
+
+---
+
+## 29. Check if a String is a Palindrome
+
+**Keywords:** `Reverse` · `Normalize`
+
+A palindrome reads the same forward and backward.
+
+```python
+return s == s[::-1]
+```
+
+---
+
+# FAANG-style Coding Questions
+
+## 30. Maximum Single Stock Profit
+
+**Keywords:** `Minimum Price` · `Current Profit` · `Max Profit`
+
+Traverse the prices once.
+
+Keep track of:
+
+1. The lowest price so far.
+2. The current profit.
+3. The maximum profit.
+
+**Mental model:**
+
+```text
+minimum price → current profit → maximum profit
+```
+
+---
+
+## 31. Find a Pythagorean Triplet
+
+**Keywords:** `a² + b² = c²` · `Square` · `Sort` · `Set`
+
+Square the numbers, sort them, and check whether two squared values can produce the third using:
+
+```text
+a² + b² = c²
+```
+
+---
+
+## 32. Coin Change
+
+**Keywords:** `Dynamic Programming` · `DP Array`
+
+Use a DP array of size `amount + 1`.
+
+Initialize:
+
+```python
+dp[0] = 1
+```
+
+Then update the number of ways for each coin.
+
+```python
+dp[i] += dp[i - coin]
+```
+
+---
+
+## 33. Lambda vs Iterator vs Generator
+
+**Keywords:** `Lambda → Anonymous` · `Iterator → Iterate` · `Generator → yield`
+
+**Lambda:** small anonymous function.
+
+**Iterator:** object used to iterate over data.
+
+**Generator:** produces values lazily using `yield`.
+
+---
+
+## 34. Maximum `j - i`
+
+**Keywords:** `arr[j] > arr[i]` · `Index Difference` · `Maximum`
+
+Find two indexes where:
+
+```text
+arr[j] > arr[i]
+```
+
+and maximize:
+
+```text
+j - i
+```
+
+---
+
+## 35. What is a Ternary Operator?
+
+**Keywords:** `Conditional Expression` · `One Line`
+
+A ternary operator is a compact way to write a simple `if/else`.
+
+```python
+result = "Pass" if score >= 50 else "Fail"
+```
+
+---
+
+## 36. How Do You Implement an LRU Cache?
+
+**Keywords:** `LRU` · `lru_cache` · `OrderedDict`
+
+Python provides a built-in solution:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=3)
+def calculate(x):
+    ...
+```
+
+`OrderedDict` can also be used for a manual implementation.
+
+---
+
+# AI & Machine Learning
+
+## 37. What is an LLM?
+
+**Keywords:** `Deep Learning` · `Large Dataset` · `Generate Text` · `API`
+
+An LLM is a deep learning model trained on large amounts of text to understand and generate human-like language.
+
+In Python, we can interact with LLMs through APIs or run models locally.
+
+---
+
+## 38. What is RAG?
+
+**Keywords:** `Retrieval` · `Vector Database` · `Context` · `Generation`
+
+RAG combines information retrieval with LLM generation.
+
+Typical flow:
+
+```text
+User Query
+    ↓
+Retriever
+    ↓
+Relevant Documents
+    ↓
+LLM
+    ↓
+Answer
+```
+
+The retrieved information provides additional context for the LLM.
+
+---
+
+## 39. How Does `async/await` Work?
+
+**Keywords:** `asyncio` · `Non-blocking I/O` · `Concurrency` · `gather`
+
+`async/await` allows Python applications to handle multiple I/O operations concurrently without blocking.
+
+It is useful when making multiple API or LLM requests.
+
+```python
+results = await asyncio.gather(
+    request_1(),
+    request_2()
+)
+```
+
+---
+
+## 40. What are Embeddings?
+
+**Keywords:** `Vector` · `Semantic Meaning` · `Similarity` · `Search`
+
+Embeddings convert data such as text into numerical vectors representing semantic meaning.
+
+Similar meanings produce vectors that are close to each other.
+
+Common applications include:
+
+* Semantic search
+* Recommendation
+* Clustering
+
+---
+
+## 41. How Would You Build an AI Agent?
+
+**Keywords:** `LLM` · `Tools` · `Memory` · `Planning`
+
+An AI Agent usually combines four main components:
+
+* **LLM** → reasoning and decision making
+* **Tools** → APIs, search, database, code execution
+* **Memory** → conversation and knowledge
+* **Planning** → breaking a task into smaller steps
+
+Typical flow:
+
+```text
+User
+ ↓
+LLM
+ ↓
+Tool / Memory
+ ↓
+Result
+ ↓
+LLM
+ ↓
+Answer / Action
+```
+
+---
+
+# Final Cheat Sheet
+
+If you need to memorize the 41 questions quickly, focus on these keywords:
+
+```text
+Python
+├── Basics
+│   ├── List vs Tuple
+│   ├── Mutable vs Immutable
+│   ├── __init__
+│   ├── Comprehension
+│   └── GIL
+│
+├── Advanced
+│   ├── KeyError
+│   ├── Memory / GC
+│   ├── Shallow / Deep Copy
+│   ├── Decorator
+│   ├── Context Manager
+│   └── Metaclass
+│
+├── Data
+│   ├── NumPy
+│   ├── Pandas
+│   ├── Missing Values
+│   └── Normalization
+│
+├── Coding
+│   ├── Palindrome
+│   ├── Missing Number
+│   ├── Stock Profit
+│   ├── Coin Change
+│   └── LRU Cache
+│
+└── AI
+    ├── LLM
+    ├── RAG
+    ├── Async
+    ├── Embeddings
+    └── AI Agent
+```
