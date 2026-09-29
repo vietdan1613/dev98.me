@@ -1,0 +1,587 @@
+---
+title: "Supabase Features"
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS', '#Supabase']
+date: 2026-10-29
+thumbnailText: Next.js
+---
+
+Supabase is a backend platform built around PostgreSQL. It provides a database, file storage, authentication, APIs, realtime capabilities, serverless functions, and developer tools in one platform. This guide gives a practical overview of the main features and how to implement them in a Next.js application.
+
+```text
+Flow                                                    
+                         NEXT.JS      
+                            │
+                            ▼
+                     SUPABASE CLIENT
+                            │
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+          ▼                 ▼                 ▼
+      PostgreSQL         Storage            Auth
+          │
+          ├── Tables
+          ├── Relations
+          ├── RLS
+          ├── Triggers
+          └── pgvector
+          │
+          ├──────────────→ Realtime
+          │
+          └──────────────→ Webhooks
+                                  │
+                                  ▼
+                            Edge Functions
+                                  │
+                                  ▼
+                            External APIs
+```
+
+## 1. PostgreSQL Database
+
+PostgreSQL is the main database used to store structured application data such as posts, users, products, orders, and categories.
+
+```sql
+create table posts (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  title text not null,
+  content text,
+  created_at timestamptz default now()
+);
+```
+
+Read data from Next.js:
+
+```ts
+const { data, error } = await supabase
+  .from("posts")
+  .select("*");
+```
+
+The basic flow is:
+
+```text
+Next.js → Supabase Client → PostgreSQL → posts
+```
+
+## 2. Storage
+
+Supabase Storage is used to store files such as images, videos, PDFs, and documents. PostgreSQL normally stores the file path or metadata, while Storage stores the actual file.
+
+Create a bucket such as `blog-media`, then upload a file:
+
+```ts
+const { data, error } = await supabase.storage
+  .from("blog-media")
+  .upload("posts/monstera.webp", file);
+```
+
+Get a public URL:
+
+```ts
+const { data } = supabase.storage
+  .from("blog-media")
+  .getPublicUrl("posts/monstera.webp");
+```
+
+Typical structure:
+
+```text
+PostgreSQL
+└── cover_image = "posts/monstera.webp"
+
+Storage
+└── blog-media/posts/monstera.webp
+```
+
+Use private buckets and signed URLs when files should not be publicly accessible.
+
+## 3. Authentication
+
+Supabase Auth handles user authentication and supports email/password, magic links, OTP, and OAuth providers.
+
+Sign up:
+
+```ts
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+});
+```
+
+Sign in:
+
+```ts
+const { data, error } =
+  await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+```
+
+Get the current user:
+
+```ts
+const { data } = await supabase.auth.getUser();
+const user = data.user;
+```
+
+The basic flow is:
+
+```text
+User → Supabase Auth → Authenticated User → Protected Data
+```
+
+## 4. Row Level Security (RLS)
+
+RLS controls which users can read, insert, update, or delete specific database rows.
+
+Enable RLS:
+
+```sql
+alter table posts enable row level security;
+```
+
+For example, users can only update their own posts:
+
+```sql
+create policy "Users can update own posts"
+on posts
+for update
+using (auth.uid() = user_id);
+```
+
+The flow is:
+
+```text
+User → Supabase → RLS Check → Database
+                    │
+                    ├── Allowed
+                    └── Rejected
+```
+
+RLS is especially important when the client accesses Supabase directly.
+
+## 5. Auto-generated REST API
+
+Supabase automatically provides an API for PostgreSQL tables, so you do not need to manually create basic CRUD endpoints.
+
+Read:
+
+```ts
+const { data } = await supabase
+  .from("posts")
+  .select("*");
+```
+
+Insert:
+
+```ts
+await supabase
+  .from("posts")
+  .insert({
+    title: "My Post",
+  });
+```
+
+Update:
+
+```ts
+await supabase
+  .from("posts")
+  .update({
+    title: "Updated Post",
+  })
+  .eq("id", postId);
+```
+
+The basic flow is:
+
+```text
+Next.js → Supabase API → PostgreSQL
+```
+
+For complex business logic, you may still need Next.js API routes, Server Actions, or Edge Functions.
+
+## 6. Realtime
+
+Supabase Realtime allows the frontend to receive database changes immediately without repeatedly polling the database.
+
+For example, an order status can update automatically when the database changes.
+
+```ts
+supabase
+  .channel("orders")
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "orders",
+    },
+    (payload) => {
+      console.log(payload);
+    }
+  )
+  .subscribe();
+```
+
+Typical use cases include chat, notifications, live dashboards, and order status updates.
+
+```text
+PostgreSQL → Realtime → Frontend
+```
+
+## 7. Edge Functions
+
+Edge Functions are server-side functions that run on Supabase. They are useful for backend logic that should not run in the browser.
+
+Common use cases include:
+
+* Calling third-party APIs
+* Using secret API keys
+* Payment processing
+* Webhooks
+* AI APIs
+* Sending emails
+
+Create a function:
+
+```bash
+supabase functions new hello
+```
+
+Example:
+
+```ts
+Deno.serve(async (req) => {
+  return new Response(
+    JSON.stringify({
+      message: "Hello!",
+    }),
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+});
+```
+
+Deploy it:
+
+```bash
+supabase functions deploy hello
+```
+
+Call it from Next.js:
+
+```ts
+const { data, error } =
+  await supabase.functions.invoke("hello", {
+    body: {
+      name: "Viet",
+    },
+  });
+```
+
+Typical flow:
+
+```text
+Next.js → Edge Function → External API → Response
+```
+
+## 8. Database Webhooks
+
+Database Webhooks automatically send an HTTP request when a database event occurs.
+
+For example:
+
+```text
+orders INSERT
+    ↓
+Database Webhook
+    ↓
+Edge Function
+    ↓
+Send notification
+```
+
+Create one from:
+
+```text
+Supabase Dashboard
+→ Database
+→ Webhooks
+→ Create Webhook
+```
+
+Select the table and event, such as:
+
+```text
+Table: orders
+Event: INSERT
+```
+
+Then specify the target URL:
+
+```text
+https://project.supabase.co/functions/v1/order-created
+```
+
+The key difference is:
+
+```text
+Realtime → Database → Frontend
+Webhook  → Database → HTTP endpoint
+```
+
+## 9. Database Triggers
+
+A database trigger automatically executes PostgreSQL logic when a database event occurs.
+
+For example, automatically create a profile when a user signs up. Supabase stores users in `auth.users`, so the function runs as `security definer` to be allowed to write into `public.profiles`:
+
+```sql
+create function public.create_profile()
+returns trigger
+language plpgsql
+security definer set search_path = ''
+as $$
+begin
+  insert into public.profiles (id)
+  values (new.id);
+
+  return new;
+end;
+$$;
+```
+
+Create the trigger:
+
+```sql
+create trigger on_auth_user_created
+after insert on auth.users
+for each row
+execute function public.create_profile();
+```
+
+The flow is:
+
+```text
+INSERT auth.users → Trigger → PostgreSQL Function → INSERT profiles
+```
+
+Use triggers for database-level automation such as timestamps, audit records, or creating related records.
+
+## 10. pgvector / Vector Search
+
+pgvector is a PostgreSQL extension that allows you to store and search embeddings. It can turn PostgreSQL into a vector database for AI applications.
+
+Enable it:
+
+```sql
+create extension if not exists vector;
+```
+
+Create a table:
+
+```sql
+create table documents (
+  id uuid primary key,
+  content text,
+  embedding vector(1536)
+);
+```
+
+The RAG flow is:
+
+```text
+Document
+   ↓
+Embedding Model
+   ↓
+Vector
+   ↓
+PostgreSQL + pgvector
+   ↓
+Similarity Search
+   ↓
+Relevant Documents
+   ↓
+LLM
+   ↓
+Answer
+```
+
+A similarity search can look like:
+
+```sql
+select
+  id,
+  content,
+  1 - (embedding <=> query_embedding) as similarity
+from documents
+order by embedding <=> query_embedding
+limit 5;
+```
+
+This is useful for RAG, AI chatbots, semantic search, and knowledge bases.
+
+## 11. Database Migrations
+
+Migrations store database schema changes as code. This makes database changes version-controlled and reproducible.
+
+Create a migration:
+
+```bash
+supabase migration new add_slug
+```
+
+Add the SQL:
+
+```sql
+alter table posts
+add column slug text;
+```
+
+Apply migrations:
+
+```bash
+supabase db push
+```
+
+Typical workflow:
+
+```text
+Migration → Git → Deployment → Production Database
+```
+
+Migrations are especially useful when working with teams or multiple environments.
+
+## 12. TypeScript Generated Types
+
+Supabase can generate TypeScript types directly from your PostgreSQL schema.
+
+Generate types:
+
+```bash
+supabase gen types typescript \
+  --project-id YOUR_PROJECT_ID \
+  > database.types.ts
+```
+
+For example, a database table:
+
+```text
+posts
+├── id
+├── title
+└── status
+```
+
+can become:
+
+```ts
+type Post = {
+  id: string;
+  title: string;
+  status: string;
+};
+```
+
+Use the generated type with the Supabase client:
+
+```ts
+const supabase =
+  createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+```
+
+The flow is:
+
+```text
+PostgreSQL Schema
+       ↓
+Supabase CLI
+       ↓
+database.types.ts
+       ↓
+Next.js + TypeScript
+```
+
+This helps keep application code synchronized with the database schema.
+
+## 13. Supabase CLI
+
+Supabase CLI is the command-line tool for developing and managing Supabase projects.
+
+Common tasks include:
+
+```text
+Supabase CLI
+├── Local development
+├── Database migrations
+├── Generate TypeScript types
+├── Deploy Edge Functions
+└── Database management
+```
+
+Common commands:
+
+```bash
+supabase start
+supabase migration new add_posts
+supabase db push
+supabase gen types typescript ...
+supabase functions deploy hello
+```
+
+The CLI is especially useful when database changes and backend code need to be managed through Git.
+
+## 14. Logs / Monitoring
+
+Supabase Logs help you understand what is happening inside your project and troubleshoot errors.
+
+Logs can help investigate:
+
+* API errors
+* Database errors
+* Authentication errors
+* Storage errors
+* Edge Function errors
+
+You can access them through:
+
+```text
+Supabase Dashboard
+→ Logs
+```
+
+Monitoring focuses more on the overall health and usage of the system, such as:
+
+```text
+Database usage
+API requests
+Error rate
+Performance
+Storage usage
+```
+
+A simple production debugging flow is:
+
+```text
+Problem
+  ↓
+Supabase Logs
+  ↓
+Find request/error
+  ↓
+Identify cause
+  ↓
+Fix
+```
