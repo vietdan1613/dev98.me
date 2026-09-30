@@ -7,11 +7,13 @@ date: 2000-01-14
 thumbnailText: Daily
 ---
 
+# Python Fundamentual 
+
 ## 1. What is Python?
 
 **Keywords:** `Readable` · `Interpreted` · `Dynamic Typing` · `Libraries` · `Cross-platform`
 
-Python is a high-level programming language known for its readable syntax, dynamic typing, large ecosystem, and cross-platform support.
+**Expectations:** Define Python as a high-level programming language, and mention its readable syntax, dynamic typing, large ecosystem, and cross-platform support.
 
 ---
 
@@ -19,7 +21,7 @@ Python is a high-level programming language known for its readable syntax, dynam
 
 **Keywords:** `Mutable` · `Immutable` · `Memory` · `Performance`
 
-A **list** is mutable, so its elements can be changed. A **tuple** is immutable, uses less memory, and is generally faster to iterate.
+**Expectations:** Contrast a **list**, which is mutable so its elements can be changed, with a **tuple**, which is immutable. Point out that tuples use less memory and are generally faster to iterate.
 
 ---
 
@@ -27,7 +29,7 @@ A **list** is mutable, so its elements can be changed. A **tuple** is immutable,
 
 **Keywords:** `Constructor` · `Initialize` · `Object`
 
-`__init__()` is called when an object is created. It is mainly used to initialize the object's state and properties.
+**Expectations:** Explain that `__init__()` is called when an object is created and is mainly used to initialize the object's state and properties.
 
 ---
 
@@ -35,7 +37,7 @@ A **list** is mutable, so its elements can be changed. A **tuple** is immutable,
 
 **Keywords:** `Mutable = Change` · `Immutable = Cannot Change`
 
-Mutable objects such as `list`, `dict`, and `set` can be modified after creation. Immutable objects such as `string`, `tuple`, and numbers cannot be changed.
+**Expectations:** Explain that mutable objects can be modified after creation while immutable objects cannot be changed. Name `list`, `dict`, and `set` as mutable examples, and `string`, `tuple`, and numbers as immutable ones.
 
 ---
 
@@ -43,13 +45,11 @@ Mutable objects such as `list`, `dict`, and `set` can be modified after creation
 
 **Keywords:** `One-line` · `List` · `Dictionary` · `Generator`
 
-Comprehension provides a concise way to create collections from an iterable.
+**Expectations:** Define a comprehension as a concise way to create collections from an iterable, and mention that list and dictionary comprehensions are common. Point out that `(x for x in ...)` creates a generator expression.
 
 ```python
 squares = [x ** 2 for x in range(5)]
 ```
-
-List and dictionary comprehensions are common. `(x for x in ...)` creates a generator expression.
 
 ---
 
@@ -57,7 +57,7 @@ List and dictionary comprehensions are common. `(x for x in ...)` creates a gene
 
 **Keywords:** `CPython` · `One Thread` · `CPU-bound` · `I/O-bound`
 
-The Global Interpreter Lock allows only one native thread to execute Python bytecode at a time in CPython. This limits multithreading for CPU-bound tasks but works well for I/O-bound operations.
+**Expectations:** Explain that in CPython the Global Interpreter Lock allows only one native thread to execute Python bytecode at a time. Point out that this limits multithreading for CPU-bound tasks but works well for I/O-bound operations.
 
 ---
 
@@ -67,11 +67,7 @@ The Global Interpreter Lock allows only one native thread to execute Python byte
 
 **Keywords:** `Binary Search` · `BFS` · `DFS` · `A*` · `AVL`
 
-* **Binary Search** → search sorted data efficiently.
-* **BFS** → level-by-level traversal, useful for shortest paths.
-* **DFS** → explore deeply before backtracking.
-* **A*** → pathfinding using heuristics.
-* **AVL** → self-balancing search tree.
+**Expectations:** Name each algorithm with its purpose: **Binary Search** searches sorted data efficiently, **BFS** traverses level by level and is useful for shortest paths, and **DFS** explores deeply before backtracking. Also mention **A*** for pathfinding using heuristics and **AVL** as a self-balancing search tree.
 
 ---
 
@@ -79,15 +75,11 @@ The Global Interpreter Lock allows only one native thread to execute Python byte
 
 **Keywords:** `Missing Key` · `.get()` · `try/except` · `in`
 
-A `KeyError` occurs when accessing a dictionary key that does not exist.
-
-Common solutions:
+**Expectations:** Explain that a `KeyError` occurs when accessing a dictionary key that does not exist. Name the common fixes: use `.get()`, wrap the access in `try/except`, or check `if key in data` first.
 
 ```python
 data.get("name")
 ```
-
-or use `try/except` or check `if key in data`.
 
 ---
 
@@ -95,7 +87,7 @@ or use `try/except` or check `if key in data`.
 
 **Keywords:** `Private Heap` · `Reference Counting` · `Garbage Collection`
 
-Python automatically manages memory using a private heap. Reference counting and garbage collection help remove objects that are no longer needed.
+**Expectations:** Explain that Python manages memory automatically using a private heap, and mention that reference counting and garbage collection remove objects that are no longer needed.
 
 ---
 
@@ -103,9 +95,7 @@ Python automatically manages memory using a private heap. Reference counting and
 
 **Keywords:** `Reference` · `Nested Objects` · `Independent Copy`
 
-A **shallow copy** creates a new outer object but keeps references to nested objects.
-
-A **deep copy** recursively copies nested objects, creating a fully independent structure.
+**Expectations:** Contrast a **shallow copy**, which creates a new outer object but keeps references to nested objects, with a **deep copy**, which recursively copies nested objects to create a fully independent structure.
 
 ---
 
@@ -113,9 +103,7 @@ A **deep copy** recursively copies nested objects, creating a fully independent 
 
 **Keywords:** `Counter` · `defaultdict` · `deque` · `OrderedDict`
 
-The `collections` module provides specialized data structures.
-
-For example:
+**Expectations:** Explain that the `collections` module provides specialized data structures. Give examples such as `Counter` for counting elements and `defaultdict` for simplifying dictionary initialization.
 
 ```python
 from collections import Counter
@@ -123,17 +111,13 @@ from collections import Counter
 Counter(["a", "b", "a"])
 ```
 
-`Counter` is useful for counting elements, while `defaultdict` simplifies dictionary initialization.
-
 ---
 
 ## 12. What is Monkey Patching?
 
 **Keywords:** `Runtime` · `Modify Behavior` · `Class` · `Module`
 
-Monkey patching means changing or replacing the behavior of a class or module at runtime.
-
-It can be useful in testing, but excessive use can make code harder to understand.
+**Expectations:** Define monkey patching as changing or replacing the behavior of a class or module at runtime. Mention that it can be useful in testing, but point out that excessive use makes code harder to understand.
 
 ---
 
@@ -141,14 +125,12 @@ It can be useful in testing, but excessive use can make code harder to understan
 
 **Keywords:** `Resource Management` · `Cleanup` · `File`
 
-The `with` statement manages resources automatically and ensures cleanup.
+**Expectations:** Explain that the `with` statement manages resources automatically and ensures cleanup. Give the file example and point out that the file is closed automatically after the block.
 
 ```python
 with open("file.txt") as file:
     data = file.read()
 ```
-
-The file is automatically closed after the block.
 
 ---
 
@@ -156,7 +138,7 @@ The file is automatically closed after the block.
 
 **Keywords:** `No Exception` · `Success`
 
-The `else` block runs only when the `try` block completes without an exception.
+**Expectations:** Explain that the `else` block runs only when the `try` block completes without an exception.
 
 ```python
 try:
@@ -173,7 +155,7 @@ else:
 
 **Keywords:** `Wrapper` · `Extend Behavior` · `@decorator`
 
-A decorator adds behavior to an existing function without modifying the function itself.
+**Expectations:** Explain that a decorator adds behavior to an existing function without modifying the function itself. Mention common uses such as logging, authentication, caching, and timing.
 
 ```python
 @my_decorator
@@ -181,17 +163,13 @@ def hello():
     print("Hello")
 ```
 
-Decorators are commonly used for logging, authentication, caching, and timing.
-
 ---
 
 ## 16. What are Context Managers?
 
 **Keywords:** `__enter__` · `__exit__` · `with` · `Resource`
 
-Context managers control how resources are acquired and released.
-
-The `with` statement uses `__enter__()` when entering the block and `__exit__()` when leaving it.
+**Expectations:** Explain that context managers control how resources are acquired and released. Walk through how the `with` statement calls `__enter__()` when entering the block and `__exit__()` when leaving it.
 
 ---
 
@@ -199,12 +177,7 @@ The `with` statement uses `__enter__()` when entering the block and `__exit__()`
 
 **Keywords:** `Class of Classes` · `type` · `Create Classes`
 
-A metaclass is a class that creates other classes.
-
-In simple terms:
-
-**Object → created by Class**
-**Class → created by Metaclass**
+**Expectations:** Define a metaclass as a class that creates other classes. Put it simply: an object is created by a class, and a class is created by a metaclass.
 
 ---
 
@@ -214,7 +187,7 @@ In simple terms:
 
 **Keywords:** `Memory Efficient` · `Fast` · `C` · `Vectorization`
 
-NumPy arrays are more memory-efficient and faster for numerical operations because NumPy uses optimized C implementations and supports vectorized operations.
+**Expectations:** Explain that NumPy arrays are more memory-efficient and faster for numerical operations than Python lists because NumPy uses optimized C implementations and supports vectorized operations.
 
 ---
 
@@ -222,9 +195,7 @@ NumPy arrays are more memory-efficient and faster for numerical operations becau
 
 **Keywords:** `merge → columns` · `join → index` · `concat → rows/columns`
 
-* `merge()` → combine DataFrames using specified columns.
-* `join()` → combine DataFrames using indexes.
-* `concat()` → combine multiple DataFrames vertically or horizontally.
+**Expectations:** Contrast the three: `merge()` combines DataFrames using specified columns, `join()` combines them using indexes, and `concat()` combines multiple DataFrames vertically or horizontally.
 
 ---
 
@@ -232,13 +203,11 @@ NumPy arrays are more memory-efficient and faster for numerical operations becau
 
 **Keywords:** `isnull()` · `dropna()` · `fillna()` · `replace()` · `interpolate()`
 
-First identify missing values with:
+**Expectations:** Walk through first identifying missing values with `df.isnull().sum()`, then choosing an appropriate strategy such as removing, filling, replacing, or interpolating them.
 
 ```python
 df.isnull().sum()
 ```
-
-Then choose an appropriate strategy such as removing, filling, replacing, or interpolating missing values.
 
 ---
 
@@ -246,10 +215,7 @@ Then choose an appropriate strategy such as removing, filling, replacing, or int
 
 **Keywords:** `Matplotlib` · `Seaborn` · `Plotly` · `Bokeh`
 
-* **Matplotlib** → general visualization.
-* **Seaborn** → statistical visualization.
-* **Plotly** → interactive charts and dashboards.
-* **Bokeh** → interactive visualization.
+**Expectations:** Name the main libraries and their focus: **Matplotlib** for general visualization, **Seaborn** for statistical visualization, **Plotly** for interactive charts and dashboards, and **Bokeh** for interactive visualization.
 
 ---
 
@@ -257,9 +223,7 @@ Then choose an appropriate strategy such as removing, filling, replacing, or int
 
 **Keywords:** `Normalization → 0–1` · `Standardization → Mean 0, Std 1`
 
-**Normalization** scales values into a specific range, usually `[0, 1]`.
-
-**Standardization** transforms data to have a mean of `0` and a standard deviation of `1`.
+**Expectations:** Contrast **normalization**, which scales values into a specific range (usually `[0, 1]`), with **standardization**, which transforms data to have a mean of `0` and a standard deviation of `1`.
 
 ---
 
@@ -269,7 +233,7 @@ Then choose an appropriate strategy such as removing, filling, replacing, or int
 
 **Keywords:** `str.replace()`
 
-Use Python's built-in `replace()` method.
+**Expectations:** Use Python's built-in `replace()` method and state O(n) time.
 
 ```python
 text.replace(" ", "-")
@@ -281,7 +245,7 @@ text.replace(" ", "-")
 
 **Keywords:** `math.isqrt()` · `Square`
 
-Get the integer square root and square it again:
+**Expectations:** Walk through getting the integer square root with `math.isqrt()`, squaring it again, and checking whether the result equals the original number.
 
 ```python
 root = math.isqrt(num)
@@ -294,9 +258,7 @@ return root * root == num
 
 **Keywords:** `Factorial` · `Trailing Zeros` · `Count from Right`
 
-Calculate the factorial, then count the zeros from the end.
-
-Example:
+**Expectations:** Walk through calculating the factorial, then counting the zeros from the end, and give an example such as `7! = 5040` having one trailing zero.
 
 ```text
 7! = 5040 → 1 trailing zero
@@ -308,9 +270,7 @@ Example:
 
 **Keywords:** `Recursion` · `String Segmentation` · `Memoization`
 
-Try splitting the string at different positions and check whether each part exists in the dictionary.
-
-Use **memoization** to avoid calculating the same substring repeatedly.
+**Expectations:** Walk through a recursive approach that tries splitting the string at different positions and checks whether each part exists in the dictionary. Mention using **memoization** to avoid recalculating the same substring repeatedly.
 
 ---
 
@@ -318,7 +278,7 @@ Use **memoization** to avoid calculating the same substring repeatedly.
 
 **Keywords:** `Sorted` · `In-place` · `Two Pointers`
 
-Because the array is sorted, compare each element with the previous unique value and write unique values into the array.
+**Expectations:** Walk through an in-place two-pointer approach: because the array is sorted, compare each element with the previous unique value and write unique values into the array. State O(n) time, O(1) space.
 
 ---
 
@@ -326,7 +286,7 @@ Because the array is sorted, compare each element with the previous unique value
 
 **Keywords:** `Expected Sum` · `Actual Sum` · `Difference`
 
-Calculate the expected sum from `1` to `n` and subtract the actual array sum.
+**Expectations:** Walk through calculating the expected sum from `1` to `n` and subtracting the actual array sum, and state O(n) time, O(1) space.
 
 ```python
 missing = expected_sum - actual_sum
@@ -338,7 +298,7 @@ missing = expected_sum - actual_sum
 
 **Keywords:** `Reverse` · `Normalize`
 
-A palindrome reads the same forward and backward.
+**Expectations:** Define a palindrome as a string that reads the same forward and backward, then compare the string with its reverse and state O(n) time, O(n) space for the reversed copy.
 
 ```python
 return s == s[::-1]
@@ -352,15 +312,7 @@ return s == s[::-1]
 
 **Keywords:** `Minimum Price` · `Current Profit` · `Max Profit`
 
-Traverse the prices once.
-
-Keep track of:
-
-1. The lowest price so far.
-2. The current profit.
-3. The maximum profit.
-
-**Mental model:**
+**Expectations:** Walk through a single pass over the prices that tracks the lowest price so far, the current profit, and the maximum profit. State O(n) time, O(1) space.
 
 ```text
 minimum price → current profit → maximum profit
@@ -372,7 +324,7 @@ minimum price → current profit → maximum profit
 
 **Keywords:** `a² + b² = c²` · `Square` · `Sort` · `Set`
 
-Square the numbers, sort them, and check whether two squared values can produce the third using:
+**Expectations:** Walk through squaring the numbers, sorting them, and checking whether two squared values can produce the third using `a² + b² = c²`. State O(n²) time, O(n) space when the pair check uses a set of squares.
 
 ```text
 a² + b² = c²
@@ -384,15 +336,11 @@ a² + b² = c²
 
 **Keywords:** `Dynamic Programming` · `DP Array`
 
-Use a DP array of size `amount + 1`.
-
-Initialize:
+**Expectations:** Walk through a dynamic programming approach with a DP array of size `amount + 1`, initializing `dp[0] = 1` and then updating the number of ways for each coin with `dp[i] += dp[i - coin]`. State O(amount × number of coins) time, O(amount) space.
 
 ```python
 dp[0] = 1
 ```
-
-Then update the number of ways for each coin.
 
 ```python
 dp[i] += dp[i - coin]
@@ -404,11 +352,7 @@ dp[i] += dp[i - coin]
 
 **Keywords:** `Lambda → Anonymous` · `Iterator → Iterate` · `Generator → yield`
 
-**Lambda:** small anonymous function.
-
-**Iterator:** object used to iterate over data.
-
-**Generator:** produces values lazily using `yield`.
+**Expectations:** Contrast the three: a **lambda** is a small anonymous function, an **iterator** is an object used to iterate over data, and a **generator** produces values lazily using `yield`.
 
 ---
 
@@ -416,13 +360,11 @@ dp[i] += dp[i - coin]
 
 **Keywords:** `arr[j] > arr[i]` · `Index Difference` · `Maximum`
 
-Find two indexes where:
+**Expectations:** Explain that the goal is to find two indexes where `arr[j] > arr[i]` and maximize the index difference `j - i`.
 
 ```text
 arr[j] > arr[i]
 ```
-
-and maximize:
 
 ```text
 j - i
@@ -434,7 +376,7 @@ j - i
 
 **Keywords:** `Conditional Expression` · `One Line`
 
-A ternary operator is a compact way to write a simple `if/else`.
+**Expectations:** Explain that a ternary operator is a compact way to write a simple `if/else`.
 
 ```python
 result = "Pass" if score >= 50 else "Fail"
@@ -446,7 +388,7 @@ result = "Pass" if score >= 50 else "Fail"
 
 **Keywords:** `LRU` · `lru_cache` · `OrderedDict`
 
-Python provides a built-in solution:
+**Expectations:** Mention Python's built-in `functools.lru_cache` decorator, and walk through `OrderedDict` as the option for a manual implementation. State O(1) time for cache lookups and updates.
 
 ```python
 from functools import lru_cache
@@ -456,8 +398,6 @@ def calculate(x):
     ...
 ```
 
-`OrderedDict` can also be used for a manual implementation.
-
 ---
 
 # AI & Machine Learning
@@ -466,9 +406,7 @@ def calculate(x):
 
 **Keywords:** `Deep Learning` · `Large Dataset` · `Generate Text` · `API`
 
-An LLM is a deep learning model trained on large amounts of text to understand and generate human-like language.
-
-In Python, we can interact with LLMs through APIs or run models locally.
+**Expectations:** Define an LLM as a deep learning model trained on large amounts of text to understand and generate human-like language. Mention that in Python you can interact with LLMs through APIs or run models locally.
 
 ---
 
@@ -476,9 +414,7 @@ In Python, we can interact with LLMs through APIs or run models locally.
 
 **Keywords:** `Retrieval` · `Vector Database` · `Context` · `Generation`
 
-RAG combines information retrieval with LLM generation.
-
-Typical flow:
+**Expectations:** Explain that RAG combines information retrieval with LLM generation, then walk through the typical flow from user query to retriever, relevant documents, LLM, and answer. Point out that the retrieved information provides additional context for the LLM.
 
 ```text
 User Query
@@ -492,17 +428,13 @@ LLM
 Answer
 ```
 
-The retrieved information provides additional context for the LLM.
-
 ---
 
 ## 39. How Does `async/await` Work?
 
 **Keywords:** `asyncio` · `Non-blocking I/O` · `Concurrency` · `gather`
 
-`async/await` allows Python applications to handle multiple I/O operations concurrently without blocking.
-
-It is useful when making multiple API or LLM requests.
+**Expectations:** Explain that `async/await` allows Python applications to handle multiple I/O operations concurrently without blocking, and mention it is useful when making multiple API or LLM requests, for example with `asyncio.gather`.
 
 ```python
 results = await asyncio.gather(
@@ -517,15 +449,7 @@ results = await asyncio.gather(
 
 **Keywords:** `Vector` · `Semantic Meaning` · `Similarity` · `Search`
 
-Embeddings convert data such as text into numerical vectors representing semantic meaning.
-
-Similar meanings produce vectors that are close to each other.
-
-Common applications include:
-
-* Semantic search
-* Recommendation
-* Clustering
+**Expectations:** Explain that embeddings convert data such as text into numerical vectors representing semantic meaning, so similar meanings produce vectors that are close to each other. Name common applications such as semantic search, recommendation, and clustering.
 
 ---
 
@@ -533,14 +457,7 @@ Common applications include:
 
 **Keywords:** `LLM` · `Tools` · `Memory` · `Planning`
 
-An AI Agent usually combines four main components:
-
-* **LLM** → reasoning and decision making
-* **Tools** → APIs, search, database, code execution
-* **Memory** → conversation and knowledge
-* **Planning** → breaking a task into smaller steps
-
-Typical flow:
+**Expectations:** Name the four main components: an **LLM** for reasoning and decision making, **tools** such as APIs, search, database, and code execution, **memory** for conversation and knowledge, and **planning** for breaking a task into smaller steps. Walk through the typical flow from user to LLM, tool or memory, result, back to the LLM, and finally an answer or action.
 
 ```text
 User

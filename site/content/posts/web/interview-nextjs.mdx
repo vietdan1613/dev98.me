@@ -13,7 +13,7 @@ thumbnailText: Daily
 
 **Keywords:** `React framework` · `Routing` · `SSR/SSG` · `RSC` · `metadata` · `route handlers` · `deploy`
 
-Next.js is a React framework that structures your app around React with built-in file-based routing, SSR/SSG, React Server Components, data fetching, metadata, route handlers, image and font optimization, and deployment-friendly defaults.
+**Expectations:** Define Next.js as a React framework that structures your app around React. Name its built-in features: file-based routing, SSR/SSG, React Server Components, data fetching, metadata, route handlers, image and font optimization, and deployment-friendly defaults.
 
 ---
 
@@ -21,7 +21,7 @@ Next.js is a React framework that structures your app around React with built-in
 
 **Keywords:** `app/` · `page`/`layout` · `RSC`/`client` · `loading`/`error` · `handlers` · `metadata` · `cache`
 
-The App Router lives under `app/` with folder segments, `page.tsx` and `layout.tsx`, Server and Client Components, loading and error UI, route handlers, metadata, and caching. Prefer App Router answers in interviews; mention Pages Router only when comparing `getStaticProps` and `getServerSideProps`.
+**Expectations:** Explain that the App Router lives under `app/` with folder segments, `page.tsx` and `layout.tsx`, Server and Client Components, loading and error UI, route handlers, metadata, and caching. Default to App Router answers, and mention the Pages Router only when comparing `getStaticProps` and `getServerSideProps`.
 
 ---
 
@@ -29,7 +29,7 @@ The App Router lives under `app/` with folder segments, `page.tsx` and `layout.t
 
 **Keywords:** `Folders = segments` · `page.tsx` · `public route`
 
-Each folder is a URL segment and `page.tsx` defines a public route—for example `app/page` → `/`, `app/products/page` → `/products`, and `app/products/[id]/page` → `/products/:id`.
+**Expectations:** Explain that each folder is a URL segment and `page.tsx` defines a public route. Give examples: `app/page` → `/`, `app/products/page` → `/products`, and `app/products/[id]/page` → `/products/:id`.
 
 ---
 
@@ -37,7 +37,7 @@ Each folder is a URL segment and `page.tsx` defines a public route—for example
 
 **Keywords:** `page` · `layout` · `shared shell`
 
-`page.tsx` is the UI for that route segment; `layout.tsx` wraps child routes with shared shell such as nav, sidebar, and providers.
+**Expectations:** Contrast `page.tsx`, the UI for that route segment, with `layout.tsx`, which wraps child routes in a shared shell such as nav, sidebar, and providers.
 
 ---
 
@@ -45,7 +45,7 @@ Each folder is a URL segment and `page.tsx` defines a public route—for example
 
 **Keywords:** `[id]` · `[slug]` · `[...slug]` · `[[...slug]]` · `params` · `notFound()`
 
-Dynamic segments use bracket syntax; route handlers receive `params` (often async). Call `notFound()` when the resource does not exist.
+**Expectations:** Explain that dynamic segments use bracket syntax and that route handlers receive `params` (often async). Mention calling `notFound()` when the resource does not exist.
 
 ---
 
@@ -53,7 +53,7 @@ Dynamic segments use bracket syntax; route handlers receive `params` (often asyn
 
 **Keywords:** `Server render` · `no client JS` · `Data/DB/secrets/SEO` · `smaller bundle`
 
-Server Components render on the server and do not ship that component code to the browser—ideal for data, secrets, and SEO. They cannot use browser APIs, event handlers, or `useState`.
+**Expectations:** Explain that Server Components render on the server and do not ship their code to the browser, making them ideal for data, secrets, and SEO. Point out that they cannot use browser APIs, event handlers, or `useState`.
 
 ---
 
@@ -61,7 +61,7 @@ Server Components render on the server and do not ship that component code to th
 
 **Keywords:** `"use client"` · `browser` · `interactivity`
 
-Client Components are marked with `"use client"` and run in the browser for clicks, local state, effects, browser APIs, and interactive widgets.
+**Expectations:** Explain that Client Components are marked with `"use client"` and run in the browser, and name what they are for: clicks, local state, effects, browser APIs, and interactive widgets.
 
 ---
 
@@ -69,7 +69,7 @@ Client Components are marked with `"use client"` and run in the browser for clic
 
 **Keywords:** `Interactive subtree` · `client boundary`
 
-Use `"use client"` only on the subtree that needs interactivity. A common mistake is marking an entire page client for a single `onClick`.
+**Expectations:** Explain that `"use client"` belongs only on the subtree that needs interactivity. Point out the common mistake of marking an entire page as client for a single `onClick`.
 
 ---
 
@@ -77,7 +77,7 @@ Use `"use client"` only on the subtree that needs interactivity. A common mistak
 
 **Keywords:** `Serializable props` · `islands` · `children from server`
 
-Yes—pass serializable props into Client Components as interactive islands. Client Components cannot import Server Components; pass server UI as `children` from a server parent instead.
+**Expectations:** Say yes, and explain passing serializable props into Client Components as interactive islands. Point out that Client Components cannot import Server Components, so server UI is passed as `children` from a server parent instead.
 
 ---
 
@@ -85,7 +85,7 @@ Yes—pass serializable props into Client Components as interactive islands. Cli
 
 **Keywords:** `SSR HTML` · `client JS` · `mismatch`
 
-Hydration attaches client JavaScript to server-rendered HTML so it becomes interactive. Mismatches often come from `Date.now()`, `Math.random()`, locale differences, or reading `localStorage` on the first render.
+**Expectations:** Define hydration as attaching client JavaScript to server-rendered HTML so it becomes interactive. Name common mismatch causes: `Date.now()`, `Math.random()`, locale differences, or reading `localStorage` on the first render.
 
 ---
 
@@ -95,7 +95,7 @@ Hydration attaches client JavaScript to server-rendered HTML so it becomes inter
 
 **Keywords:** `notFound()` · `not-found.tsx` · `route state`
 
-Call `notFound()` when a resource is missing and provide `not-found.tsx` for the UI. A missing resource is route state, not merely an empty screen.
+**Expectations:** Explain calling `notFound()` when a resource is missing and providing `not-found.tsx` for the UI. Point out that a missing resource is route state, not merely an empty screen.
 
 ---
 
@@ -103,7 +103,7 @@ Call `notFound()` when a resource is missing and provide `not-found.tsx` for the
 
 **Keywords:** `redirect()` · `server` · `no flash`
 
-Use `redirect()` on the server for auth or setup flows so protected content does not flash before the redirect completes.
+**Expectations:** Explain using `redirect()` on the server for auth or setup flows, and point out that this keeps protected content from flashing before the redirect completes.
 
 ---
 
@@ -111,7 +111,7 @@ Use `redirect()` on the server for auth or setup flows so protected content does
 
 **Keywords:** `metadata` · `generateMetadata()` · `title` · `OG`
 
-Export static `metadata` or implement `generateMetadata()` for dynamic routes—title, description, canonical URL, and Open Graph tags from server data.
+**Expectations:** Explain exporting static `metadata` or implementing `generateMetadata()` for dynamic routes. Mention the fields it sets from server data: title, description, canonical URL, and Open Graph tags.
 
 ---
 
@@ -119,7 +119,7 @@ Export static `metadata` or implement `generateMetadata()` for dynamic routes—
 
 **Keywords:** `Loading UI` · `Suspense` · `stable layout`
 
-`loading.tsx` defines route-level loading UI integrated with Suspense, giving a stable loading layout instead of a blank screen.
+**Expectations:** Explain that `loading.tsx` defines route-level loading UI integrated with Suspense, giving a stable loading layout instead of a blank screen.
 
 ---
 
@@ -127,7 +127,7 @@ Export static `metadata` or implement `generateMetadata()` for dynamic routes—
 
 **Keywords:** `Error boundary` · `Client Component` · `recoverable`
 
-`error.tsx` is a route error boundary and must be a Client Component. Use it for recoverable errors, not for expected empty or not-found states.
+**Expectations:** Explain that `error.tsx` is a route error boundary and must be a Client Component. Point out that it is for recoverable errors, not for expected empty or not-found states.
 
 ---
 
@@ -137,7 +137,7 @@ Export static `metadata` or implement `generateMetadata()` for dynamic routes—
 
 **Keywords:** `Static` · `request-time` · `mixed` · `Suspense`
 
-Choose static when content can be stale until revalidate; choose request-time for user-specific data, cookies, headers, or permissions. Mixed patterns cache a shell and revalidate price or inventory; use Suspense for uncached segments.
+**Expectations:** Explain choosing static when content can be stale until revalidate, and request-time for user-specific data, cookies, headers, or permissions. Mention mixed patterns that cache a shell and revalidate price or inventory, using Suspense for uncached segments.
 
 ---
 
@@ -145,7 +145,7 @@ Choose static when content can be stale until revalidate; choose request-time fo
 
 **Keywords:** `Build-time` · `dynamic routes` · `known slugs`
 
-`generateStaticParams()` returns params at build time for dynamic routes—typical for known catalog slugs, docs, or marketing pages.
+**Expectations:** Explain that `generateStaticParams()` returns params at build time for dynamic routes, and give typical uses: known catalog slugs, docs, or marketing pages.
 
 ---
 
@@ -153,7 +153,7 @@ Choose static when content can be stale until revalidate; choose request-time fo
 
 **Keywords:** `Explicit freshness` · `revalidate` · `per-request` · `secrets`
 
-State caching and freshness explicitly rather than relying on memorized defaults. Cache public slow-changing data with revalidate; keep user-specific fetches per-request or private; never share cached responses across users when secrets are involved.
+**Expectations:** State caching and freshness explicitly rather than relying on memorized defaults. Explain caching public slow-changing data with revalidate and keeping user-specific fetches per-request or private. Point out that cached responses must never be shared across users when secrets are involved.
 
 ---
 
@@ -161,7 +161,7 @@ State caching and freshness explicitly rather than relying on memorized defaults
 
 **Keywords:** `Time-based` · `on-demand` · `CMS`
 
-Revalidation refreshes cached content on a schedule or on demand (for example after a CMS or admin publish). Name the freshness requirement first, then pick the mechanism.
+**Expectations:** Define revalidation as refreshing cached content on a schedule or on demand (for example after a CMS or admin publish). Name the freshness requirement first, then pick the mechanism.
 
 ---
 
@@ -169,7 +169,7 @@ Revalidation refreshes cached content on a schedule or on demand (for example af
 
 **Keywords:** `Query-driven` · `server render` · `client fetch`
 
-Search is query-driven and should not be treated as fully static. Server-render per query, fetch on the client, or use a cached shell with client-side refinement.
+**Expectations:** Point out that search is query-driven and should not be treated as fully static. Name the options: server-render per query, fetch on the client, or use a cached shell with client-side refinement.
 
 ---
 
@@ -179,7 +179,7 @@ Search is query-driven and should not be treated as fully static. Server-render 
 
 **Keywords:** `route.ts` · `APIs` · `webhooks` · `server-only`
 
-Route Handlers in `route.ts` expose HTTP endpoints for APIs and webhooks on the server, keeping secrets and backend logic off the client.
+**Expectations:** Explain that Route Handlers in `route.ts` expose HTTP endpoints for APIs and webhooks on the server, keeping secrets and backend logic off the client.
 
 ---
 
@@ -187,7 +187,7 @@ Route Handlers in `route.ts` expose HTTP endpoints for APIs and webhooks on the 
 
 **Keywords:** `Server only` · `never Client` · `NEXT_PUBLIC_*`
 
-Secrets belong on the server only—never in Client Components or in `NEXT_PUBLIC_*` environment variables exposed to the browser.
+**Expectations:** Explain that secrets belong on the server only, and point out they must never go in Client Components or in `NEXT_PUBLIC_*` environment variables, which are exposed to the browser.
 
 ---
 
@@ -195,7 +195,7 @@ Secrets belong on the server only—never in Client Components or in `NEXT_PUBLI
 
 **Keywords:** `Server mutations` · `validate` · `authorize` · `trusted writes`
 
-Server Functions run mutation and server-side work you trust: validate input, authorize the caller, use secrets safely, and perform writes on the server.
+**Expectations:** Explain that Server Functions run mutations and server-side work you trust. Walk through what they do: validate input, authorize the caller, use secrets safely, and perform writes on the server.
 
 ---
 
@@ -203,7 +203,7 @@ Server Functions run mutation and server-side work you trust: validate input, au
 
 **Keywords:** `Client = UX` · `Server = trust` · `pending` · `a11y`
 
-Client validation improves UX; server validation enforces trust. Handle pending state, prevent double-submit, surface errors clearly, and keep messages accessible.
+**Expectations:** Contrast client validation, which improves UX, with server validation, which enforces trust. Mention handling pending state, preventing double-submit, surfacing errors clearly, and keeping messages accessible.
 
 ---
 
@@ -211,7 +211,7 @@ Client validation improves UX; server validation enforces trust. Handle pending 
 
 **Keywords:** `Server cookies/headers` · `redirect` · `Proxy (Middleware)` · `authorize at data layer`
 
-Read auth from server cookies or headers and redirect before rendering protected UI. Proxy (Middleware) can gate early, but still authorize at the data and mutation layer.
+**Expectations:** Explain reading auth from server cookies or headers and redirecting before rendering protected UI. Point out that Proxy (Middleware) can gate early, but you must still authorize at the data and mutation layer.
 
 ---
 
@@ -221,7 +221,7 @@ Read auth from server cookies or headers and redirect before rendering protected
 
 **Keywords:** `Prefer RSC` · `small "use client"` · `bundle size`
 
-Prefer Server Components, keep `"use client"` boundaries small, avoid heavy shared imports in client trees, and measure bundle impact.
+**Expectations:** Explain preferring Server Components, keeping `"use client"` boundaries small, and avoiding heavy shared imports in client trees. Mention measuring bundle impact.
 
 ---
 
@@ -229,7 +229,7 @@ Prefer Server Components, keep `"use client"` boundaries small, avoid heavy shar
 
 **Keywords:** `next/image` · `sized` · `reserve space` · `LCP`
 
-Use `next/image` for responsive sizing, reserved layout space to avoid CLS, and better LCP performance.
+**Expectations:** Explain using `next/image` for responsive sizing, reserved layout space to avoid CLS, and better LCP performance.
 
 ---
 
@@ -237,7 +237,7 @@ Use `next/image` for responsive sizing, reserved layout space to avoid CLS, and 
 
 **Keywords:** `next/font` · `CLS` · `perceived perf`
 
-`next/font` self-hosts and optimizes fonts to reduce layout shift and improve perceived performance.
+**Expectations:** Explain that `next/font` self-hosts and optimizes fonts to reduce layout shift and improve perceived performance.
 
 ---
 
@@ -245,7 +245,7 @@ Use `next/image` for responsive sizing, reserved layout space to avoid CLS, and 
 
 **Keywords:** `Fetch` · `blocking data` · `JS size` · `hydration` · `LCP` · `cache`
 
-Check whether slow fetch, blocking data, client JS size, hydration cost, images/LCP, or disabled caching is the bottleneck. Measure with build output, DevTools, server logs, and Web Vitals.
+**Expectations:** Walk through checking whether slow fetch, blocking data, client JS size, hydration cost, images/LCP, or disabled caching is the bottleneck. Mention measuring with build output, DevTools, server logs, and Web Vitals.
 
 ---
 
@@ -253,7 +253,7 @@ Check whether slow fetch, blocking data, client JS size, hydration cost, images/
 
 **Keywords:** `Dev = feedback` · `Prod = optimized` · `env` · `caching`
 
-Development optimizes for fast feedback; production serves real users with optimized builds. Environment variables, build output, runtime behavior, and caching differ between the two.
+**Expectations:** Contrast development, which optimizes for fast feedback, with production, which serves real users with optimized builds. Point out that environment variables, build output, runtime behavior, and caching differ between the two.
 
 ---
 
@@ -263,7 +263,7 @@ Development optimizes for fast feedback; production serves real users with optim
 
 **Keywords:** `Server page` · `SEO metadata` · `notFound` · `freshness`
 
-A server-rendered page with SEO metadata, `notFound()` for missing products, small client widgets for interactivity, and explicit freshness policy for price and inventory.
+**Expectations:** Describe a server-rendered page with SEO metadata, `notFound()` for missing products, and small client widgets for interactivity. Mention an explicit freshness policy for price and inventory.
 
 ---
 
@@ -271,7 +271,7 @@ A server-rendered page with SEO metadata, `notFound()` for missing products, sma
 
 **Keywords:** `Auth gate` · `private server fetch` · `Suspense` · `URL filters`
 
-Gate auth before UI, fetch with private per-user server data (no shared cache), use Suspense for heavy widgets, and drive filters from the URL where it helps sharing and back navigation.
+**Expectations:** Explain gating auth before UI and fetching private per-user server data (no shared cache). Mention Suspense for heavy widgets and driving filters from the URL where it helps sharing and back navigation.
 
 ---
 
@@ -279,7 +279,7 @@ Gate auth before UI, fetch with private per-user server data (no shared cache), 
 
 **Keywords:** `Route-by-route` · `layouts` · `client boundaries` · `coexist`
 
-Migrate incrementally: replace data APIs, adopt layouts and client boundaries, and watch for old mental models around RSC and cache. Routes can coexist; use `"use client"` and Route Handlers as needed, and test redirects, metadata, and 404 behavior.
+**Expectations:** Explain migrating incrementally: replace data APIs, adopt layouts and client boundaries, and watch for old mental models around RSC and cache. Point out that routes can coexist, use `"use client"` and Route Handlers as needed, and mention testing redirects, metadata, and 404 behavior.
 
 ---
 
@@ -287,7 +287,7 @@ Migrate incrementally: replace data APIs, adopt layouts and client boundaries, a
 
 **Keywords:** `Match first render to SSR` · `effects` · `cookies on server`
 
-Keep the first client render aligned with server HTML—defer browser-only reads to effects, resolve cookies on the server, or isolate unknown state behind a client boundary.
+**Expectations:** Explain keeping the first client render aligned with server HTML. Name the techniques: defer browser-only reads to effects, resolve cookies on the server, or isolate unknown state behind a client boundary.
 
 ---
 
@@ -295,7 +295,7 @@ Keep the first client render aligned with server HTML—defer browser-only reads
 
 **Keywords:** `Server: SEO/secrets/auth` · `Client: interactive/live` · `loading/error UI`
 
-Server fetching suits SEO, secrets, auth, and avoiding waterfalls. Client fetching suits interactivity, browser-only APIs, and live updates after mount. Always define loading and error UI for either path.
+**Expectations:** Contrast server fetching, suited to SEO, secrets, auth, and avoiding waterfalls, with client fetching, suited to interactivity, browser-only APIs, and live updates after mount. Point out that either path always needs defined loading and error UI.
 
 ---
 
@@ -303,7 +303,7 @@ Server fetching suits SEO, secrets, auth, and avoiding waterfalls. Client fetchi
 
 **Keywords:** `Route error` · `widget error` · `degrade` · `fatal vs degradable`
 
-Separate route-level failures from local widget errors—degrade optional sections when possible and distinguish fatal errors from recoverable or degradable ones.
+**Expectations:** Explain separating route-level failures from local widget errors and degrading optional sections when possible. Point out the distinction between fatal errors and recoverable or degradable ones.
 
 ---
 
@@ -311,7 +311,7 @@ Separate route-level failures from local widget errors—degrade optional sectio
 
 **Keywords:** `Split concerns` · `page.tsx`
 
-Split data loading, metadata, UI composition, client widgets, mutations, and error handling instead of dumping everything into `page.tsx`.
+**Expectations:** Explain splitting data loading, metadata, UI composition, client widgets, mutations, and error handling instead of dumping everything into `page.tsx`.
 
 ---
 
@@ -319,7 +319,7 @@ Split data loading, metadata, UI composition, client widgets, mutations, and err
 
 **Keywords:** `Unit` · `RTL` · `E2E` · `route/integration`
 
-Unit-test utilities, use React Testing Library for components, E2E for critical flows, and route or integration tests for redirects, Route Handlers, and server boundaries.
+**Expectations:** Walk through the layers: unit tests for utilities, React Testing Library for components, E2E for critical flows, and route or integration tests for redirects, Route Handlers, and server boundaries.
 
 ---
 
@@ -327,7 +327,7 @@ Unit-test utilities, use React Testing Library for components, E2E for critical 
 
 **Keywords:** `Secrets` · `client size` · `route states` · `explicit cache`
 
-Review for leaked secrets, oversized client boundaries, loading/error/404 and metadata coverage, and explicit caching choices rather than accidental defaults.
+**Expectations:** Name what you review for: leaked secrets, oversized client boundaries, loading/error/404 and metadata coverage, and explicit caching choices rather than accidental defaults.
 
 ---
 
@@ -335,6 +335,6 @@ Review for leaked secrets, oversized client boundaries, loading/error/404 and me
 
 **Keywords:** `Boundary` · `freshness` · `server/client` · `Next API` · `failure mode`
 
-Structure strong answers: name the boundary, state freshness needs, pick server vs client, cite a concrete Next.js API, and mention one failure mode you would handle.
+**Expectations:** Walk through the structure of a strong answer: name the boundary, state freshness needs, pick server vs client, cite a concrete Next.js API, and mention one failure mode you would handle.
 
 ---

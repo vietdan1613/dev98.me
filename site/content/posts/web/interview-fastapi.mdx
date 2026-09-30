@@ -7,13 +7,13 @@ date: 2000-01-13
 thumbnailText: Daily
 ---
 
-# 🟢 Beginner FastAPI
+# Beginner FastAPI
 
 ## 1. What is FastAPI?
 
 **Keywords:** `Python` · `API Framework` · `Type Hints` · `Pydantic` · `Starlette`
 
-FastAPI is a modern Python framework for building APIs. It uses Python type hints for validation, serialization, and automatic documentation. It is built on **Starlette** and **Pydantic**.
+**Expectations:** Define FastAPI as a modern Python framework for building APIs that uses Python type hints for validation, serialization, and automatic documentation. Mention that it is built on **Starlette** and **Pydantic**.
 
 ---
 
@@ -21,7 +21,7 @@ FastAPI is a modern Python framework for building APIs. It uses Python type hint
 
 **Keywords:** `Fast` · `Type Hints` · `Async` · `Auto Docs`
 
-FastAPI is popular because it provides high performance, native async support, automatic validation, and automatic API documentation with relatively little boilerplate.
+**Expectations:** Explain that FastAPI is popular for its high performance, native async support, automatic validation, and automatic API documentation, all with relatively little boilerplate.
 
 ---
 
@@ -29,9 +29,7 @@ FastAPI is popular because it provides high performance, native async support, a
 
 **Keywords:** `Minimal` · `Validation` · `Async` · `OpenAPI`
 
-Flask is minimal and flexible, while FastAPI provides built-in validation, serialization, OpenAPI documentation, and native async support.
-
-**Simple answer:** Flask gives you more control; FastAPI gives you more features out of the box.
+**Expectations:** Contrast Flask as minimal and flexible with FastAPI's built-in validation, serialization, OpenAPI documentation, and native async support. Sum it up simply: Flask gives you more control, FastAPI gives you more features out of the box.
 
 ---
 
@@ -39,12 +37,7 @@ Flask is minimal and flexible, while FastAPI provides built-in validation, seria
 
 **Keywords:** `API-first` · `Full-stack` · `ORM` · `Admin`
 
-Django is a full-stack framework with ORM, authentication, admin, and templating.
-
-FastAPI is API-focused and lets you choose your own database and other components.
-
-**Use FastAPI:** APIs, microservices, ML services.
-**Use Django:** full web applications.
+**Expectations:** Contrast Django, a full-stack framework with ORM, authentication, admin, and templating, with FastAPI, which is API-focused and lets you choose your own database and other components. Say when to pick each: FastAPI for APIs, microservices, and ML services; Django for full web applications.
 
 ---
 
@@ -52,7 +45,7 @@ FastAPI is API-focused and lets you choose your own database and other component
 
 **Keywords:** `Decorator` · `HTTP Method` · `Path`
 
-Use a FastAPI decorator:
+**Expectations:** Explain that you define a route with a FastAPI decorator, and point out that the decorator defines both the HTTP method and the URL path.
 
 ```python
 @app.get("/items")
@@ -60,15 +53,13 @@ def read_items():
     return {"items": []}
 ```
 
-The decorator defines the HTTP method and URL path.
-
 ---
 
 ## 6. What are path parameters?
 
 **Keywords:** `URL Path` · `{id}` · `Validation`
 
-Path parameters are values embedded directly in the URL.
+**Expectations:** Define path parameters as values embedded directly in the URL, and mention that FastAPI validates their type automatically.
 
 ```python
 @app.get("/items/{item_id}")
@@ -76,21 +67,17 @@ def read_item(item_id: int):
     return {"item_id": item_id}
 ```
 
-FastAPI validates the type automatically.
-
 ---
 
 ## 7. What are query parameters?
 
 **Keywords:** `?` · `Key/Value` · `Optional` · `Default`
 
-Query parameters appear after `?` in the URL.
+**Expectations:** Explain that query parameters appear after `?` in the URL, and give their common uses: filtering, pagination, sorting, and searching.
 
 ```text
 /items?skip=20&limit=10
 ```
-
-They are commonly used for filtering, pagination, sorting, and searching.
 
 ---
 
@@ -98,11 +85,7 @@ They are commonly used for filtering, pagination, sorting, and searching.
 
 **Keywords:** `OpenAPI` · `/docs` · `/redoc` · `Swagger`
 
-FastAPI automatically generates API documentation from type hints, routes, and Pydantic models.
-
-* `/docs` → Swagger UI
-* `/redoc` → ReDoc
-* `/openapi.json` → OpenAPI schema
+**Expectations:** Explain that FastAPI automatically generates API documentation from type hints, routes, and Pydantic models. Name the endpoints: `/docs` for Swagger UI, `/redoc` for ReDoc, and `/openapi.json` for the OpenAPI schema.
 
 ---
 
@@ -110,15 +93,13 @@ FastAPI automatically generates API documentation from type hints, routes, and P
 
 **Keywords:** `Validation` · `Serialization` · `Models`
 
-Pydantic defines the structure of request and response data.
+**Expectations:** Explain that Pydantic defines the structure of request and response data, and that FastAPI uses the model to validate incoming data and serialize responses.
 
 ```python
 class Item(BaseModel):
     name: str
     price: float
 ```
-
-FastAPI uses the model to validate incoming data and serialize responses.
 
 ---
 
@@ -128,9 +109,7 @@ FastAPI uses the model to validate incoming data and serialize responses.
 
 **Keywords:** `Type Hints` · `Pydantic` · `422`
 
-FastAPI automatically validates path, query, body, and header parameters using type hints and Pydantic models.
-
-If validation fails, FastAPI returns a **422** response with error details.
+**Expectations:** Explain that FastAPI automatically validates path, query, body, and header parameters using type hints and Pydantic models. Mention that when validation fails, FastAPI returns a **422** response with error details.
 
 ---
 
@@ -138,17 +117,11 @@ If validation fails, FastAPI returns a **422** response with error details.
 
 **Keywords:** `Security` · `Schema` · `Contract`
 
-A response model defines exactly what the API is allowed to return.
+**Expectations:** Define a response model as the declaration of exactly what the API is allowed to return. Name its benefits: it prevents sensitive fields from leaking, documents the response, and keeps the API contract stable.
 
 ```python
 @app.get("/users/{id}", response_model=UserPublic)
 ```
-
-Benefits:
-
-* Prevent sensitive fields from leaking.
-* Document the response.
-* Keep the API contract stable.
 
 ---
 
@@ -156,14 +129,12 @@ Benefits:
 
 **Keywords:** `Depends()` · `Reusable` · `DB` · `Auth`
 
-FastAPI uses `Depends()` to inject reusable logic into endpoints.
+**Expectations:** Explain that FastAPI uses `Depends()` to inject reusable logic into endpoints, and give common dependencies: database sessions, authentication, permissions, and configuration.
 
 ```python
 def read_items(db = Depends(get_db)):
     ...
 ```
-
-Common dependencies include database sessions, authentication, permissions, and configuration.
 
 ---
 
@@ -171,16 +142,7 @@ Common dependencies include database sessions, authentication, permissions, and 
 
 **Keywords:** `Global` · `Request` · `Response` · `Cross-cutting`
 
-Middleware runs for every request and response.
-
-Common use cases:
-
-* Logging
-* CORS
-* Headers
-* Request timing
-
-Use **middleware** for global behavior and **dependencies** for endpoint-specific behavior.
+**Expectations:** Explain that middleware runs for every request and response, and give common use cases: logging, CORS, headers, and request timing. Contrast it with dependencies: use **middleware** for global behavior and **dependencies** for endpoint-specific behavior.
 
 ---
 
@@ -188,7 +150,7 @@ Use **middleware** for global behavior and **dependencies** for endpoint-specifi
 
 **Keywords:** `HTTPException` · `Exception Handler` · `Error Response`
 
-Use `HTTPException` for errors inside an endpoint:
+**Expectations:** Explain that you raise `HTTPException` for errors inside an endpoint, and use custom exception handlers when the same error needs consistent handling across the application.
 
 ```python
 raise HTTPException(
@@ -197,23 +159,13 @@ raise HTTPException(
 )
 ```
 
-Use custom exception handlers when the same error needs consistent handling across the application.
-
 ---
 
 ## 15. What are Background Tasks?
 
 **Keywords:** `After Response` · `Short Task` · `BackgroundTasks`
 
-Background tasks run after the response is sent.
-
-Good for:
-
-* Sending emails
-* Small notifications
-* Lightweight cleanup
-
-For important or long-running jobs requiring retries and persistence, use a real task queue such as Celery or RQ.
+**Expectations:** Explain that background tasks run after the response is sent and are good for sending emails, small notifications, and lightweight cleanup. Point out that important or long-running jobs requiring retries and persistence should use a real task queue such as Celery or RQ.
 
 ---
 
@@ -221,14 +173,12 @@ For important or long-running jobs requiring retries and persistence, use a real
 
 **Keywords:** `UploadFile` · `Streaming` · `Memory`
 
-Use `UploadFile` for file uploads.
+**Expectations:** Explain that you use `UploadFile` for file uploads, and point out that it is preferred because it can stream large files instead of loading the entire file into memory.
 
 ```python
 async def upload_file(file: UploadFile = File(...)):
     ...
 ```
-
-`UploadFile` is preferred because it can stream large files instead of loading the entire file into memory.
 
 ---
 
@@ -236,9 +186,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 **Keywords:** `OAuth2` · `Bearer Token` · `JWT` · `Depends`
 
-FastAPI provides security utilities such as OAuth2, API keys, HTTP Basic, and Bearer authentication.
-
-A common flow is:
+**Expectations:** Name FastAPI's security utilities (OAuth2, API keys, HTTP Basic, and Bearer authentication), then walk through a common flow: extract the token from the request, validate the JWT, get the current user, and reach the protected endpoint.
 
 ```text
 Request
@@ -260,11 +208,7 @@ Protected Endpoint
 
 **Keywords:** `Dependency Tree` · `Resolve` · `Cache` · `yield`
 
-FastAPI inspects function signatures and builds a dependency tree.
-
-It resolves dependencies before the endpoint runs and caches the same dependency within a request.
-
-For example, `get_db` can be shared by multiple dependencies without creating multiple sessions.
+**Expectations:** Explain that FastAPI inspects function signatures to build a dependency tree, resolves dependencies before the endpoint runs, and caches the same dependency within a request. Give an example: `get_db` can be shared by multiple dependencies without creating multiple sessions.
 
 ---
 
@@ -272,14 +216,7 @@ For example, `get_db` can be shared by multiple dependencies without creating mu
 
 **Keywords:** `Startup` · `Shutdown` · `Resources` · `ML Model`
 
-Lifespan events run code when the application starts and shuts down.
-
-Typical use cases:
-
-* Database connections
-* Loading ML models
-* Initializing resources
-* Cleaning up resources
+**Expectations:** Explain that lifespan events run code when the application starts and shuts down, with typical uses like database connections, loading ML models, and initializing and cleaning up resources. Point out that lifespan runs **per worker process**.
 
 ```text
 Startup
@@ -289,15 +226,13 @@ Application Running
 Shutdown
 ```
 
-One important point: lifespan runs **per worker process**.
-
 ---
 
 ## 20. How do you write custom middleware?
 
 **Keywords:** `HTTP Middleware` · `ASGI` · `Request/Response`
 
-The simple approach is:
+**Expectations:** Walk through the simple approach using the `@app.middleware("http")` decorator with `call_next`, and mention that for advanced use cases you can implement Starlette or raw ASGI middleware.
 
 ```python
 @app.middleware("http")
@@ -306,22 +241,13 @@ async def log_requests(request, call_next):
     return response
 ```
 
-For advanced use cases, you can implement Starlette or raw ASGI middleware.
-
 ---
 
 ## 21. How do you optimize FastAPI performance?
 
 **Keywords:** `Async I/O` · `Lean Models` · `Caching` · `Profiling`
 
-Main strategies:
-
-1. Use async for I/O-bound operations.
-2. Keep response models efficient.
-3. Cache expensive operations.
-4. Profile before optimizing.
-
-Tools such as `py-spy` can help identify real bottlenecks.
+**Expectations:** Name the main strategies: use async for I/O-bound operations, keep response models efficient, cache expensive operations, and profile before optimizing. Mention tools such as `py-spy` for identifying real bottlenecks.
 
 ---
 
@@ -329,16 +255,12 @@ Tools such as `py-spy` can help identify real bottlenecks.
 
 **Keywords:** `URL Versioning` · `Header` · `Router`
 
-Common approaches:
+**Expectations:** Describe URL versioning as a common approach that is simple and easy to understand, and explain that FastAPI can serve each version through a separate router.
 
 ```text
 /v1/users
 /v2/users
 ```
-
-URL versioning is simple and easy to understand.
-
-FastAPI can use separate routers:
 
 ```python
 v1_router = APIRouter(prefix="/v1")
@@ -351,9 +273,7 @@ v2_router = APIRouter(prefix="/v2")
 
 **Keywords:** `Workers` · `Uvicorn` · `Gunicorn` · `Load Balancer`
 
-A single Uvicorn process uses one event loop.
-
-For production, run multiple workers:
+**Expectations:** Explain that a single Uvicorn process uses one event loop, so production should run multiple workers. For larger systems, mention running multiple containers behind a load balancer and moving shared state to Redis or a database.
 
 ```bash
 gunicorn app.main:app \
@@ -361,23 +281,13 @@ gunicorn app.main:app \
   -k uvicorn.workers.UvicornWorker
 ```
 
-For larger systems, run multiple containers behind a load balancer.
-
-Shared state should move to Redis or a database.
-
 ---
 
 ## 24. What caching strategies work with FastAPI?
 
 **Keywords:** `In-process` · `Redis` · `HTTP Cache`
 
-Three common levels:
-
-* **In-process** → `lru_cache`, `cachetools`
-* **Distributed** → Redis, Memcached
-* **HTTP** → `Cache-Control`, CDN
-
-The main tradeoff is **cache invalidation and stale data**.
+**Expectations:** Name the three common levels: in-process (`lru_cache`, `cachetools`), distributed (Redis, Memcached), and HTTP (`Cache-Control`, CDN). Point out that the main tradeoff is **cache invalidation and stale data**.
 
 ---
 
@@ -385,7 +295,7 @@ The main tradeoff is **cache invalidation and stale data**.
 
 **Keywords:** `Dependency` · `yield` · `Close` · `One Request`
 
-A database session is usually created and closed through a dependency.
+**Expectations:** Explain that a database session is usually created and closed through a dependency, so each request gets its own session.
 
 ```python
 def get_db():
@@ -396,8 +306,6 @@ def get_db():
         db.close()
 ```
 
-Each request gets its own session.
-
 ---
 
 # 🔵 Async Programming
@@ -406,13 +314,7 @@ Each request gets its own session.
 
 **Keywords:** `def` · `async def` · `Threadpool` · `Event Loop`
 
-A normal `def` endpoint runs in a threadpool.
-
-An `async def` endpoint runs directly on the event loop.
-
-**Important:** async is not automatically faster.
-
-Async is useful mainly for **I/O-bound work**.
+**Expectations:** Explain that a normal `def` endpoint runs in a threadpool, while an `async def` endpoint runs directly on the event loop. Point out that async is not automatically faster and is useful mainly for **I/O-bound work**.
 
 ---
 
@@ -420,9 +322,7 @@ Async is useful mainly for **I/O-bound work**.
 
 **Keywords:** `Event Loop` · `Coroutine` · `Task` · `gather`
 
-`asyncio` is Python's library for asynchronous programming.
-
-Useful APIs include:
+**Expectations:** Define `asyncio` as Python's library for asynchronous programming, name useful APIs such as `gather()`, `create_task()`, and `sleep()`, and mention that FastAPI uses asyncio through Starlette and Uvicorn.
 
 ```python
 asyncio.gather()
@@ -430,17 +330,13 @@ asyncio.create_task()
 asyncio.sleep()
 ```
 
-FastAPI uses asyncio through Starlette and Uvicorn.
-
 ---
 
 ## 28. What does `await` actually do?
 
 **Keywords:** `Pause` · `Event Loop` · `Resume` · `Non-blocking`
 
-`await` pauses the current coroutine while the operation is waiting.
-
-The event loop can execute other coroutines during that time.
+**Expectations:** Explain that `await` pauses the current coroutine while the operation is waiting, letting the event loop run other coroutines until the I/O completes and the coroutine resumes. Point out that `await` only helps when the awaited operation is actually asynchronous.
 
 ```text
 Coroutine
@@ -456,17 +352,13 @@ I/O completes
 Resume
 ```
 
-`await` only helps when the awaited operation is actually asynchronous.
-
 ---
 
 ## 29. What is the Event Loop?
 
 **Keywords:** `Single Thread` · `Coroutines` · `Scheduler` · `I/O`
 
-The event loop runs coroutines and switches between them whenever one is waiting.
-
-Think of it as a **single worker handling many I/O tasks by switching between them**.
+**Expectations:** Explain that the event loop runs coroutines and switches between them whenever one is waiting, and describe it as a **single worker handling many I/O tasks by switching between them**.
 
 ---
 
@@ -474,11 +366,7 @@ Think of it as a **single worker handling many I/O tasks by switching between th
 
 **Keywords:** `Concurrency` · `Parallelism` · `I/O` · `CPU`
 
-**Concurrency:** dealing with multiple tasks by switching between them.
-
-**Parallelism:** executing multiple tasks at the same time on multiple CPU cores.
-
-In FastAPI:
+**Expectations:** Define **concurrency** as dealing with multiple tasks by switching between them and **parallelism** as executing multiple tasks at the same time on multiple CPU cores. Map them to FastAPI: async gives concurrency for I/O, while workers/processes give parallelism for CPU.
 
 ```text
 Async → Concurrency → I/O
@@ -491,16 +379,7 @@ Workers/Processes → Parallelism → CPU
 
 **Keywords:** `I/O-bound` · `Database` · `HTTP` · `Waiting`
 
-Async improves performance when the application spends most of its time waiting.
-
-Good examples:
-
-* Async database queries
-* External API calls
-* File I/O
-* Message queues
-
-It does not help CPU-heavy work such as image processing or ML inference.
+**Expectations:** Explain that async improves performance when the application spends most of its time waiting, with examples like async database queries, external API calls, file I/O, and message queues. Point out that it does not help CPU-heavy work such as image processing or ML inference.
 
 ---
 
@@ -508,22 +387,16 @@ It does not help CPU-heavy work such as image processing or ML inference.
 
 **Keywords:** `Blocking` · `Event Loop` · `time.sleep` · `to_thread`
 
-Blocking code freezes the event loop.
-
-Bad:
+**Expectations:** Explain that blocking code freezes the event loop, contrast calling `time.sleep()` inside an async endpoint (bad) with `await asyncio.sleep()` (better), and mention moving blocking work to a thread with `asyncio.to_thread()`.
 
 ```python
 async def endpoint():
     time.sleep(5)
 ```
 
-Better:
-
 ```python
 await asyncio.sleep(5)
 ```
-
-Or move blocking work to a thread with `asyncio.to_thread()`.
 
 ---
 
@@ -533,14 +406,7 @@ Or move blocking work to a thread with `asyncio.to_thread()`.
 
 **Keywords:** `Resources` · `HTTP Methods` · `Stateless` · `Status Codes`
 
-Good REST API design uses:
-
-* Resource-based URLs
-* HTTP methods correctly
-* Stateless requests
-* Consistent status codes
-
-Example:
+**Expectations:** Name the principles of good REST API design: resource-based URLs, correct use of HTTP methods, stateless requests, and consistent status codes. Give an example of the standard routes for a `users` resource.
 
 ```text
 GET    /users
@@ -556,7 +422,7 @@ DELETE /users/{id}
 
 **Keywords:** `2xx` · `4xx` · `5xx`
 
-Important codes:
+**Expectations:** Walk through the important status codes below, and make the easy distinction clear: **401** means not authenticated, while **403** means authenticated but not allowed.
 
 | Code  | Meaning               |
 | ----- | --------------------- |
@@ -571,22 +437,13 @@ Important codes:
 | `422` | Validation Error      |
 | `500` | Internal Server Error |
 
-Easy distinction:
-
-**401 → not authenticated**
-**403 → authenticated but not allowed**
-
 ---
 
 ## 35. How should you handle request validation?
 
 **Keywords:** `Validate Early` · `Pydantic` · `Business Rules`
 
-Validate data as close to the API boundary as possible.
-
-Use Pydantic for input structure and validation.
-
-For example:
+**Expectations:** Explain that data should be validated as close to the API boundary as possible, using Pydantic for input structure and validation before business logic and the database. Point out that business rules that depend on database state should remain in the business/service layer.
 
 ```text
 Request
@@ -598,23 +455,13 @@ Business Logic
 Database
 ```
 
-Business rules that depend on database state should remain in the business/service layer.
-
 ---
 
 ## 36. How should response validation shape your API?
 
 **Keywords:** `Response Model` · `Security` · `Contract`
 
-Every public endpoint should ideally have a response model.
-
-It provides:
-
-1. Field filtering.
-2. API documentation.
-3. Response validation.
-
-It prevents internal database fields from accidentally being exposed.
+**Expectations:** Explain that every public endpoint should ideally have a response model, name what it provides (field filtering, API documentation, and response validation), and point out that it prevents internal database fields from accidentally being exposed.
 
 ---
 
@@ -622,25 +469,15 @@ It prevents internal database fields from accidentally being exposed.
 
 **Keywords:** `Offset` · `Cursor` · `Large Dataset`
 
-Two common approaches:
-
-### Offset Pagination
+**Expectations:** Contrast offset pagination, which is simple but becomes slower for deep pages, with cursor pagination, which is more efficient and stable for large datasets and infinite scrolling. Give the rule of thumb: offset for small/admin use cases, cursor for large datasets or infinite scroll.
 
 ```text
 ?page=2&limit=20
 ```
 
-Simple but becomes slower for deep pages.
-
-### Cursor Pagination
-
 ```text
 ?cursor=abc123&limit=20
 ```
-
-More efficient and stable for large datasets and infinite scrolling.
-
-**Rule of thumb:**
 
 ```text
 Small/Admin → Offset
@@ -653,15 +490,11 @@ Large/Infinite Scroll → Cursor
 
 **Keywords:** `Query Params` · `Pydantic` · `Depends`
 
-Simple filtering can use query parameters:
+**Expectations:** Explain that simple filtering can use query parameters, while many filters are better handled with a Pydantic model as a dependency, which keeps the endpoint clean and makes validation easier.
 
 ```text
 /orders?status=paid&customer_id=10
 ```
-
-For many filters, use a Pydantic model as a dependency.
-
-This keeps the endpoint clean and makes validation easier.
 
 ---
 
@@ -669,15 +502,7 @@ This keeps the endpoint clean and makes validation easier.
 
 **Keywords:** `Routes` · `Type Hints` · `Pydantic` · `OpenAPI`
 
-FastAPI inspects:
-
-* Routes
-* Path/query parameters
-* Pydantic models
-* Response models
-* Dependencies
-
-Then it generates an OpenAPI JSON schema.
+**Expectations:** Explain that FastAPI inspects routes, path/query parameters, Pydantic models, response models, and dependencies, and then generates an OpenAPI JSON schema.
 
 ```text
 /openapi.json
@@ -693,7 +518,7 @@ Then it generates an OpenAPI JSON schema.
 
 **Keywords:** `ORM` · `Engine` · `Session` · `Depends`
 
-Typical architecture:
+**Expectations:** Walk through the typical architecture: create a session factory and inject a SQLAlchemy session into each request via `Depends(get_db)`, which the endpoint then uses to talk to the database.
 
 ```text
 FastAPI Endpoint
@@ -705,21 +530,13 @@ SQLAlchemy Session
 Database
 ```
 
-Create a session factory and inject a session into each request.
-
 ---
 
 ## 41. What is SQLModel?
 
 **Keywords:** `SQLAlchemy` · `Pydantic` · `Less Duplication`
 
-SQLModel combines ideas from SQLAlchemy and Pydantic.
-
-A single model can represent both database data and validation schemas.
-
-**Advantage:** less duplicated code.
-
-**Tradeoff:** SQLAlchemy is more mature and flexible for complex schemas.
+**Expectations:** Explain that SQLModel combines ideas from SQLAlchemy and Pydantic, so a single model can represent both database data and validation schemas. Mention the advantage (less duplicated code) and the tradeoff (SQLAlchemy is more mature and flexible for complex schemas).
 
 ---
 
@@ -727,7 +544,7 @@ A single model can represent both database data and validation schemas.
 
 **Keywords:** `Async Driver` · `Async Engine` · `AsyncSession`
 
-For PostgreSQL, a common setup is:
+**Expectations:** Walk through a common PostgreSQL setup, where FastAPI uses an `AsyncSession` backed by SQLAlchemy async and the `asyncpg` driver, and mention that database operations use `await`.
 
 ```text
 FastAPI
@@ -741,15 +558,13 @@ asyncpg
 PostgreSQL
 ```
 
-Database operations use `await`.
-
 ---
 
 ## 43. How do you handle database transactions?
 
 **Keywords:** `Commit` · `Rollback` · `Atomic`
 
-A transaction groups multiple database operations into one unit.
+**Expectations:** Explain that a transaction groups multiple database operations into one unit that is committed together, and that if something fails you roll back instead of leaving the database partially updated. Point out that you shouldn't commit after every operation in a multi-step transaction.
 
 ```text
 Operation 1
@@ -761,24 +576,13 @@ Operation 3
 Commit
 ```
 
-If something fails, rollback instead of leaving the database partially updated.
-
-**Important:** don't commit after every operation in a multi-step transaction.
-
 ---
 
 ## 44. How do you manage database sessions?
 
 **Keywords:** `One Session/Request` · `Close` · `Dependency`
 
-Main rules:
-
-* One session per request.
-* Close sessions after the request.
-* Don't share request sessions with background tasks.
-* Don't keep sessions open longer than necessary.
-
-Background tasks should create their own database session.
+**Expectations:** Cover the main rules: one session per request, close sessions after the request, and don't keep sessions open longer than necessary. Point out that request sessions shouldn't be shared with background tasks, which should create their own database session.
 
 ---
 
@@ -786,18 +590,12 @@ Background tasks should create their own database session.
 
 **Keywords:** `Alembic` · `Revision` · `Upgrade` · `Review`
 
-Alembic is commonly used with SQLAlchemy.
-
-Typical workflow:
+**Expectations:** Mention that Alembic is commonly used with SQLAlchemy, and walk through the typical workflow of autogenerating a revision and upgrading to head. Point out that you should always review generated migrations and never modify an already-applied migration; create a new migration instead.
 
 ```bash
 alembic revision --autogenerate -m "add users"
 alembic upgrade head
 ```
-
-Always review generated migrations.
-
-**Important:** never modify an already-applied migration. Create a new migration instead.
 
 ---
 
@@ -805,9 +603,7 @@ Always review generated migrations.
 
 **Keywords:** `pool_size` · `max_overflow` · `timeout` · `pre_ping`
 
-SQLAlchemy manages a connection pool.
-
-Important settings:
+**Expectations:** Explain that SQLAlchemy manages a connection pool and name the important settings: `pool_size` for normal connections, `max_overflow` for extra connections during spikes, `pool_timeout` for the wait time for a connection, and `pool_pre_ping` to check whether a connection is still alive. Point out that total connections across all workers must always stay below the database connection limit.
 
 ```python
 create_engine(
@@ -818,10 +614,3 @@ create_engine(
     pool_pre_ping=True,
 )
 ```
-
-* `pool_size` → normal connections
-* `max_overflow` → extra connections during spikes
-* `pool_timeout` → wait time for a connection
-* `pool_pre_ping` → checks whether a connection is still alive
-
-Always make sure total connections across all workers stay below the database connection limit.

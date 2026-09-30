@@ -15,7 +15,7 @@ thumbnailText: Daily
 
 **Keywords:** `State` · `Props` · `Parent Re-render` · `Hooks`
 
-A component re-renders when its state changes, its props change, or its parent re-renders (which can pass new props or simply re-run the child). In function components, hooks replace class lifecycle methods; the diagram above summarizes typical hook flow relative to render and effects.
+**Expectations:** Name the three triggers: a state change, a props change, or a parent re-render (which can pass new props or simply re-run the child). Mention that in function components hooks replace class lifecycle methods, and use the diagram above to walk through typical hook flow relative to render and effects.
 
 ---
 
@@ -23,7 +23,7 @@ A component re-renders when its state changes, its props change, or its parent r
 
 **Keywords:** `Controlled` · `Uncontrolled` · `State` · `Refs`
 
-**Controlled** components have their value or behavior driven by React state or props (for example, an input whose `value` comes from state). **Uncontrolled** components keep state in the DOM and you read or update it via refs rather than React state.
+**Expectations:** Define controlled components as those whose value or behavior is driven by React state or props (for example, an input whose `value` comes from state). Contrast them with uncontrolled components, which keep state in the DOM and are read or updated via refs rather than React state.
 
 ---
 
@@ -31,7 +31,7 @@ A component re-renders when its state changes, its props change, or its parent r
 
 **Keywords:** `Same Props/State` · `Same Output` · `Shallow Compare`
 
-A pure component renders the same output for the same props and state. `React.memo` wraps function components with a shallow prop comparison to skip re-renders when props are unchanged.
+**Expectations:** Define a pure component as one that renders the same output for the same props and state. Mention that `React.memo` wraps function components with a shallow prop comparison to skip re-renders when props are unchanged.
 
 ---
 
@@ -39,7 +39,7 @@ A pure component renders the same output for the same props and state. `React.me
 
 **Keywords:** `Wrapper` · `Reuse Logic` · `Props`
 
-A HOC is a function that takes a component and returns a new component with added behavior or data, usually by injecting props. It is a pattern for sharing cross-cutting logic without duplicating it in every component.
+**Expectations:** Define a HOC as a function that takes a component and returns a new component with added behavior or data, usually by injecting props. Explain that it is a pattern for sharing cross-cutting logic without duplicating it in every component.
 
 ---
 
@@ -47,7 +47,7 @@ A HOC is a function that takes a component and returns a new component with adde
 
 **Keywords:** `Virtual DOM` · `Diff` · `Fiber`
 
-Reconciliation is React’s process of comparing the new element tree with the previous one and applying the minimal set of updates to the real DOM. The Fiber architecture enables incremental work and priorities such as concurrent rendering.
+**Expectations:** Explain reconciliation as React’s process of comparing the new element tree with the previous one and applying the minimal set of updates to the real DOM. Mention that the Fiber architecture enables incremental work and priorities such as concurrent rendering.
 
 ---
 
@@ -55,7 +55,7 @@ Reconciliation is React’s process of comparing the new element tree with the p
 
 **Keywords:** `After Paint` · `Before Paint` · `DOM`
 
-`useEffect` runs **after** the browser paints; it does not block painting. `useLayoutEffect` runs **after** DOM updates but **before** paint, so the user does not see intermediate layout if you measure or mutate DOM synchronously.
+**Expectations:** Contrast the timing: `useEffect` runs after the browser paints and does not block painting, while `useLayoutEffect` runs after DOM updates but before paint. Point out that this is why `useLayoutEffect` keeps the user from seeing intermediate layout when you measure or mutate the DOM synchronously.
 
 ---
 
@@ -63,7 +63,7 @@ Reconciliation is React’s process of comparing the new element tree with the p
 
 **Keywords:** `Blocking` · `Paint` · `Performance`
 
-Because it runs synchronously before paint, heavy work inside `useLayoutEffect` blocks visual updates and can cause jank. Prefer `useEffect` unless you must read or change layout before the user sees it.
+**Expectations:** Explain that because it runs synchronously before paint, heavy work inside `useLayoutEffect` blocks visual updates and can cause jank. Say you prefer `useEffect` unless you must read or change layout before the user sees it.
 
 ---
 
@@ -71,7 +71,7 @@ Because it runs synchronously before paint, heavy work inside `useLayoutEffect` 
 
 **Keywords:** `Measure DOM` · `Animation` · `Tooltip Position`
 
-Measuring element size or position before paint—for example, positioning a tooltip, synchronizing scroll, or avoiding a flash of wrong layout when animations depend on dimensions.
+**Expectations:** Give the example of measuring element size or position before paint, such as positioning a tooltip, synchronizing scroll, or avoiding a flash of wrong layout when animations depend on dimensions.
 
 ---
 
@@ -79,7 +79,7 @@ Measuring element size or position before paint—for example, positioning a too
 
 **Keywords:** `Interruptible` · `Priorities` · `Effects`
 
-Concurrent rendering lets React pause, resume, or discard work on lower-priority updates. Effect timing and what the user sees can differ from strictly synchronous renders, but the goal is smoother UI under load.
+**Expectations:** Explain that concurrent rendering lets React pause, resume, or discard work on lower-priority updates. Point out that effect timing and what the user sees can differ from strictly synchronous renders, but the goal is smoother UI under load.
 
 ---
 
@@ -87,7 +87,7 @@ Concurrent rendering lets React pause, resume, or discard work on lower-priority
 
 **Keywords:** `Error Boundaries` · `Async` · `try/catch`
 
-Use **Error Boundaries** around UI subtrees to catch render errors and show fallback UI. For async logic (fetch, event handlers), use `try/catch`, centralized logging, and user-visible error states—not uncaught promise rejections.
+**Expectations:** Describe wrapping UI subtrees in Error Boundaries to catch render errors and show fallback UI. For async logic (fetch, event handlers), mention `try/catch`, centralized logging, and user-visible error states rather than uncaught promise rejections.
 
 ---
 
@@ -95,7 +95,7 @@ Use **Error Boundaries** around UI subtrees to catch render errors and show fall
 
 **Keywords:** `map()` · `key` · `Elements`
 
-Map over your data array and return a React element per item. Each root element in the list needs a **`key`** prop so React can match items across updates.
+**Expectations:** Explain mapping over the data array and returning a React element per item. Point out that each root element in the list needs a `key` prop so React can match items across updates.
 
 ---
 
@@ -103,7 +103,7 @@ Map over your data array and return a React element per item. Each root element 
 
 **Keywords:** `Identity` · `Reconciliation` · `Reuse`
 
-Keys tell React which list items correspond between renders. Stable keys help preserve component state and avoid incorrect DOM reuse when items are inserted, removed, or reordered.
+**Expectations:** Explain that keys tell React which list items correspond between renders. Point out that stable keys help preserve component state and avoid incorrect DOM reuse when items are inserted, removed, or reordered.
 
 ---
 
@@ -111,7 +111,7 @@ Keys tell React which list items correspond between renders. Stable keys help pr
 
 **Keywords:** `Unique` · `Stable` · `Id`
 
-Use identifiers that are **unique among siblings** and **stable** across renders—database ids, slugs, or other durable ids—not random values created on each render.
+**Expectations:** Say a good key is unique among siblings and stable across renders, such as database ids, slugs, or other durable ids. Point out that random values created on each render are not good keys.
 
 ---
 
@@ -119,7 +119,7 @@ Use identifiers that are **unique among siblings** and **stable** across renders
 
 **Keywords:** `Static List` · `Reorder` · `Anti-pattern`
 
-Only when the list is **static** (no reorder, insert, or delete in the middle). If order or membership changes, index keys cause subtle bugs and lost local state.
+**Expectations:** Explain that index keys are acceptable only when the list is static (no reorder, insert, or delete in the middle). Point out that if order or membership changes, index keys cause subtle bugs and lost local state.
 
 ---
 
@@ -127,7 +127,7 @@ Only when the list is **static** (no reorder, insert, or delete in the middle). 
 
 **Keywords:** `Index Fallback` · `Warning`
 
-React falls back to array indices and may log a development warning. Updates still work for simple cases but can be wrong when the list changes structurally.
+**Expectations:** Explain that React falls back to array indices and may log a development warning. Point out that updates still work for simple cases but can be wrong when the list changes structurally.
 
 ---
 
@@ -135,7 +135,7 @@ React falls back to array indices and may log a development warning. Updates sti
 
 **Keywords:** `Virtualization` · `Windowing` · `Pagination`
 
-Use **virtualization** (for example `react-window` or `@tanstack/react-virtual`) so only visible rows mount and render. Combine with memoized row components and stable keys.
+**Expectations:** Name virtualization (for example `react-window` or `@tanstack/react-virtual`) so only visible rows mount and render. Mention combining it with memoized row components and stable keys.
 
 ---
 
@@ -143,7 +143,7 @@ Use **virtualization** (for example `react-window` or `@tanstack/react-virtual`)
 
 **Keywords:** `Accessibility` · `Stable ID` · `List Identity`
 
-`useId()` generates **stable unique ids** across renders for accessibility attributes (`htmlFor`, `aria-*`). **`key`** identifies list items during reconciliation; it is not a substitute for DOM ids and must be unique per sibling in a list.
+**Expectations:** Explain that `useId()` generates stable unique ids across renders for accessibility attributes (`htmlFor`, `aria-*`), while `key` identifies list items during reconciliation. Point out that `key` is not a substitute for DOM ids and must be unique per sibling in a list.
 
 ---
 
@@ -151,7 +151,7 @@ Use **virtualization** (for example `react-window` or `@tanstack/react-virtual`)
 
 **Keywords:** `Global State` · `Prop Drilling` · `Provider`
 
-Context lets you pass data through the tree without threading props through every level. `createContext`, a `Provider`, and `useContext` (or `Consumer`) form the basic API.
+**Expectations:** Define Context as a way to pass data through the tree without threading props through every level. Name the basic API: `createContext`, a `Provider`, and `useContext` (or `Consumer`).
 
 ---
 
@@ -159,7 +159,7 @@ Context lets you pass data through the tree without threading props through ever
 
 **Keywords:** `Theme` · `Auth` · `Locale` · `Settings`
 
-Use it for **low-churn global data** many components need: theme, authentication session, locale, or feature flags. Avoid putting fast-changing or highly granular state in a single large context.
+**Expectations:** Say to use it for low-churn global data that many components need: theme, authentication session, locale, or feature flags. Point out that you should avoid putting fast-changing or highly granular state in a single large context.
 
 ---
 
@@ -167,7 +167,7 @@ Use it for **low-churn global data** many components need: theme, authentication
 
 **Keywords:** `createContext` · `Provider` · `useContext`
 
-`React.createContext(defaultValue)` creates a context object. A parent wraps children with `<Provider value={...}>`. Descendants call `useContext(MyContext)` to read the nearest provider value.
+**Expectations:** Walk through the flow: `React.createContext(defaultValue)` creates a context object, a parent wraps children with `<Provider value={...}>`, and descendants call `useContext(MyContext)` to read the nearest provider value.
 
 ---
 
@@ -175,7 +175,7 @@ Use it for **low-churn global data** many components need: theme, authentication
 
 **Keywords:** `Re-render Consumers` · `Split Context` · `Memoize Value`
 
-When the provider `value` changes, **all consuming components re-render**. Split contexts by concern, memoize the value object with `useMemo`, and colocate state so unrelated updates do not broadcast globally.
+**Expectations:** Explain that when the provider `value` changes, all consuming components re-render. Mention splitting contexts by concern, memoizing the value object with `useMemo`, and colocating state so unrelated updates do not broadcast globally.
 
 ---
 
@@ -183,7 +183,7 @@ When the provider `value` changes, **all consuming components re-render**. Split
 
 **Keywords:** `Re-renders` · `Large Trees` · `Heavy Render`
 
-Common causes include unnecessary re-renders, huge component trees, expensive work during render, and global context updates. Profiling usually shows whether the bottleneck is render count or render cost.
+**Expectations:** Name the common causes: unnecessary re-renders, huge component trees, expensive work during render, and global context updates. Mention that profiling usually shows whether the bottleneck is render count or render cost.
 
 ---
 
@@ -191,7 +191,7 @@ Common causes include unnecessary re-renders, huge component trees, expensive wo
 
 **Keywords:** `memo` · `useMemo` · `useCallback` · `Split State`
 
-Memoize expensive components and values (`React.memo`, `useMemo`, `useCallback`), split state and context, virtualize long lists, and move heavy work out of render (workers, deferred updates).
+**Expectations:** Mention memoizing expensive components and values (`React.memo`, `useMemo`, `useCallback`), splitting state and context, virtualizing long lists, and moving heavy work out of render (workers, deferred updates).
 
 ---
 
@@ -199,7 +199,7 @@ Memoize expensive components and values (`React.memo`, `useMemo`, `useCallback`)
 
 **Keywords:** `Profiler` · `DevTools` · `why-did-you-render`
 
-Use the **React DevTools Profiler** to record commits and flame charts. During development, strategic logging or tools like “why did you render” help trace prop or context changes.
+**Expectations:** Name the React DevTools Profiler for recording commits and flame charts. Mention that during development, strategic logging or tools like “why did you render” help trace prop or context changes.
 
 ---
 
@@ -207,7 +207,7 @@ Use the **React DevTools Profiler** to record commits and flame charts. During d
 
 **Keywords:** `Component` · `Value` · `Function`
 
-`React.memo` memoizes a **component** based on props. `useMemo` memoizes a **computed value**. `useCallback` memoizes a **function reference** so child memo components see stable props.
+**Expectations:** Contrast the three: `React.memo` memoizes a component based on props, `useMemo` memoizes a computed value, and `useCallback` memoizes a function reference so child memo components see stable props.
 
 ---
 
@@ -215,7 +215,7 @@ Use the **React DevTools Profiler** to record commits and flame charts. During d
 
 **Keywords:** `Expensive Render` · `Stable Props` · `Cheap Render`
 
-Use it when a component is expensive and props are often unchanged. Avoid it when renders are cheap or props change every time—memo comparison overhead can cost more than re-rendering.
+**Expectations:** Say to use it when a component is expensive and props are often unchanged. Point out that you avoid it when renders are cheap or props change every time, because memo comparison overhead can cost more than re-rendering.
 
 ---
 
@@ -223,7 +223,7 @@ Use it when a component is expensive and props are often unchanged. Avoid it whe
 
 **Keywords:** `react-window` · `Memoized Row` · `Stable Keys`
 
-Virtualize the list so only visible items render. Extract a memoized row component and pass stable keys and narrow props to limit re-renders while scrolling.
+**Expectations:** Explain virtualizing the list so only visible items render. Mention extracting a memoized row component and passing stable keys and narrow props to limit re-renders while scrolling.
 
 ---
 
@@ -231,7 +231,7 @@ Virtualize the list so only visible items render. Extract a memoized row compone
 
 **Keywords:** `Non-urgent Updates` · `Concurrent` · `UX`
 
-Both mark work as lower priority under concurrent features. **`useDeferredValue`** defers updating a derived value (for example, filter a large list while typing). **`useTransition`** wraps state updates (for example, switching tabs while loading heavy content) so the UI stays responsive.
+**Expectations:** Explain that both mark work as lower priority under concurrent features. Contrast `useDeferredValue`, which defers updating a derived value (for example, filtering a large list while typing), with `useTransition`, which wraps state updates (for example, switching tabs while loading heavy content) so the UI stays responsive.
 
 ---
 
@@ -239,7 +239,7 @@ Both mark work as lower priority under concurrent features. **`useDeferredValue`
 
 **Keywords:** `User-centric` · `DOM` · `Jest/Vitest`
 
-RTL encourages tests that query and interact with the DOM the way users do—roles, labels, and text—rather than testing component internals.
+**Expectations:** Explain that RTL encourages tests that query and interact with the DOM the way users do (roles, labels, and text) rather than testing component internals.
 
 ---
 
@@ -247,7 +247,7 @@ RTL encourages tests that query and interact with the DOM the way users do—rol
 
 **Keywords:** `getByRole` · `getByLabelText` · `getByText`
 
-Prefer queries in recommended order: **`getByRole`**, **`getByLabelText`**, **`getByPlaceholderText`**, **`getByText`**, then test ids as a last resort.
+**Expectations:** Name the queries in recommended order: `getByRole`, `getByLabelText`, `getByPlaceholderText`, `getByText`, then test ids as a last resort.
 
 ---
 
@@ -255,7 +255,7 @@ Prefer queries in recommended order: **`getByRole`**, **`getByLabelText`**, **`g
 
 **Keywords:** `Accessibility` · `Real Usage` · `Resilience`
 
-Roles mirror how assistive tech and users perceive the page. Tests tied to roles tend to survive refactors better than tests tied to class names or component structure.
+**Expectations:** Explain that roles mirror how assistive tech and users perceive the page. Point out that tests tied to roles tend to survive refactors better than tests tied to class names or component structure.
 
 ---
 
@@ -263,7 +263,7 @@ Roles mirror how assistive tech and users perceive the page. Tests tied to roles
 
 **Keywords:** `Sync` · `Async` · `Throw vs Null`
 
-`getBy*` throws if missing (sync). `queryBy*` returns `null` if missing (sync). `findBy*` returns a promise and waits for the element (async), suited to post-fetch or animated UI.
+**Expectations:** Contrast the three: `getBy*` throws if the element is missing (sync), `queryBy*` returns `null` if missing (sync), and `findBy*` returns a promise and waits for the element (async). Mention that `findBy*` suits post-fetch or animated UI.
 
 ---
 
@@ -271,7 +271,7 @@ Roles mirror how assistive tech and users perceive the page. Tests tied to roles
 
 **Keywords:** `Realistic` · `Pointer` · `Keyboard`
 
-`@testing-library/user-event` simulates full interaction sequences (focus, keydown, input) closer to real browser behavior than low-level `fireEvent` calls.
+**Expectations:** Explain that `@testing-library/user-event` simulates full interaction sequences (focus, keydown, input) that are closer to real browser behavior than low-level `fireEvent` calls.
 
 ---
 
@@ -279,7 +279,7 @@ Roles mirror how assistive tech and users perceive the page. Tests tied to roles
 
 **Keywords:** `Behavior` · `Refactor-safe` · `Public API`
 
-Tests should assert **observable behavior** (what users see and do), not internal state, private methods, or child component structure—so refactors do not break tests unnecessarily.
+**Expectations:** Explain that tests should assert observable behavior (what users see and do), not internal state, private methods, or child component structure. Point out that this keeps refactors from breaking tests unnecessarily.
 
 ---
 
@@ -287,7 +287,7 @@ Tests should assert **observable behavior** (what users see and do), not interna
 
 **Keywords:** `Network` · `Timers` · `Real DOM`
 
-Mock **external systems** (APIs, modules you do not own, fake timers). Prefer real DOM behavior from RTL; only mock browser APIs when JSDOM lacks them and you cannot run tests in a real browser.
+**Expectations:** Say to mock external systems (APIs, modules you do not own, fake timers) and prefer real DOM behavior from RTL. Point out that you only mock browser APIs when JSDOM lacks them and you cannot run tests in a real browser.
 
 ---
 
@@ -295,7 +295,7 @@ Mock **external systems** (APIs, modules you do not own, fake timers). Prefer re
 
 **Keywords:** `Network Layer` · `Realistic` · `Reuse`
 
-Mock Service Worker intercepts requests at the network level, so components use real `fetch` and handlers stay reusable across unit and integration tests.
+**Expectations:** Explain that Mock Service Worker intercepts requests at the network level, so components use real `fetch`. Mention that handlers stay reusable across unit and integration tests.
 
 ---
 
@@ -303,7 +303,7 @@ Mock Service Worker intercepts requests at the network level, so components use 
 
 **Keywords:** `Implementation Details` · `Enzyme-style` · `Queries`
 
-Testing internals, overusing test ids, or manually mounting with legacy patterns instead of rendering and querying as a user. Duplicate mistake: asserting on component instance state.
+**Expectations:** Name the common mistakes: testing internals, overusing test ids, or manually mounting with legacy patterns instead of rendering and querying as a user. Mention asserting on component instance state as another form of the same mistake.
 
 ---
 
@@ -311,7 +311,7 @@ Testing internals, overusing test ids, or manually mounting with legacy patterns
 
 **Keywords:** `Node` · `DOM Implementation` · `No Browser`
 
-JSDOM implements DOM and HTML APIs in Node so tests run without a full browser. It is the default environment for many Jest/Vitest React setups.
+**Expectations:** Define JSDOM as an implementation of DOM and HTML APIs in Node so tests run without a full browser. Mention that it is the default environment for many Jest/Vitest React setups.
 
 ---
 
@@ -319,7 +319,7 @@ JSDOM implements DOM and HTML APIs in Node so tests run without a full browser. 
 
 **Keywords:** `ResizeObserver` · `matchMedia` · `Clipboard`
 
-Common gaps include **`ResizeObserver`**, **`matchMedia`**, and **`Clipboard`**. Tests that depend on them may need polyfills, mocks, or browser runners (Playwright/Cypress).
+**Expectations:** Name common gaps such as `ResizeObserver`, `matchMedia`, and `Clipboard`. Mention that tests depending on them may need polyfills, mocks, or browser runners (Playwright/Cypress).
 
 ---
 
@@ -327,7 +327,7 @@ Common gaps include **`ResizeObserver`**, **`matchMedia`**, and **`Clipboard`**.
 
 **Keywords:** `Integration` · `E2E` · `Fidelity`
 
-Heavy mocking drifts from production behavior. **Integration and E2E tests** should use real environments where possible so layout, events, and APIs match what users experience.
+**Expectations:** Explain that heavy mocking drifts from production behavior. Point out that integration and E2E tests should use real environments where possible so layout, events, and APIs match what users experience.
 
 ---
 
@@ -335,7 +335,7 @@ Heavy mocking drifts from production behavior. **Integration and E2E tests** sho
 
 **Keywords:** `Type` · `Click` · `Submit` · `Validation`
 
-Simulate typing, tabbing, clicking buttons, submitting, and reading validation messages—not calling `setState` directly or reaching into form libraries’ internals.
+**Expectations:** Mention simulating typing, tabbing, clicking buttons, submitting, and reading validation messages. Point out that you should not call `setState` directly or reach into form libraries’ internals.
 
 ---
 
@@ -343,7 +343,7 @@ Simulate typing, tabbing, clicking buttons, submitting, and reading validation m
 
 **Keywords:** `jest-dom` · `Presence` · `Visibility`
 
-Common **`@testing-library/jest-dom`** matchers: `toBeInTheDocument()`, `toHaveTextContent()`, `toHaveAttribute()`, `toBeVisible()`, and role/name assertions via `toHaveAccessibleName()`.
+**Expectations:** Name common `@testing-library/jest-dom` matchers: `toBeInTheDocument()`, `toHaveTextContent()`, `toHaveAttribute()`, `toBeVisible()`, and role/name assertions via `toHaveAccessibleName()`.
 
 ---
 
@@ -351,7 +351,7 @@ Common **`@testing-library/jest-dom`** matchers: `toBeInTheDocument()`, `toHaveT
 
 **Keywords:** `Composition` · `Compound Components` · `Prop Getters`
 
-Typical patterns: **composition** instead of deep props, **latest ref** for async callbacks, **compound components** for flexible APIs, and **prop getters** for controlled customization.
+**Expectations:** Name the typical patterns: composition instead of deep props, latest ref for async callbacks, compound components for flexible APIs, and prop getters for controlled customization.
 
 ---
 
@@ -359,7 +359,7 @@ Typical patterns: **composition** instead of deep props, **latest ref** for asyn
 
 **Keywords:** `children` · `Flexibility` · `Reuse`
 
-Composition passes UI and behavior via **`children`** and slots instead of class hierarchies. It fits tabs, layouts, and dropdowns where consumers arrange pieces without fragile base classes.
+**Expectations:** Explain that composition passes UI and behavior via `children` and slots instead of class hierarchies. Give examples such as tabs, layouts, and dropdowns, where consumers arrange pieces without fragile base classes.
 
 ---
 
@@ -367,7 +367,7 @@ Composition passes UI and behavior via **`children`** and slots instead of class
 
 **Keywords:** `No Re-render` · `Stale Closure` · `Timers`
 
-Refs update **without re-rendering** and always expose the current value in async callbacks—useful for intervals, debounced handlers, and subscriptions where state closures would be stale.
+**Expectations:** Explain that refs update without re-rendering and always expose the current value in async callbacks. Mention intervals, debounced handlers, and subscriptions as cases where state closures would be stale.
 
 ---
 
@@ -375,7 +375,7 @@ Refs update **without re-rendering** and always expose the current value in asyn
 
 **Keywords:** `Shared Context` · `Implicit State` · `Flexible API`
 
-Related components (for example `<Tabs>`, `<TabList>`, `<Tab>`) share state through context so consumers compose markup freely without prop drilling every callback.
+**Expectations:** Define compound components as related components (for example `<Tabs>`, `<TabList>`, `<Tab>`) that share state through context. Point out that consumers can compose markup freely without prop drilling every callback.
 
 ---
 
@@ -383,7 +383,7 @@ Related components (for example `<Tabs>`, `<TabList>`, `<Tab>`) share state thro
 
 **Keywords:** `useReducer` · `Override Transitions` · `Inversion`
 
-Consumers pass a reducer or dispatch rules to intercept state transitions (open/close, next step) without forking the internal component implementation.
+**Expectations:** Explain that consumers pass a reducer or dispatch rules to intercept state transitions (open/close, next step). Point out that this customizes behavior without forking the internal component implementation.
 
 ---
 
@@ -391,7 +391,7 @@ Consumers pass a reducer or dispatch rules to intercept state transitions (open/
 
 **Keywords:** `Merge Props` · `Required Behavior` · `Override-safe`
 
-Prop getters return props objects that merge required handlers and aria attributes while letting callers spread their own props—common for accessible inputs, dropdowns, and modals.
+**Expectations:** Explain that prop getters return props objects that merge required handlers and aria attributes while letting callers spread their own props. Mention accessible inputs, dropdowns, and modals as common uses.
 
 ---
 
@@ -401,7 +401,7 @@ Prop getters return props objects that merge required handlers and aria attribut
 
 **Keywords:** `Controlled Input` · `State` · `localStorage` · `Immutability`
 
-Interviewers expect a small CRUD UI: controlled input and Add button, list with delete and completed toggle, reject empty todos, clear all, and **persist after refresh** (typically `localStorage`). Clean state updates and keys matter.
+**Expectations:** Build a small CRUD UI: a controlled input and Add button, a list with delete and a completed toggle, rejection of empty todos, clear all, and persistence after refresh (typically `localStorage`). Show clean state updates and use keys properly.
 
 ---
 
@@ -409,7 +409,7 @@ Interviewers expect a small CRUD UI: controlled input and Add button, list with 
 
 **Keywords:** `useEffect` · `Loading` · `Error` · `Fetch`
 
-Load `https://jsonplaceholder.typicode.com/users` on mount. Show **loading**, **error**, and success UI with **name** and **email**. Demonstrate abort/cleanup or at least handling failed requests without crashing.
+**Expectations:** Load `https://jsonplaceholder.typicode.com/users` on mount and show loading, error, and success UI with each user’s name and email. Demonstrate abort/cleanup, or at least handle failed requests without crashing.
 
 ---
 
@@ -417,7 +417,7 @@ Load `https://jsonplaceholder.typicode.com/users` on mount. Show **loading**, **
 
 **Keywords:** `useState` · `Controlled` · `Immutable Updates` · `Add/Remove`
 
-Manage an array in state; each field is a **controlled** input whose change updates only that index **immutably**. Buttons append a new empty value and remove by index without mutating the previous array in place.
+**Expectations:** Manage an array in state where each field is a controlled input whose change updates only that index immutably. Add buttons that append a new empty value and remove by index, without mutating the previous array in place.
 
 ---
 
@@ -427,7 +427,7 @@ Manage an array in state; each field is a **controlled** input whose change upda
 
 **Keywords:** `Component Architecture` · `State` · `Caching` · `Performance` · `A11y`
 
-Interviewers expect a modular route and feature structure, clear split between **server state** (React Query) and **UI state**, data fetching with caching and pagination, code splitting, virtualization for large tables/charts, and responsive accessible layouts.
+**Expectations:** Cover, in order: a modular route and feature structure, a clear split between server state (React Query) and UI state, data fetching with caching and pagination, code splitting, virtualization for large tables/charts, and responsive accessible layouts.
 
 ---
 
@@ -435,7 +435,7 @@ Interviewers expect a modular route and feature structure, clear split between *
 
 **Keywords:** `WebSockets` · `Message State` · `Virtualization` · `Offline`
 
-Cover UI layers (conversation list, thread, composer), **WebSocket** or SSE transport with reconnect, optimistic sends and ordering, virtualized message lists, presence/typing indicators, and error or offline handling.
+**Expectations:** Cover, in order: UI layers (conversation list, thread, composer), WebSocket or SSE transport with reconnect, optimistic sends and ordering, virtualized message lists, presence/typing indicators, and error or offline handling.
 
 ---
 
@@ -443,7 +443,7 @@ Cover UI layers (conversation list, thread, composer), **WebSocket** or SSE tran
 
 **Keywords:** `Portal` · `Focus Trap` · `ARIA` · `Controlled API` · `Stacking`
 
-Discuss props for open/onClose, controlled vs uncontrolled usage, **`createPortal`**, focus trap and return focus, `role="dialog"` and `aria-modal`, escape and overlay click policy, theming, and stacking multiple modals without z-index chaos.
+**Expectations:** Cover, in order: props for open/onClose, controlled vs uncontrolled usage, `createPortal`, focus trap and return focus, `role="dialog"` and `aria-modal`, escape and overlay click policy, theming, and stacking multiple modals without z-index chaos.
 
 ---
 
@@ -453,7 +453,7 @@ Discuss props for open/onClose, controlled vs uncontrolled usage, **`createPorta
 
 **Keywords:** `UI State` · `Server State` · `Global` · `Auth`
 
-**Local state** for UI that does not need sharing. **Redux** (or similar) for global client state many features update. **React Query** for server data—fetch, cache, sync. **Auth** often combines Context with secure storage and minimal global footprint.
+**Expectations:** Explain the split: local state for UI that does not need sharing, Redux (or similar) for global client state many features update, and React Query for server data (fetch, cache, sync). Mention that auth often combines Context with secure storage and a minimal global footprint.
 
 ---
 
@@ -461,7 +461,7 @@ Discuss props for open/onClose, controlled vs uncontrolled usage, **`createPorta
 
 **Keywords:** `Boilerplate` · `Immer` · `Slices` · `Store`
 
-RTK is the recommended way to write Redux: **`configureStore`**, **`createSlice`**, and built-in Immer reduce boilerplate while keeping predictable unidirectional flow: UI → action → middleware → reducer → store → UI.
+**Expectations:** Explain that RTK is the recommended way to write Redux, with `configureStore`, `createSlice`, and built-in Immer reducing boilerplate. Point out that it keeps predictable unidirectional flow: UI → action → middleware → reducer → store → UI.
 
 ---
 
@@ -469,7 +469,7 @@ RTK is the recommended way to write Redux: **`configureStore`**, **`createSlice`
 
 **Keywords:** `Reducers` · `Actions` · `Initial State`
 
-`createSlice` defines **initial state**, **reducers**, and auto-generated **action creators** in one module, keeping related logic colocated.
+**Expectations:** Explain that `createSlice` defines initial state, reducers, and auto-generated action creators in one module, keeping related logic colocated.
 
 ---
 
@@ -477,7 +477,7 @@ RTK is the recommended way to write Redux: **`configureStore`**, **`createSlice`
 
 **Keywords:** `Immer` · `Draft` · `Immutable Update`
 
-Reducers written with “mutation” syntax run inside **Immer**, which produces immutable state updates safely from draft changes.
+**Expectations:** Explain that reducers written with “mutation” syntax run inside Immer, which produces immutable state updates safely from draft changes.
 
 ---
 
@@ -485,7 +485,7 @@ Reducers written with “mutation” syntax run inside **Immer**, which produces
 
 **Keywords:** `DevTools` · `Middleware` · `Defaults`
 
-`configureStore` sets up the Redux store with sensible defaults: combined reducers, Redux DevTools integration, and default middleware (including checks in development).
+**Expectations:** Explain that `configureStore` sets up the Redux store with sensible defaults: combined reducers, Redux DevTools integration, and default middleware (including checks in development).
 
 ---
 
@@ -493,7 +493,7 @@ Reducers written with “mutation” syntax run inside **Immer**, which produces
 
 **Keywords:** `getDefaultMiddleware` · `concat` · `redux-logger`
 
-Extend middleware via `configureStore({ middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger) })` for logging, analytics, or custom side effects—keeping reducers pure.
+**Expectations:** Walk through extending middleware via `configureStore({ middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger) })` for logging, analytics, or custom side effects. Point out that this keeps reducers pure.
 
 ---
 
@@ -501,7 +501,7 @@ Extend middleware via `configureStore({ middleware: (getDefaultMiddleware) => ge
 
 **Keywords:** `Pending` · `Fulfilled` · `Rejected` · `API`
 
-Creates an async action that dispatches lifecycle actions for API calls or other promises, wiring results into slices via `extraReducers` without manual boilerplate.
+**Expectations:** Explain that `createAsyncThunk` creates an async action that dispatches lifecycle actions for API calls or other promises. Mention wiring the results into slices via `extraReducers` without manual boilerplate.
 
 ---
 
@@ -509,7 +509,7 @@ Creates an async action that dispatches lifecycle actions for API calls or other
 
 **Keywords:** `extraReducers` · `Cross-slice` · `Builder`
 
-Yes. Use **`extraReducers`** with `builder.addCase(otherSliceAction, ...)` to update state when external actions fire.
+**Expectations:** Answer yes, and explain using `extraReducers` with `builder.addCase(otherSliceAction, ...)` to update state when external actions fire.
 
 ---
 
@@ -517,7 +517,7 @@ Yes. Use **`extraReducers`** with `builder.addCase(otherSliceAction, ...)` to up
 
 **Keywords:** `Own Actions` · `External Actions` · `Slice`
 
-**`reducers`** handle actions defined in the same slice. **`extraReducers`** handle actions from other slices, thunks, or shared action creators.
+**Expectations:** Contrast them: `reducers` handle actions defined in the same slice, while `extraReducers` handle actions from other slices, thunks, or shared action creators.
 
 ---
 
@@ -525,7 +525,7 @@ Yes. Use **`extraReducers`** with `builder.addCase(otherSliceAction, ...)` to up
 
 **Keywords:** `Middleware` · `Side Effects` · `Generators`
 
-Redux Saga is middleware for complex async flows—debouncing, polling, cancellation—using declarative **effects** instead of putting async logic in components or reducers.
+**Expectations:** Define Redux Saga as middleware for complex async flows such as debouncing, polling, and cancellation. Point out that it uses declarative effects instead of putting async logic in components or reducers.
 
 ---
 
@@ -533,7 +533,7 @@ Redux Saga is middleware for complex async flows—debouncing, polling, cancella
 
 **Keywords:** `pause` · `resume` · `Declarative`
 
-Generators (`function*`) can **yield** effects and resume when async work completes, making sequential and parallel flows readable and testable.
+**Expectations:** Explain that generators (`function*`) can yield effects and resume when async work completes. Point out that this makes sequential and parallel flows readable and testable.
 
 ---
 
@@ -541,7 +541,7 @@ Generators (`function*`) can **yield** effects and resume when async work comple
 
 **Keywords:** `Watcher` · `Worker` · `Effect`
 
-A saga is typically a generator that **watches** for actions and **runs workers** that yield effects (`call`, `put`, `fork`, etc.) to perform side effects.
+**Expectations:** Define a saga as typically a generator that watches for actions and runs workers that yield effects (`call`, `put`, `fork`, etc.) to perform side effects.
 
 ---
 
@@ -549,7 +549,7 @@ A saga is typically a generator that **watches** for actions and **runs workers*
 
 **Keywords:** `Invoke` · `Dispatch` · `Non-blocking`
 
-**`put`** dispatches an action. **`call`** invokes a function and **waits** for its result. **`fork`** starts a non-blocking task in the background for concurrent work.
+**Expectations:** Contrast the three: `put` dispatches an action, `call` invokes a function and waits for its result, and `fork` starts a non-blocking task in the background for concurrent work.
 
 ---
 
@@ -557,7 +557,7 @@ A saga is typically a generator that **watches** for actions and **runs workers*
 
 **Keywords:** `Cancel Previous` · `Debounce Pattern` · `Search`
 
-For a given action type, **`takeLatest`** cancels any in-flight worker from a prior dispatch and runs only the newest—ideal for search or rapid clicks.
+**Expectations:** Explain that for a given action type, `takeLatest` cancels any in-flight worker from a prior dispatch and runs only the newest. Mention search or rapid clicks as ideal use cases.
 
 ---
 
@@ -565,7 +565,7 @@ For a given action type, **`takeLatest`** cancels any in-flight worker from a pr
 
 **Keywords:** `Every` · `Latest` · `Leading`
 
-**`takeEvery`** runs a worker for **every** action. **`takeLatest`** keeps only the **latest**. **`takeLeading`** ignores new actions until the current worker **finishes**.
+**Expectations:** Contrast them: `takeEvery` runs a worker for every action, `takeLatest` keeps only the latest, and `takeLeading` ignores new actions until the current worker finishes.
 
 ---
 
@@ -573,7 +573,7 @@ For a given action type, **`takeLatest`** cancels any in-flight worker from a pr
 
 **Keywords:** `all` · `Concurrent` · `Effects`
 
-Use **`yield all([call(api1), call(api2), ...])`** to run independent requests concurrently and collect results together.
+**Expectations:** Explain using `yield all([call(api1), call(api2), ...])` to run independent requests concurrently and collect results together.
 
 ---
 
@@ -581,7 +581,7 @@ Use **`yield all([call(api1), call(api2), ...])`** to run independent requests c
 
 **Keywords:** `try/catch` · `onError` · `Failure Action`
 
-Wrap `yield call(...)` in **try/catch**, dispatch failure actions, and optionally use **`spawn`** with error boundaries for detached tasks.
+**Expectations:** Explain wrapping `yield call(...)` in try/catch and dispatching failure actions. Mention optionally using `spawn` with error boundaries for detached tasks.
 
 ---
 
@@ -589,7 +589,7 @@ Wrap `yield call(...)` in **try/catch**, dispatch failure actions, and optionall
 
 **Keywords:** `takeLatest` · `cancel` · `fork`
 
-**`takeLatest`** auto-cancels prior tasks. Manually use **`cancel(forkedTask)`** or race patterns when a route changes or a component unmounts.
+**Expectations:** Point out that `takeLatest` auto-cancels prior tasks. Mention manually using `cancel(forkedTask)` or race patterns when a route changes or a component unmounts.
 
 ---
 
@@ -597,7 +597,7 @@ Wrap `yield call(...)` in **try/catch**, dispatch failure actions, and optionall
 
 **Keywords:** `First Wins` · `Timeout` · `Cancellation`
 
-**`race`** runs multiple effects and completes when the **first** finishes—useful for timeouts, “click cancel vs wait for response”, or competing events.
+**Expectations:** Explain that `race` runs multiple effects and completes when the first finishes. Give examples such as timeouts, “click cancel vs wait for response”, or competing events.
 
 ---
 
@@ -605,7 +605,7 @@ Wrap `yield call(...)` in **try/catch**, dispatch failure actions, and optionall
 
 **Keywords:** `Predictable` · `Time-travel` · `Testability`
 
-Side effects belong in sagas; **reducers** stay synchronous and pure so state updates are deterministic, easy to test, and compatible with DevTools.
+**Expectations:** Explain that side effects belong in sagas while reducers stay synchronous and pure. Point out that this keeps state updates deterministic, easy to test, and compatible with DevTools.
 
 ---
 
@@ -613,7 +613,7 @@ Side effects belong in sagas; **reducers** stay synchronous and pure so state up
 
 **Keywords:** `Server State` · `Cache` · `Sync` · `TanStack Query`
 
-React Query (TanStack Query) manages **server state**: fetching, caching, background refetch, and keeping UI in sync with the backend without duplicating loading/error logic everywhere.
+**Expectations:** Explain that React Query (TanStack Query) manages server state: fetching, caching, background refetch, and keeping UI in sync with the backend. Point out that it avoids duplicating loading/error logic everywhere.
 
 ---
 
@@ -621,7 +621,7 @@ React Query (TanStack Query) manages **server state**: fetching, caching, backgr
 
 **Keywords:** `POST` · `PUT` · `DELETE` · `useMutation`
 
-A **mutation** changes server data. `useMutation` handles execute, loading, error, and success callbacks, often invalidating related queries afterward.
+**Expectations:** Define a mutation as an operation that changes server data. Explain that `useMutation` handles execute, loading, error, and success callbacks, often invalidating related queries afterward.
 
 ---
 
@@ -629,7 +629,7 @@ A **mutation** changes server data. `useMutation` handles execute, loading, erro
 
 **Keywords:** `Cache Key` · `Identity` · `Invalidation`
 
-Query keys uniquely identify cached data (often arrays like `['users', id]`). They drive caching, deduplication, and targeted **`invalidateQueries`**.
+**Expectations:** Explain that query keys uniquely identify cached data (often arrays like `['users', id]`). Point out that they drive caching, deduplication, and targeted `invalidateQueries`.
 
 ---
 
@@ -637,7 +637,7 @@ Query keys uniquely identify cached data (often arrays like `['users', id]`). Th
 
 **Keywords:** `Stale-while-revalidate` · `Query Key` · `Background Refetch`
 
-Data is stored by query key. Fresh data can be shown immediately while stale queries refetch in the background according to `staleTime` and triggers like focus or reconnect.
+**Expectations:** Explain that data is stored by query key. Point out that fresh data can be shown immediately while stale queries refetch in the background according to `staleTime` and triggers like focus or reconnect.
 
 ---
 
@@ -645,7 +645,7 @@ Data is stored by query key. Fresh data can be shown immediately while stale que
 
 **Keywords:** `Fresh` · `No Refetch` · `TTL`
 
-Duration data is considered **fresh**; while fresh, mounts may not refetch automatically depending on configuration.
+**Expectations:** Define `staleTime` as the duration data is considered fresh. Point out that while data is fresh, mounts may not refetch automatically, depending on configuration.
 
 ---
 
@@ -653,7 +653,7 @@ Duration data is considered **fresh**; while fresh, mounts may not refetch autom
 
 **Keywords:** `Garbage Collection` · `Inactive` · `Memory`
 
-How long **unused** query data stays in memory after the last observer unmounts before garbage collection (`gcTime` in v5, formerly `cacheTime`).
+**Expectations:** Explain that it is how long unused query data stays in memory after the last observer unmounts, before garbage collection. Mention that it is called `gcTime` in v5, formerly `cacheTime`.
 
 ---
 
@@ -661,7 +661,7 @@ How long **unused** query data stays in memory after the last observer unmounts 
 
 **Keywords:** `Window Focus` · `Reconnect` · `Interval`
 
-Common triggers: **window refocus**, **network reconnect**, **`refetchInterval`**, and invalidation after mutations—subject to `staleTime` and `enabled`.
+**Expectations:** Name the common triggers: window refocus, network reconnect, `refetchInterval`, and invalidation after mutations. Point out that these are subject to `staleTime` and `enabled`.
 
 ---
 
@@ -669,7 +669,7 @@ Common triggers: **window refocus**, **network reconnect**, **`refetchInterval`*
 
 **Keywords:** `Conditional Fetch` · `Dependencies` · `Lazy Query`
 
-When **`enabled: false`**, the query does not run automatically until toggled true—useful when an id or auth token must exist first.
+**Expectations:** Explain that with `enabled: false`, the query does not run automatically until toggled true. Mention that this is useful when an id or auth token must exist first.
 
 ---
 
@@ -677,7 +677,7 @@ When **`enabled: false`**, the query does not run automatically until toggled tr
 
 **Keywords:** `First Load` · `Any Request` · `Background`
 
-**`isLoading`** is true when there is no cached data yet and a fetch is in flight. **`isFetching`** is true for **any** in-flight request, including background refetches.
+**Expectations:** Contrast them: `isLoading` is true when there is no cached data yet and a fetch is in flight, while `isFetching` is true for any in-flight request, including background refetches.
 
 ---
 
@@ -685,7 +685,7 @@ When **`enabled: false`**, the query does not run automatically until toggled tr
 
 **Keywords:** `queryClient` · `invalidateQueries` · `Refetch`
 
-Call **`queryClient.invalidateQueries({ queryKey: [...] })`** to mark matching queries stale and trigger refetch for active observers.
+**Expectations:** Explain calling `queryClient.invalidateQueries({ queryKey: [...] })` to mark matching queries stale and trigger refetch for active observers.
 
 ---
 
@@ -693,7 +693,7 @@ Call **`queryClient.invalidateQueries({ queryKey: [...] })`** to mark matching q
 
 **Keywords:** `onMutate` · `Rollback` · `setQueryData`
 
-Update the cache in **`onMutate`**, return rollback context, and restore on **`onError`** if the mutation fails—so the UI feels instant while staying consistent.
+**Expectations:** Walk through updating the cache in `onMutate`, returning rollback context, and restoring on `onError` if the mutation fails. Point out that this makes the UI feel instant while staying consistent.
 
 ---
 
@@ -701,7 +701,7 @@ Update the cache in **`onMutate`**, return rollback context, and restore on **`o
 
 **Keywords:** `useInfiniteQuery` · `getNextPageParam` · `Flatten`
 
-**`useInfiniteQuery`** loads pages with **`fetchNextPage`**, using **`getNextPageParam`** from the last response. Flatten `data.pages` in the UI and virtualize long feeds when needed.
+**Expectations:** Explain that `useInfiniteQuery` loads pages with `fetchNextPage`, using `getNextPageParam` from the last response. Mention flattening `data.pages` in the UI and virtualizing long feeds when needed.
 
 ---
 
@@ -709,6 +709,6 @@ Update the cache in **`onMutate`**, return rollback context, and restore on **`o
 
 **Keywords:** `onError` · `Toast` · `Retry`
 
-Use **`onError`** in `useMutation` to show messages, log, or revert optimistic updates. Pair with global error boundaries or toasts for consistent UX.
+**Expectations:** Explain using `onError` in `useMutation` to show messages, log, or revert optimistic updates. Mention pairing it with global error boundaries or toasts for consistent UX.
 
 ---
