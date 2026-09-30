@@ -7,57 +7,140 @@ date: 2000-01-14
 thumbnailText: Daily
 ---
 
-# Python Fundamentual 
+# Python Fundamentals
 
 ## 1. What is Python?
 
-**Keywords:** `Readable` · `Interpreted` · `Dynamic Typing` · `Libraries` · `Cross-platform`
+**Expectations:** Readable · Interpreted · Dynamic typing · Libraries · Cross-platform
 
-**Expectations:** Define Python as a high-level programming language, and mention its readable syntax, dynamic typing, large ecosystem, and cross-platform support.
+**Example answer:**
+
+> Python is a high-level, general-purpose programming language known for its readable syntax and broad use in web development, automation, data science, and AI.
+>
+> Its key features are:
+>
+> - **Simple, readable syntax**, which makes it approachable for beginners and productive for experienced developers.
+> - **Interpreted execution**: code runs through the interpreter without a separate build step, which makes testing and debugging quick.
+> - **Dynamic typing**: I don't declare variable types, and types are checked at runtime.
+> - **A large ecosystem**: libraries such as NumPy, pandas, and Django cover data science, web development, and more.
+> - **Cross-platform support**: the same code runs on Windows, macOS, and Linux.
 
 ---
 
 ## 2. List vs Tuple
 
-**Keywords:** `Mutable` · `Immutable` · `Memory` · `Performance`
+**Expectations:** Mutable · Immutable · Memory · Performance
 
-**Expectations:** Contrast a **list**, which is mutable so its elements can be changed, with a **tuple**, which is immutable. Point out that tuples use less memory and are generally faster to iterate.
+**Example answer:**
+
+> Lists and tuples are both ordered sequences, but they differ in mutability.
+>
+> A **list** is mutable, so I can add, remove, or change elements after creation. It has more built-in methods, such as `append()`, `remove()`, and `sort()`, and it uses a bit more memory.
+>
+> A **tuple** is immutable, so its elements cannot change after creation. It uses less memory, is slightly faster to iterate, and can be used as a dictionary key when all its elements are hashable. I use tuples for fixed records, such as coordinates, and lists for collections that change.
+
+```python
+colors = ["red", "green"]
+colors.append("blue")
+print(colors)  # ['red', 'green', 'blue']
+
+point = (3, 4)
+point[0] = 5  # TypeError: 'tuple' object does not support item assignment
+```
 
 ---
 
 ## 3. What is `__init__()`?
 
-**Keywords:** `Constructor` · `Initialize` · `Object`
+**Expectations:** Constructor · Initialize · Object
 
-**Expectations:** Explain that `__init__()` is called when an object is created and is mainly used to initialize the object's state and properties.
+**Example answer:**
+
+> `__init__()` is the method Python calls automatically after a new instance of a class is created. It is often called the constructor, although technically `__new__()` creates the object and `__init__()` initializes it.
+>
+> I use it to assign initial values to the object's attributes and run any setup the object needs.
+
+```python
+class BookShop:
+    def __init__(self, title):
+        self.title = title
+
+    def book(self):
+        print("The title of the book is", self.title)
+
+
+b = BookShop("Sandman")
+b.book()  # The title of the book is Sandman
+```
 
 ---
 
 ## 4. Mutable vs Immutable
 
-**Keywords:** `Mutable = Change` · `Immutable = Cannot Change`
+**Expectations:** Mutable = can change · Immutable = cannot change
 
-**Expectations:** Explain that mutable objects can be modified after creation while immutable objects cannot be changed. Name `list`, `dict`, and `set` as mutable examples, and `string`, `tuple`, and numbers as immutable ones.
+**Example answer:**
+
+> Mutable objects can be changed after creation. Examples are `list`, `dict`, and `set`: I can add, remove, or update elements in place, which suits collections that change often.
+>
+> Immutable objects cannot be changed after creation. Examples are `int`, `float`, `str`, `tuple`, and `frozenset`. Any operation that looks like a modification actually creates a new object.
+>
+> A common trap is that reassigning a variable is not mutation. `name = "world"` just points the name at a new string object; the old string was never changed.
+
+```python
+nums = [1, 2, 3]
+nums.append(4)        # the same list object is modified
+print(nums)           # [1, 2, 3, 4]
+
+text = "hello"
+upper = text.upper()  # returns a new string
+print(text)           # hello
+
+point = (1, 2, 3)
+point[0] = 4          # TypeError
+```
 
 ---
 
 ## 5. What is Comprehension?
 
-**Keywords:** `One-line` · `List` · `Dictionary` · `Generator`
+**Expectations:** One-line · List · Dictionary · Generator
 
-**Expectations:** Define a comprehension as a concise way to create collections from an iterable, and mention that list and dictionary comprehensions are common. Point out that `(x for x in ...)` creates a generator expression.
+**Example answer:**
+
+> A comprehension is a concise way to build a new collection from an iterable in a single expression, instead of writing a multi-line `for` loop.
+>
+> A **list comprehension** uses square brackets, and a **dictionary comprehension** uses curly braces with `key: value` pairs.
+>
+> There is no tuple comprehension. Parentheses create a **generator expression**, which produces values lazily. To get a tuple, I pass a generator to `tuple()`.
 
 ```python
-squares = [x ** 2 for x in range(5)]
+squares = [i ** 2 for i in range(1, 6)]
+# [1, 4, 9, 16, 25]
+
+square_map = {i: i ** 2 for i in range(1, 6)}
+# {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+
+gen = (i for i in range(1, 6))
+# <generator object <genexpr> ...>
+
+numbers = tuple(i for i in range(1, 6))
+# (1, 2, 3, 4, 5)
 ```
 
 ---
 
 ## 6. What is the GIL?
 
-**Keywords:** `CPython` · `One Thread` · `CPU-bound` · `I/O-bound`
+**Expectations:** CPython · One thread · CPU-bound · I/O-bound
 
-**Expectations:** Explain that in CPython the Global Interpreter Lock allows only one native thread to execute Python bytecode at a time. Point out that this limits multithreading for CPU-bound tasks but works well for I/O-bound operations.
+**Example answer:**
+
+> The Global Interpreter Lock is a mutex in CPython, the reference Python implementation, that allows only one native thread to execute Python bytecode at a time.
+>
+> It simplifies memory management by protecting internal state such as reference counts, but it prevents true parallelism for CPU-bound work in threads. For I/O-bound work, threads still help, because they release the GIL while waiting on the network, files, or a database.
+>
+> For CPU-bound work, I would use `multiprocessing` or libraries that do heavy work in C outside the GIL, such as NumPy. Python 3.13 added an experimental free-threaded build without the GIL (PEP 703), and Python 3.14 makes it officially supported, though some C extensions are not yet compatible.
 
 ---
 
@@ -65,119 +148,296 @@ squares = [x ** 2 for x in range(5)]
 
 ## 7. Common Searching and Graph Algorithms
 
-**Keywords:** `Binary Search` · `BFS` · `DFS` · `A*` · `AVL`
+**Expectations:** Binary search · BFS · DFS · A\* · AVL tree
 
-**Expectations:** Name each algorithm with its purpose: **Binary Search** searches sorted data efficiently, **BFS** traverses level by level and is useful for shortest paths, and **DFS** explores deeply before backtracking. Also mention **A*** for pathfinding using heuristics and **AVL** as a self-balancing search tree.
+**Example answer:**
+
+> - **Binary search** finds an item in a sorted list by repeatedly halving the search range, in O(log n) time. In Python, the `bisect` module implements it.
+> - **An AVL tree** is a self-balancing binary search tree. It rebalances after inserts and deletes, so searches stay O(log n).
+> - **Breadth-first search (BFS)** explores a graph level by level, usually with a `collections.deque` queue. It finds the shortest path in an unweighted graph.
+> - **Depth-first search (DFS)** goes as deep as possible down one branch before backtracking, using recursion or a stack. It suits maze solving, cycle detection, and tree traversal.
+> - **A\* search** finds the shortest path by combining the cost so far with a heuristic estimate of the remaining distance. It is common in maps and games.
+
+```python
+from collections import deque
+
+def bfs(graph, start):
+    visited = {start}
+    queue = deque([start])
+    order = []
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+    return order
+```
 
 ---
 
 ## 8. What is a `KeyError`?
 
-**Keywords:** `Missing Key` · `.get()` · `try/except` · `in`
+**Expectations:** Missing key · `.get()` · `try/except` · `in`
 
-**Expectations:** Explain that a `KeyError` occurs when accessing a dictionary key that does not exist. Name the common fixes: use `.get()`, wrap the access in `try/except`, or check `if key in data` first.
+**Example answer:**
+
+> A `KeyError` is raised when I access a dictionary key that does not exist, for example looking up a student who isn't in a dictionary of scores.
+>
+> I can handle it in three ways: use `.get()` to return `None` or a default value, wrap the access in `try/except KeyError`, or check `if key in scores` before accessing it. If missing keys should get a default automatically, `collections.defaultdict` is another option.
 
 ```python
-data.get("name")
+scores = {"alice": 90}
+
+scores.get("bob")     # None
+scores.get("bob", 0)  # 0
+
+try:
+    scores["bob"]
+except KeyError:
+    print("Student not found")
+
+if "bob" in scores:
+    print(scores["bob"])
 ```
 
 ---
 
 ## 9. How Does Python Manage Memory?
 
-**Keywords:** `Private Heap` · `Reference Counting` · `Garbage Collection`
+**Expectations:** Private heap · Reference counting · Garbage collection
 
-**Expectations:** Explain that Python manages memory automatically using a private heap, and mention that reference counting and garbage collection remove objects that are no longer needed.
+**Example answer:**
+
+> Python manages memory automatically. All objects live in a private heap, and the memory manager handles allocation and deallocation.
+>
+> CPython mainly uses **reference counting**: each object tracks how many references point to it, and when the count drops to zero, its memory is freed immediately. Reference counting cannot free objects that reference each other in a cycle, so a **cyclic garbage collector** periodically finds and collects those.
+>
+> The `gc` module lets me interact with the collector, for example to run a collection with `gc.collect()` or disable it temporarily.
 
 ---
 
 ## 10. Shallow Copy vs Deep Copy
 
-**Keywords:** `Reference` · `Nested Objects` · `Independent Copy`
+**Expectations:** Reference · Nested objects · Independent copy
 
-**Expectations:** Contrast a **shallow copy**, which creates a new outer object but keeps references to nested objects, with a **deep copy**, which recursively copies nested objects to create a fully independent structure.
+**Example answer:**
+
+> A **shallow copy** creates a new outer object but fills it with references to the same inner objects. If the original contains nested mutable objects, such as lists inside a list, a change to an inner object shows up in both. I create one with `list.copy()`, slicing, or `copy.copy()`.
+>
+> A **deep copy** recursively copies every nested object, so the result is fully independent. I create one with `copy.deepcopy()`.
+>
+> I use a shallow copy when the contents are immutable or when sharing nested objects is intended, and a deep copy for nested structures I want to modify independently.
+
+```python
+import copy
+
+original = [[1, 2], [3, 4]]
+shallow = copy.copy(original)
+deep = copy.deepcopy(original)
+
+original[0].append(99)
+print(shallow)  # [[1, 2, 99], [3, 4]]
+print(deep)     # [[1, 2], [3, 4]]
+```
 
 ---
 
 ## 11. What is the `collections` Module?
 
-**Keywords:** `Counter` · `defaultdict` · `deque` · `OrderedDict`
+**Expectations:** `Counter` · `defaultdict` · `deque` · `OrderedDict`
 
-**Expectations:** Explain that the `collections` module provides specialized data structures. Give examples such as `Counter` for counting elements and `defaultdict` for simplifying dictionary initialization.
+**Example answer:**
+
+> The `collections` module provides specialized data structures that simplify common tasks:
+>
+> - `Counter` counts elements in an iterable.
+> - `defaultdict` creates a default value for missing keys, so I don't need explicit checks.
+> - `deque` is a double-ended queue with fast appends and pops on both ends, useful for BFS and sliding windows.
+> - `OrderedDict` remembers insertion order and can move keys to the end, which helps with LRU caches. Regular dicts also keep insertion order since Python 3.7.
 
 ```python
-from collections import Counter
+from collections import Counter, defaultdict
 
-Counter(["a", "b", "a"])
+Counter(["a", "b", "c", "a", "b", "a"])
+# Counter({'a': 3, 'b': 2, 'c': 1})
+
+groups = defaultdict(list)
+groups["fruits"].append("apple")
+# defaultdict(<class 'list'>, {'fruits': ['apple']})
 ```
 
 ---
 
 ## 12. What is Monkey Patching?
 
-**Keywords:** `Runtime` · `Modify Behavior` · `Class` · `Module`
+**Expectations:** Runtime · Modify behavior · Class · Module
 
-**Expectations:** Define monkey patching as changing or replacing the behavior of a class or module at runtime. Mention that it can be useful in testing, but point out that excessive use makes code harder to understand.
+**Example answer:**
+
+> Monkey patching means changing the behavior of a class or module at runtime, for example by replacing one of its methods with another function.
+>
+> It is most useful in tests, to replace a slow or external dependency. I use it sparingly in application code, because it makes behavior harder to follow and can surprise other developers. In tests, I prefer `unittest.mock.patch` or pytest's `monkeypatch` fixture, which undo the change automatically.
+
+```python
+class Monkey:
+    def patch(self):
+        print("patch() is being called")
+
+
+def monk_p(self):
+    print("monk_p() is being called")
+
+
+Monkey.patch = monk_p
+
+Monkey().patch()  # monk_p() is being called
+```
 
 ---
 
 ## 13. What is the `with` Statement?
 
-**Keywords:** `Resource Management` · `Cleanup` · `File`
+**Expectations:** Resource management · Cleanup · File
 
-**Expectations:** Explain that the `with` statement manages resources automatically and ensures cleanup. Give the file example and point out that the file is closed automatically after the block.
+**Example answer:**
+
+> The `with` statement is designed for resource management. It uses a context manager to set up a resource and guarantee cleanup when the block ends, even if an exception is raised.
+>
+> The common example is files: instead of writing `open`, `try`, `finally`, and `close`, I use `with open(...)`, and the file is closed automatically. The same pattern works for locks, database connections, and transactions.
 
 ```python
-with open("file.txt") as file:
-    data = file.read()
+with open("myfile.txt", "w") as file:
+    file.write("Hello, world!")
+# the file is closed here
 ```
 
 ---
 
 ## 14. Why Use `else` with `try/except`?
 
-**Keywords:** `No Exception` · `Success`
+**Expectations:** No exception · Success
 
-**Expectations:** Explain that the `else` block runs only when the `try` block completes without an exception.
+**Example answer:**
+
+> The `else` block runs only when the `try` block finishes without raising an exception.
+>
+> It keeps the `try` block small: only the code that might fail goes in `try`, and the follow-up code for the success case goes in `else`. That way, I don't accidentally catch exceptions from code I didn't mean to protect.
+>
+> In this example, entering `2` and `d` triggers the `except` block, while entering `2` and `1` prints the result from the `else` block.
 
 ```python
 try:
-    result = 10 / 2
-except:
-    print("Error")
+    num1 = int(input("Enter Numerator: "))
+    num2 = int(input("Enter Denominator: "))
+    division = num1 / num2
+except (ValueError, ZeroDivisionError):
+    print("Invalid input!")
 else:
-    print("Success")
+    print(f"Result is: {division}")
+    print("Division is successful.")
 ```
 
 ---
 
 ## 15. What are Decorators?
 
-**Keywords:** `Wrapper` · `Extend Behavior` · `@decorator`
+**Expectations:** Wrapper · Extend behavior · `@decorator`
 
-**Expectations:** Explain that a decorator adds behavior to an existing function without modifying the function itself. Mention common uses such as logging, authentication, caching, and timing.
+**Example answer:**
+
+> A decorator is a function that takes another function and returns a new function that adds behavior around it, without changing the original function's code. The `@decorator` syntax applies it.
+>
+> Common uses are logging, authentication checks, caching, retries, and timing. I use `functools.wraps` inside the wrapper so the decorated function keeps its original name and docstring.
 
 ```python
+import functools
+
+def my_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print("Something is happening before the function is called.")
+        result = func(*args, **kwargs)
+        print("Something is happening after the function is called.")
+        return result
+    return wrapper
+
 @my_decorator
-def hello():
-    print("Hello")
+def say_hello():
+    print("Hello!")
+
+say_hello()
+# Something is happening before the function is called.
+# Hello!
+# Something is happening after the function is called.
 ```
 
 ---
 
 ## 16. What are Context Managers?
 
-**Keywords:** `__enter__` · `__exit__` · `with` · `Resource`
+**Expectations:** `__enter__` · `__exit__` · `with` · Resource
 
-**Expectations:** Explain that context managers control how resources are acquired and released. Walk through how the `with` statement calls `__enter__()` when entering the block and `__exit__()` when leaving it.
+**Example answer:**
+
+> A context manager controls how a resource is acquired and released. When a `with` block starts, Python calls `__enter__()`, and its return value is bound to the name after `as`. When the block ends, even because of an exception, Python calls `__exit__()` to clean up.
+>
+> I can implement one as a class with those two methods, or more simply with the `contextlib.contextmanager` decorator on a generator function.
+
+```python
+class FileManager:
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+
+    def __enter__(self):
+        self.file = open(self.filename, self.mode)
+        return self.file
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.file.close()
+
+
+with FileManager("test.txt", "w") as f:
+    f.write("Hello, world!")
+```
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def file_manager(filename, mode):
+    file = open(filename, mode)
+    try:
+        yield file
+    finally:
+        file.close()
+```
 
 ---
 
 ## 17. What are Metaclasses?
 
-**Keywords:** `Class of Classes` · `type` · `Create Classes`
+**Expectations:** Class of classes · `type` · Create classes
 
-**Expectations:** Define a metaclass as a class that creates other classes. Put it simply: an object is created by a class, and a class is created by a metaclass.
+**Example answer:**
+
+> A metaclass is the class of a class. A regular class creates objects, and a metaclass creates classes. The default metaclass is `type`.
+>
+> With a custom metaclass, I can modify a class definition when it is created, for example to enforce naming rules, register classes automatically, or add methods. In practice, class decorators or `__init_subclass__` are often simpler, so I reach for metaclasses mainly in framework-level code.
+
+```python
+class Meta(type):
+    def __new__(cls, name, bases, dct):
+        print(f"Creating class {name}")
+        return super().__new__(cls, name, bases, dct)
+
+
+class MyClass(metaclass=Meta):
+    pass
+# Creating class MyClass
+```
 
 ---
 
@@ -185,45 +445,123 @@ def hello():
 
 ## 18. NumPy vs Python Lists
 
-**Keywords:** `Memory Efficient` · `Fast` · `C` · `Vectorization`
+**Expectations:** Memory efficient · Fast · C · Vectorization
 
-**Expectations:** Explain that NumPy arrays are more memory-efficient and faster for numerical operations than Python lists because NumPy uses optimized C implementations and supports vectorized operations.
+**Example answer:**
+
+> NumPy arrays have three main advantages over Python lists:
+>
+> - **Memory**: they store elements of one type in a contiguous block, instead of a list of pointers to separate Python objects.
+> - **Speed**: operations run in optimized C code, so they are much faster on large arrays.
+> - **Vectorization**: I can apply arithmetic to a whole array at once, such as `arr * 2`, and use many built-in math functions that lists don't have.
+
+```python
+import numpy as np
+
+nums = [1, 2, 3]
+arr = np.array(nums)
+
+nums * 2  # [1, 2, 3, 1, 2, 3]
+arr * 2   # array([2, 4, 6])
+```
 
 ---
 
 ## 19. `merge()` vs `join()` vs `concat()`
 
-**Keywords:** `merge → columns` · `join → index` · `concat → rows/columns`
+**Expectations:** `merge` → columns · `join` → index · `concat` → rows/columns
 
-**Expectations:** Contrast the three: `merge()` combines DataFrames using specified columns, `join()` combines them using indexes, and `concat()` combines multiple DataFrames vertically or horizontally.
+**Example answer:**
+
+> - `merge()` combines two DataFrames based on one or more common columns, like a SQL join. The `how` argument can be `inner` (the default), `left`, `right`, `outer`, or `cross`.
+> - `join()` combines DataFrames based on their index. It performs a left join by default, and the `on` argument can match a column of the calling DataFrame against the other DataFrame's index.
+> - `concat()` stacks two or more DataFrames along an axis, vertically by default or horizontally with `axis=1`. It does not match on keys.
+
+```python
+import pandas as pd
+
+pd.merge(df1, df2, how="outer", on="id")
+df1.join(df2)
+pd.concat([df1, df2])
+```
 
 ---
 
 ## 20. How Do You Handle Missing Values?
 
-**Keywords:** `isnull()` · `dropna()` · `fillna()` · `replace()` · `interpolate()`
+**Expectations:** `isnull()` · `dropna()` · `fillna()` · `replace()` · `interpolate()`
 
-**Expectations:** Walk through first identifying missing values with `df.isnull().sum()`, then choosing an appropriate strategy such as removing, filling, replacing, or interpolating them.
+**Example answer:**
+
+> First, I identify missing values with `df.isnull().sum()`, which counts the missing values in each column.
+>
+> Then I choose a strategy based on the data:
+>
+> - Drop rows or columns with `dropna()`, but only when a small share of a large dataset is missing, because dropping loses information.
+> - Fill with a constant, the mean or median, or neighboring values using `fillna()`, `ffill()`, or `bfill()`.
+> - Replace a specific marker value with `replace()`.
+> - Estimate values from their neighbors with `interpolate()`, which works well for time series.
 
 ```python
+import numpy as np
+import pandas as pd
+
+df = pd.DataFrame({
+    "id": [1, 4, np.nan, 9],
+    "age": [30, 45, np.nan, np.nan],
+    "score": [np.nan, 140, 180, 198],
+})
+
 df.isnull().sum()
+# id       1
+# age      2
+# score    1
+
+df.dropna(axis=0, how="any")
+df.fillna(df.mean())
+df.bfill()
+df.replace(to_replace=np.nan, value=-999)
+df.interpolate(method="linear", limit_direction="forward")
 ```
 
 ---
 
 ## 21. Python Visualization Libraries
 
-**Keywords:** `Matplotlib` · `Seaborn` · `Plotly` · `Bokeh`
+**Expectations:** Matplotlib · Seaborn · Plotly · Bokeh
 
-**Expectations:** Name the main libraries and their focus: **Matplotlib** for general visualization, **Seaborn** for statistical visualization, **Plotly** for interactive charts and dashboards, and **Bokeh** for interactive visualization.
+**Example answer:**
+
+> The libraries I've used most are:
+>
+> - **Matplotlib** for general, highly customizable static charts.
+> - **Seaborn**, built on Matplotlib, for statistical charts with good defaults.
+> - **Plotly** for interactive charts and dashboards, for example with Dash.
+> - **Bokeh** for interactive, browser-based visualizations of large datasets.
+>
+> Matplotlib and Seaborn cover most analysis work. I use Plotly or Bokeh when the output needs interactivity or will live in a web app.
 
 ---
 
 ## 22. Normalization vs Standardization
 
-**Keywords:** `Normalization → 0–1` · `Standardization → Mean 0, Std 1`
+**Expectations:** Normalization → 0–1 · Standardization → mean 0, std 1
 
-**Expectations:** Contrast **normalization**, which scales values into a specific range (usually `[0, 1]`), with **standardization**, which transforms data to have a mean of `0` and a standard deviation of `1`.
+**Example answer:**
+
+> **Normalization** rescales values into a fixed range, usually `[0, 1]`, using the minimum and maximum. **Standardization** transforms values to have a mean of `0` and a standard deviation of `1`.
+>
+> Many machine learning models, such as k-nearest neighbors, SVMs, and models trained with gradient descent, work better when features are on similar scales. I use normalization when I need bounded values, and standardization when the data has outliers that would distort min-max scaling. I fit the scaler on the training data only and then apply it to the test data, to avoid data leakage.
+
+```python
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+data = np.array([[1, 2], [3, 4], [5, 6]])
+
+normalized = MinMaxScaler().fit_transform(data)
+standardized = StandardScaler().fit_transform(data)
+```
 
 ---
 
@@ -231,77 +569,181 @@ df.isnull().sum()
 
 ## 23. Replace Spaces with a Character
 
-**Keywords:** `str.replace()`
+**Expectations:** `str.replace()`
 
-**Expectations:** Use Python's built-in `replace()` method and state O(n) time.
+**Example answer:**
+
+> I would use the built-in `str.replace()` method, which replaces every space with the given character in O(n) time.
+>
+> For example, the string `"l vey u"` with the character `"o"` becomes `"loveyou"`.
 
 ```python
-text.replace(" ", "-")
+def str_replace(text, ch):
+    return text.replace(" ", ch)
+
+str_replace("l vey u", "o")
+# 'loveyou'
 ```
 
 ---
 
 ## 24. Check if a Number is a Perfect Square
 
-**Keywords:** `math.isqrt()` · `Square`
+**Expectations:** `math.isqrt()` · Square
 
-**Expectations:** Walk through getting the integer square root with `math.isqrt()`, squaring it again, and checking whether the result equals the original number.
+**Example answer:**
+
+> I use `math.isqrt(num)` to get the exact integer square root, square it, and check whether the result equals the original number. Using `isqrt` avoids the floating-point errors that `math.sqrt` can have with large numbers.
+>
+> For `10`, the integer square root is `3`, and `3 * 3 = 9`, so it returns `False`. For `36`, the root is `6`, and `6 * 6 = 36`, so it returns `True`.
 
 ```python
-root = math.isqrt(num)
-return root * root == num
+import math
+
+def valid_square(num):
+    if num < 0:
+        return False
+    root = math.isqrt(num)
+    return root * root == num
+
+valid_square(10)  # False
+valid_square(36)  # True
 ```
 
 ---
 
 ## 25. Count Trailing Zeros in `n!`
 
-**Keywords:** `Factorial` · `Trailing Zeros` · `Count from Right`
+**Expectations:** Factorial · Trailing zeros · Factors of 5
 
-**Expectations:** Walk through calculating the factorial, then counting the zeros from the end, and give an example such as `7! = 5040` having one trailing zero.
+**Example answer:**
 
-```text
-7! = 5040 → 1 trailing zero
+> The straightforward approach is to calculate `n!`, convert it to a string, and count the zeros from the right. For example, `7! = 5040` has two zeros in total but only one trailing zero, so the answer is `1`.
+>
+> That works for small `n`, but factorials grow very fast. The better approach is to notice that each trailing zero comes from a factor of 10, which is `2 × 5`, and factors of 2 are always more common. So I count the factors of 5 in `n!`: `n // 5 + n // 25 + n // 125 + ...`. That runs in O(log n) time.
+
+```python
+import math
+
+def factorial_trailing_zeros_naive(n):
+    digits = str(math.factorial(n))
+    return len(digits) - len(digits.rstrip("0"))
+
+def factorial_trailing_zeros(n):
+    count = 0
+    while n >= 5:
+        n //= 5
+        count += n
+    return count
+
+factorial_trailing_zeros(10)  # 2
+factorial_trailing_zeros(18)  # 3
 ```
 
 ---
 
 ## 26. Can a String Be Split into Dictionary Words?
 
-**Keywords:** `Recursion` · `String Segmentation` · `Memoization`
+**Expectations:** Recursion · String segmentation · Memoization
 
-**Expectations:** Walk through a recursive approach that tries splitting the string at different positions and checks whether each part exists in the dictionary. Mention using **memoization** to avoid recalculating the same substring repeatedly.
+**Example answer:**
+
+> I try every split point. If the prefix `s[:i]` is a dictionary word, I recursively check whether the rest of the string, `s[i:]`, can also be segmented. An empty remainder means the whole string was split successfully.
+>
+> Without caching, the same suffixes get checked again and again, which is exponential in the worst case. With **memoization**, each suffix is solved only once, which brings the work down to polynomial time. I also store the dictionary as a set for O(1) lookups.
+>
+> For example, `"applepie"` with the words `apple`, `pie`, `pen`, and `app` returns `True`.
+
+```python
+def can_segment_str(s, words, memo=None):
+    if memo is None:
+        memo = {}
+    if not s:
+        return True
+    if s in memo:
+        return memo[s]
+
+    for i in range(1, len(s) + 1):
+        if s[:i] in words and can_segment_str(s[i:], words, memo):
+            memo[s] = True
+            return True
+
+    memo[s] = False
+    return False
+
+can_segment_str("applepie", {"apple", "pie", "pen", "app"})
+# True
+```
 
 ---
 
 ## 27. Remove Duplicates from a Sorted Array
 
-**Keywords:** `Sorted` · `In-place` · `Two Pointers`
+**Expectations:** Sorted · In-place · Two pointers
 
-**Expectations:** Walk through an in-place two-pointer approach: because the array is sorted, compare each element with the previous unique value and write unique values into the array. State O(n) time, O(1) space.
+**Example answer:**
+
+> Because the array is sorted, duplicates sit next to each other. I use two pointers: `i` scans the array, and `insert_index` marks where the next unique value goes. Whenever `array[i]` differs from the previous element, I write it at `insert_index` and move `insert_index` forward.
+>
+> At the end, `insert_index` is `k`, the number of unique elements, and `array[:k]` holds them. This is O(n) time and O(1) extra space. For example, `[1, 1, 2, 3, 3]` returns `3`.
+
+```python
+def remove_duplicates(array):
+    if not array:
+        return 0
+    insert_index = 1
+    for i in range(1, len(array)):
+        if array[i - 1] != array[i]:
+            array[insert_index] = array[i]
+            insert_index += 1
+    return insert_index
+
+array = [1, 2, 2, 3, 3, 4]
+k = remove_duplicates(array)
+# k = 4, array[:k] -> [1, 2, 3, 4]
+```
 
 ---
 
 ## 28. Find the Missing Number
 
-**Keywords:** `Expected Sum` · `Actual Sum` · `Difference`
+**Expectations:** Expected sum · Actual sum · Difference
 
-**Expectations:** Walk through calculating the expected sum from `1` to `n` and subtracting the actual array sum, and state O(n) time, O(1) space.
+**Example answer:**
+
+> The list contains the numbers from `1` to `n` with exactly one missing, so `n` is the list length plus one. I calculate the expected sum with the arithmetic series formula `n * (n + 1) // 2`, subtract the actual sum of the list, and the difference is the missing number.
+>
+> For example, `[4, 5, 3, 2, 8, 1, 6]` has `n = 8`, and the missing number is `7`. This is O(n) time and O(1) space.
 
 ```python
-missing = expected_sum - actual_sum
+def find_missing(nums):
+    n = len(nums) + 1
+    expected_sum = n * (n + 1) // 2
+    return expected_sum - sum(nums)
+
+find_missing([4, 5, 3, 2, 8, 1, 6])  # 7
+find_missing([1, 5, 6, 3, 4])        # 2
 ```
 
 ---
 
 ## 29. Check if a String is a Palindrome
 
-**Keywords:** `Reverse` · `Normalize`
+**Expectations:** Reverse · Normalize
 
-**Expectations:** Define a palindrome as a string that reads the same forward and backward, then compare the string with its reverse and state O(n) time, O(n) space for the reversed copy.
+**Example answer:**
+
+> A palindrome reads the same forward and backward. I first normalize the string by keeping only letters and digits and converting it to lowercase, then compare it with its reverse using `s[::-1]`.
+>
+> This is O(n) time and O(n) space for the cleaned and reversed copies. If memory matters, I can compare characters with two pointers from both ends for O(1) extra space.
 
 ```python
-return s == s[::-1]
+def is_palindrome(s):
+    s = "".join(ch for ch in s if ch.isalnum()).lower()
+    return s == s[::-1]
+
+is_palindrome("A man, a plan, a canal: Panama")  # True
+is_palindrome("hello")                           # False
 ```
 
 ---
@@ -310,92 +752,239 @@ return s == s[::-1]
 
 ## 30. Maximum Single Stock Profit
 
-**Keywords:** `Minimum Price` · `Current Profit` · `Max Profit`
+**Expectations:** Minimum price · Current profit · Max profit
 
-**Expectations:** Walk through a single pass over the prices that tracks the lowest price so far, the current profit, and the maximum profit. State O(n) time, O(1) space.
+**Example answer:**
 
-```text
-minimum price → current profit → maximum profit
+> I make one pass over the prices while tracking the lowest buy price seen so far and the best profit. For each price, I calculate the profit of selling at that price after buying at the lowest earlier price. If it beats the best profit, I record this price as the sell price. Then I update the lowest buy price if the current price is lower.
+>
+> I start the best profit as the difference between the first two prices, so if prices only fall, the function still returns the smallest loss. At the end, the buy price is the sell price minus the best profit. This is O(n) time and O(1) space.
+>
+> For example, `[8, 4, 12, 9, 20, 1]` returns buy `4` and sell `20`, and `[8, 6, 5, 4, 3, 2, 1]` returns buy `6` and sell `5`.
+
+```python
+def buy_sell_stock_prices(prices):
+    current_buy = prices[0]
+    global_sell = prices[1]
+    global_profit = global_sell - current_buy
+
+    for i in range(1, len(prices)):
+        current_profit = prices[i] - current_buy
+
+        if current_profit > global_profit:
+            global_profit = current_profit
+            global_sell = prices[i]
+
+        if current_buy > prices[i]:
+            current_buy = prices[i]
+
+    return global_sell - global_profit, global_sell
+
+buy_sell_stock_prices([8, 4, 12, 9, 20, 1])   # (4, 20)
+buy_sell_stock_prices([8, 6, 5, 4, 3, 2, 1])  # (6, 5)
 ```
 
 ---
 
 ## 31. Find a Pythagorean Triplet
 
-**Keywords:** `a² + b² = c²` · `Square` · `Sort` · `Set`
+**Expectations:** a² + b² = c² · Square · Sort · Set
 
-**Expectations:** Walk through squaring the numbers, sorting them, and checking whether two squared values can produce the third using `a² + b² = c²`. State O(n²) time, O(n) space when the pair check uses a set of squares.
+**Example answer:**
 
-```text
-a² + b² = c²
+> I square every element and sort the squares. For each candidate `c²`, starting from the largest, I scan the smaller squares and keep a set of the values seen so far. If `c² - b²` is already in the set, then some `a² + b² = c²`, so a triplet exists.
+>
+> This is O(n²) time and O(n) space for the set. For example, `[3, 1, 4, 6, 5]` returns `True` because `3² + 4² = 5²`, and `[10, 4, 6, 12, 5]` returns `False`.
+
+```python
+def check_triplet(nums):
+    squares = sorted(x * x for x in nums)
+    n = len(squares)
+
+    for i in range(n - 1, 1, -1):
+        seen = set()
+        for j in range(i - 1, -1, -1):
+            if squares[i] - squares[j] in seen:
+                return True
+            seen.add(squares[j])
+    return False
+
+check_triplet([3, 1, 4, 6, 5])    # True
+check_triplet([10, 4, 6, 12, 5])  # False
 ```
 
 ---
 
 ## 32. Coin Change
 
-**Keywords:** `Dynamic Programming` · `DP Array`
+**Expectations:** Dynamic programming · DP array
 
-**Expectations:** Walk through a dynamic programming approach with a DP array of size `amount + 1`, initializing `dp[0] = 1` and then updating the number of ways for each coin with `dp[i] += dp[i - coin]`. State O(amount × number of coins) time, O(amount) space.
+**Example answer:**
+
+> This is a dynamic programming problem. I create a list `solution` of size `amount + 1`, where `solution[i]` is the number of ways to make amount `i`. I set `solution[0] = 1`, because there is exactly one way to make zero: use no coins.
+>
+> Then, for each coin, I loop from the coin's value up to the amount and add `solution[i - coin]` to `solution[i]`. Putting the coins in the outer loop counts combinations rather than orderings. The answer is `solution[amount]`.
+>
+> For coins `[1, 2, 5]` and amount `5`, there are four ways. This is O(amount × number of coins) time and O(amount) space.
 
 ```python
-dp[0] = 1
-```
+def solve_coin_change(denominations, amount):
+    solution = [0] * (amount + 1)
+    solution[0] = 1
+    for coin in denominations:
+        for i in range(coin, amount + 1):
+            solution[i] += solution[i - coin]
+    return solution[amount]
 
-```python
-dp[i] += dp[i - coin]
+solve_coin_change([1, 2, 5], 5)  # 4
 ```
 
 ---
 
 ## 33. Lambda vs Iterator vs Generator
 
-**Keywords:** `Lambda → Anonymous` · `Iterator → Iterate` · `Generator → yield`
+**Expectations:** Lambda → anonymous · Iterator → iterate · Generator → `yield`
 
-**Expectations:** Contrast the three: a **lambda** is a small anonymous function, an **iterator** is an object used to iterate over data, and a **generator** produces values lazily using `yield`.
+**Example answer:**
+
+> A **lambda** is an anonymous function written in one line. It can take any number of arguments but contains a single expression, whose value is returned. I use it for short functions passed to `sorted()`, `map()`, or `filter()`.
+>
+> An **iterator** is an object that returns values one at a time. It implements `__iter__()` and `__next__()`, and raises `StopIteration` when it runs out. Lists, dictionaries, tuples, and sets are iterables: calling `iter()` on them returns an iterator.
+>
+> A **generator** is a function that uses `yield` instead of `return`. Calling it returns an iterator that produces values lazily, pausing at each `yield`, which saves memory for large or infinite sequences.
+
+```python
+square = lambda x: x * x
+square(4)  # 16
+
+it = iter([1, 2, 3])
+next(it)   # 1
+next(it)   # 2
+
+def count_up(n):
+    for i in range(n):
+        yield i
+
+list(count_up(3))  # [0, 1, 2]
+```
 
 ---
 
 ## 34. Maximum `j - i`
 
-**Keywords:** `arr[j] > arr[i]` · `Index Difference` · `Maximum`
+**Expectations:** `arr[j] > arr[i]` · Index difference · Maximum
 
-**Expectations:** Explain that the goal is to find two indexes where `arr[j] > arr[i]` and maximize the index difference `j - i`.
+**Example answer:**
 
-```text
-arr[j] > arr[i]
-```
+> The goal is to find indexes `i` and `j` where `arr[j] > arr[i]` and `j - i` is as large as possible.
+>
+> The brute-force solution uses two loops: for each `i` from the left, scan `j` from the right end and stop at the first `arr[j] > arr[i]`, since that gives the largest gap for this `i`. This is O(n²) time and O(1) space.
+>
+> To get O(n) time, I build a prefix-minimum array and a suffix-maximum array, then walk both with two pointers. For example, `[20, 70, 40, 50, 12, 38, 98]` returns `6`, with `i = 0` and `j = 6`.
 
-```text
-j - i
+```python
+def max_index_diff(arr):
+    n = len(arr)
+    max_diff = -1
+    for i in range(n):
+        for j in range(n - 1, i, -1):
+            if arr[j] > arr[i]:
+                max_diff = max(max_diff, j - i)
+                break
+    return max_diff
+
+def max_index_diff_linear(arr):
+    n = len(arr)
+    left_min = [arr[0]] * n
+    for i in range(1, n):
+        left_min[i] = min(left_min[i - 1], arr[i])
+
+    right_max = [arr[-1]] * n
+    for j in range(n - 2, -1, -1):
+        right_max[j] = max(right_max[j + 1], arr[j])
+
+    i = j = 0
+    max_diff = -1
+    while i < n and j < n:
+        if left_min[i] < right_max[j]:
+            max_diff = max(max_diff, j - i)
+            j += 1
+        else:
+            i += 1
+    return max_diff
+
+max_index_diff([20, 70, 40, 50, 12, 38, 98])                 # 6
+max_index_diff_linear([10, 3, 2, 4, 5, 6, 7, 8, 18, 0])      # 8
 ```
 
 ---
 
 ## 35. What is a Ternary Operator?
 
-**Keywords:** `Conditional Expression` · `One Line`
+**Expectations:** Conditional expression · One line
 
-**Expectations:** Explain that a ternary operator is a compact way to write a simple `if/else`.
+**Example answer:**
+
+> A ternary operator, or conditional expression, picks one of two values based on a condition in a single line: `value_if_true if condition else value_if_false`.
+>
+> It keeps simple `if/else` assignments compact. I can chain them, but more than one level quickly becomes hard to read, so for anything complex I go back to a regular `if/elif/else`.
 
 ```python
-result = "Pass" if score >= 50 else "Fail"
+score = 75
+
+if score < 50:
+    grade = "Fail"
+elif score < 70:
+    grade = "Merit"
+else:
+    grade = "Distinction"
+
+grade = "Fail" if score < 50 else "Merit" if score < 70 else "Distinction"
+# Distinction
 ```
 
 ---
 
 ## 36. How Do You Implement an LRU Cache?
 
-**Keywords:** `LRU` · `lru_cache` · `OrderedDict`
+**Expectations:** LRU · `lru_cache` · `OrderedDict`
 
-**Expectations:** Mention Python's built-in `functools.lru_cache` decorator, and walk through `OrderedDict` as the option for a manual implementation. State O(1) time for cache lookups and updates.
+**Example answer:**
+
+> The simplest option is the built-in `functools.lru_cache` decorator, which caches a function's results and evicts the least recently used entry once `maxsize` is reached.
+>
+> For a manual implementation, I use `OrderedDict`. On `get`, I move the key to the end to mark it as recently used. On `put`, I insert or update the key, move it to the end, and if the cache is over capacity, remove the oldest item with `popitem(last=False)`. Both operations are O(1).
 
 ```python
 from functools import lru_cache
 
 @lru_cache(maxsize=3)
-def calculate(x):
-    ...
+def add(a, b):
+    return a + b
+
+add(1, 2)  # calculated and cached
+add(1, 2)  # returned from the cache
+```
+
+```python
+from collections import OrderedDict
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+
+    def get(self, key):
+        if key not in self.cache:
+            return None
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put(self, key, value):
+        self.cache[key] = value
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.capacity:
+            self.cache.popitem(last=False)
 ```
 
 ---
@@ -404,17 +993,41 @@ def calculate(x):
 
 ## 37. What is an LLM?
 
-**Keywords:** `Deep Learning` · `Large Dataset` · `Generate Text` · `API`
+**Expectations:** Deep learning · Large dataset · Generate text · API
 
-**Expectations:** Define an LLM as a deep learning model trained on large amounts of text to understand and generate human-like language. Mention that in Python you can interact with LLMs through APIs or run models locally.
+**Example answer:**
+
+> A Large Language Model is a deep learning model, usually a transformer, trained on massive amounts of text to understand and generate human-like language. Popular examples include GPT, Claude, Llama, and Gemini.
+>
+> In Python, I can call an LLM through a provider's API or SDK, or run open-weight models locally with tools such as Hugging Face Transformers or Ollama. I keep the API key in an environment variable, not in the code.
+
+```python
+from openai import OpenAI
+
+client = OpenAI()  # reads OPENAI_API_KEY from the environment
+
+response = client.chat.completions.create(
+    model="gpt-5",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Explain Python decorators in simple terms."},
+    ],
+)
+
+print(response.choices[0].message.content)
+```
 
 ---
 
 ## 38. What is RAG?
 
-**Keywords:** `Retrieval` · `Vector Database` · `Context` · `Generation`
+**Expectations:** Retrieval · Vector database · Context · Generation
 
-**Expectations:** Explain that RAG combines information retrieval with LLM generation, then walk through the typical flow from user query to retriever, relevant documents, LLM, and answer. Point out that the retrieved information provides additional context for the LLM.
+**Example answer:**
+
+> RAG stands for Retrieval-Augmented Generation. Instead of relying only on what the LLM learned during training, the system retrieves relevant documents from a knowledge base and passes them to the LLM as context. This makes answers more accurate and up to date, reduces hallucinations, and lets me use private data without retraining the model.
+>
+> It has three main parts: a **document store**, usually a vector database such as Pinecone, Chroma, or FAISS, that holds embedded documents; a **retriever** that finds the documents most similar to the query; and a **generator**, the LLM that writes the answer from the retrieved context.
 
 ```text
 User Query
@@ -428,36 +1041,104 @@ LLM
 Answer
 ```
 
+```python
+from langchain_chroma import Chroma
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+vectorstore = Chroma.from_documents(documents, OpenAIEmbeddings())
+llm = ChatOpenAI(model="gpt-5")
+
+question = "What are Python best practices?"
+docs = vectorstore.similarity_search(question, k=4)
+context = "\n\n".join(doc.page_content for doc in docs)
+
+answer = llm.invoke(
+    f"Answer using only this context:\n{context}\n\nQuestion: {question}"
+)
+print(answer.content)
+```
+
 ---
 
 ## 39. How Does `async/await` Work?
 
-**Keywords:** `asyncio` · `Non-blocking I/O` · `Concurrency` · `gather`
+**Expectations:** `asyncio` · Non-blocking I/O · Concurrency · `gather`
 
-**Expectations:** Explain that `async/await` allows Python applications to handle multiple I/O operations concurrently without blocking, and mention it is useful when making multiple API or LLM requests, for example with `asyncio.gather`.
+**Example answer:**
+
+> `async/await` lets one thread handle many I/O-bound tasks concurrently. When a coroutine reaches `await` on a network call, the `asyncio` event loop switches to another task instead of blocking.
+>
+> This matters in AI applications because LLM and API calls spend most of their time waiting. With `asyncio.gather()`, I can send several requests at once, so the total time is close to the slowest request instead of the sum of all of them. For CPU-heavy work, such as running a model locally, async doesn't help, and I would use processes or a separate worker instead.
 
 ```python
-results = await asyncio.gather(
-    request_1(),
-    request_2()
-)
+import asyncio
+from openai import AsyncOpenAI
+
+client = AsyncOpenAI()
+
+async def get_completion(prompt: str) -> str:
+    response = await client.chat.completions.create(
+        model="gpt-5",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content
+
+async def process_multiple_prompts(prompts: list[str]) -> list[str]:
+    tasks = [get_completion(prompt) for prompt in prompts]
+    return await asyncio.gather(*tasks)
+
+prompts = ["Explain Python lists", "Explain Python dicts", "Explain Python sets"]
+results = asyncio.run(process_multiple_prompts(prompts))
 ```
 
 ---
 
 ## 40. What are Embeddings?
 
-**Keywords:** `Vector` · `Semantic Meaning` · `Similarity` · `Search`
+**Expectations:** Vector · Semantic meaning · Similarity · Search
 
-**Expectations:** Explain that embeddings convert data such as text into numerical vectors representing semantic meaning, so similar meanings produce vectors that are close to each other. Name common applications such as semantic search, recommendation, and clustering.
+**Example answer:**
+
+> Embeddings are dense numerical vectors that represent the meaning of data such as text or images. Items with similar meaning get vectors that are close together, usually measured with cosine similarity.
+>
+> They power semantic search, recommendations, clustering, and the retrieval step in RAG. In Python, I can create them with libraries such as `sentence-transformers` or with an embeddings API.
+
+```python
+import numpy as np
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+sentences = [
+    "Python is a programming language",
+    "JavaScript is used for web development",
+    "Python is great for data science",
+]
+embeddings = model.encode(sentences)
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+cosine_similarity(embeddings[0], embeddings[2])  # higher
+cosine_similarity(embeddings[0], embeddings[1])  # lower
+```
 
 ---
 
 ## 41. How Would You Build an AI Agent?
 
-**Keywords:** `LLM` · `Tools` · `Memory` · `Planning`
+**Expectations:** LLM · Tools · Memory · Planning
 
-**Expectations:** Name the four main components: an **LLM** for reasoning and decision making, **tools** such as APIs, search, database, and code execution, **memory** for conversation and knowledge, and **planning** for breaking a task into smaller steps. Walk through the typical flow from user to LLM, tool or memory, result, back to the LLM, and finally an answer or action.
+**Example answer:**
+
+> An AI agent uses an LLM to decide which actions to take to reach a goal, instead of answering in a single step. It has four main parts:
+>
+> - An **LLM** as the reasoning engine that reads the input and decides the next step.
+> - **Tools**, such as web search, database queries, APIs, or code execution, that the agent can call.
+> - **Memory**, both short-term conversation history and long-term knowledge, often in a vector store.
+> - **Planning**, which breaks a complex task into smaller steps.
+>
+> The core is a loop: the LLM chooses a tool call, the application runs the tool, and the result goes back to the LLM until it can give a final answer. I would add guardrails such as a maximum number of steps, validation of tool arguments, and logging. Frameworks such as LangChain, LangGraph, or the OpenAI Agents SDK provide this loop, but it is also simple to write directly.
 
 ```text
 User
@@ -472,3 +1153,22 @@ LLM
  ↓
 Answer / Action
 ```
+
+```python
+def search_database(query: str) -> str:
+    return f"Results for: {query}"
+
+TOOLS = {"search_database": search_database}
+
+def run_agent(task: str, max_steps: int = 5) -> str:
+    messages = [{"role": "user", "content": task}]
+    for _ in range(max_steps):
+        step = llm_decide(messages, tools=TOOLS)  # a tool call or a final answer
+        if step.final_answer:
+            return step.final_answer
+        result = TOOLS[step.tool_name](**step.arguments)
+        messages.append({"role": "tool", "content": result})
+    return "Stopped after reaching the step limit."
+```
+
+---
