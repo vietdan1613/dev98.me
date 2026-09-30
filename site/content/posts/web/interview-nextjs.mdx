@@ -11,330 +11,516 @@ thumbnailText: Daily
 
 ## 1. What is Next.js?
 
-**Keywords:** `React framework` · `Routing` · `SSR/SSG` · `RSC` · `metadata` · `route handlers` · `deploy`
+**Expectations:** React framework · Routing · Rendering · Data fetching · Optimization
 
-**Expectations:** Define Next.js as a React framework that structures your app around React. Name its built-in features: file-based routing, SSR/SSG, React Server Components, data fetching, metadata, route handlers, image and font optimization, and deployment-friendly defaults.
+**Example answer:**
 
----
-
-## 2. What is the App Router?
-
-**Keywords:** `app/` · `page`/`layout` · `RSC`/`client` · `loading`/`error` · `handlers` · `metadata` · `cache`
-
-**Expectations:** Explain that the App Router lives under `app/` with folder segments, `page.tsx` and `layout.tsx`, Server and Client Components, loading and error UI, route handlers, metadata, and caching. Default to App Router answers, and mention the Pages Router only when comparing `getStaticProps` and `getServerSideProps`.
+> Next.js is a React framework for building web applications. It adds routing, server rendering, static generation, data fetching patterns, image optimization, metadata handling, API route handlers, and deployment conventions around React.
+>
+> Plain React mainly gives you the UI layer. Next.js decides how routes are mapped to files, how pages are rendered, how data can be fetched on the server, and how the app is bundled and optimized.
+>
+> If asked **"Why use it?"**, I would say that Next.js provides features such as server-rendered pages for SEO, route-based code splitting, safer server data access, built-in metadata, and deployment conventions.
 
 ---
 
-## 3. How does file-system routing work?
+## 2. How is Next.js different from React?
 
-**Keywords:** `Folders = segments` · `page.tsx` · `public route`
+**Expectations:** React library · Next.js framework · Application structure
 
-**Expectations:** Explain that each folder is a URL segment and `page.tsx` defines a public route. Give examples: `app/page` → `/`, `app/products/page` → `/products`, and `app/products/[id]/page` → `/products/:id`.
+**Example answer:**
 
----
-
-## 4. What is the difference between page.tsx and layout.tsx?
-
-**Keywords:** `page` · `layout` · `shared shell`
-
-**Expectations:** Contrast `page.tsx`, the UI for that route segment, with `layout.tsx`, which wraps child routes in a shared shell such as nav, sidebar, and providers.
+> React is a library for building component-based UI. Next.js is a framework that uses React and adds application structure.
+>
+> In a React app built with Vite, you choose your own router, data fetching setup, rendering model, and deployment pattern. In Next.js, file-system routing, server rendering, code splitting, metadata, and production build behavior come with the framework.
 
 ---
 
-## 5. What are dynamic routes?
+## 3. What is the App Router?
 
-**Keywords:** `[id]` · `[slug]` · `[...slug]` · `[[...slug]]` · `params` · `notFound()`
+**Expectations:** `app/` directory · Server Components · Layouts · Nested routing · Streaming
 
-**Expectations:** Explain that dynamic segments use bracket syntax and that route handlers receive `params` (often async). Mention calling `notFound()` when the resource does not exist.
+**Example answer:**
 
----
-
-## 6. What are Server Components?
-
-**Keywords:** `Server render` · `no client JS` · `Data/DB/secrets/SEO` · `smaller bundle`
-
-**Expectations:** Explain that Server Components render on the server and do not ship their code to the browser, making them ideal for data, secrets, and SEO. Point out that they cannot use browser APIs, event handlers, or `useState`.
+> The App Router is the modern Next.js router based on the **`app/`** directory. It uses React Server Components, layouts, nested routing, loading UI, error boundaries, route handlers, and streaming.
+>
+> For example, **`app/products/page.tsx`** maps to **`/products`**, and **`app/products/[id]/page.tsx`** maps to dynamic product pages.
+>
+> In newer Next.js applications, the App Router is the default mental model. The Pages Router still exists, but App Router answers should focus on **`page.tsx`**, **`layout.tsx`**, Server Components, Route Handlers, and cache/revalidation APIs.
 
 ---
 
-## 7. What are Client Components?
+## 4. What is file-based routing?
 
-**Keywords:** `"use client"` · `browser` · `interactivity`
+**Expectations:** Folder structure · File structure · URL mapping
 
-**Expectations:** Explain that Client Components are marked with `"use client"` and run in the browser, and name what they are for: clicks, local state, effects, browser APIs, and interactive widgets.
+**Example answer:**
 
----
-
-## 8. When should you use "use client"?
-
-**Keywords:** `Interactive subtree` · `client boundary`
-
-**Expectations:** Explain that `"use client"` belongs only on the subtree that needs interactivity. Point out the common mistake of marking an entire page as client for a single `onClick`.
+> File-based routing means the folder and file structure defines the URL structure. In the App Router, a route segment becomes public when it contains a **`page.tsx`** or **`page.js`** file.
+>
+> For example:
+>
+> `app/page.tsx` creates **`/`**, `app/about/page.tsx` creates **`/about`**, and `app/blog/[slug]/page.tsx` creates dynamic blog routes such as **`/blog/react`**.
 
 ---
 
-## 9. Can Server Components render Client Components?
+## 5. What is the difference between `page.tsx`, `layout.tsx`, and `template.tsx`?
 
-**Keywords:** `Serializable props` · `islands` · `children from server`
+**Expectations:** Route UI · Shared layout · Remounting
 
-**Expectations:** Say yes, and explain passing serializable props into Client Components as interactive islands. Point out that Client Components cannot import Server Components, so server UI is passed as `children` from a server parent instead.
+**Example answer:**
 
----
-
-## 10. What is hydration?
-
-**Keywords:** `SSR HTML` · `client JS` · `mismatch`
-
-**Expectations:** Define hydration as attaching client JavaScript to server-rendered HTML so it becomes interactive. Name common mismatch causes: `Date.now()`, `Math.random()`, locale differences, or reading `localStorage` on the first render.
+> **`page.tsx`** renders the UI for a route. **`layout.tsx`** wraps a route segment and its children, and it is preserved across navigation when possible. **`template.tsx`** also wraps children, but it creates a new instance on navigation, so state inside it is reset.
+>
+> I would use layouts for shared shells like navbars and sidebars. I would use templates when each navigation should remount that wrapper.
 
 ---
 
-# Routing, metadata, and error handling
+## 6. What are dynamic routes in Next.js?
 
-## 11. How do you handle a 404 in the App Router?
+**Expectations:** `[slug]` · `[id]` · Catch-all routes
 
-**Keywords:** `notFound()` · `not-found.tsx` · `route state`
+**Example answer:**
 
-**Expectations:** Explain calling `notFound()` when a resource is missing and providing `not-found.tsx` for the UI. Point out that a missing resource is route state, not merely an empty screen.
-
----
-
-## 12. How do redirects work?
-
-**Keywords:** `redirect()` · `server` · `no flash`
-
-**Expectations:** Explain using `redirect()` on the server for auth or setup flows, and point out that this keeps protected content from flashing before the redirect completes.
+> Dynamic routes handle URLs whose segment values are not known ahead of time. In the App Router, a folder like **`[slug]`** captures a value and passes it through **`params`**.
+>
+> For example, `app/blog/[slug]/page.tsx` can handle URLs such as `/blog/react` or `/blog/nextjs`.
+>
+> Catch-all routes use **`[...slug]`**, and optional catch-all routes use **`[[...slug]]`**.
 
 ---
 
-## 13. How do you add metadata?
+## 7. What is `generateStaticParams()`?
 
-**Keywords:** `metadata` · `generateMetadata()` · `title` · `OG`
+**Expectations:** Dynamic routes · Build time · Static generation
 
-**Expectations:** Explain exporting static `metadata` or implementing `generateMetadata()` for dynamic routes. Mention the fields it sets from server data: title, description, canonical URL, and Open Graph tags.
+**Example answer:**
 
----
-
-## 14. What is loading.tsx?
-
-**Keywords:** `Loading UI` · `Suspense` · `stable layout`
-
-**Expectations:** Explain that `loading.tsx` defines route-level loading UI integrated with Suspense, giving a stable loading layout instead of a blank screen.
+> **`generateStaticParams()`** tells Next.js which dynamic routes to generate at build time. It replaces **`getStaticPaths`** from the Pages Router.
+>
+> For example, a blog can fetch all slugs during the build and return **`{ slug }`** objects. Next.js then pre-renders those pages instead of waiting for a first request.
 
 ---
 
-## 15. What is error.tsx?
+## 8. What are Server Components?
 
-**Keywords:** `Error boundary` · `Client Component` · `recoverable`
+**Expectations:** Server rendering · No component JS sent to browser · Server data · No hooks/events
 
-**Expectations:** Explain that `error.tsx` is a route error boundary and must be a Client Component. Point out that it is for recoverable errors, not for expected empty or not-found states.
+**Example answer:**
 
----
-
-# Rendering and caching questions
-
-## 16. Static generation versus request-time rendering: how do you choose?
-
-**Keywords:** `Static` · `request-time` · `mixed` · `Suspense`
-
-**Expectations:** Explain choosing static when content can be stale until revalidate, and request-time for user-specific data, cookies, headers, or permissions. Mention mixed patterns that cache a shell and revalidate price or inventory, using Suspense for uncached segments.
+> Server Components render on the server and do not send their component code to the browser. They are the default in the App Router.
+>
+> I would use them for reading files, querying databases, fetching data with secrets, rendering static content, and reducing client-side JavaScript. They cannot use browser-only APIs, event handlers, or hooks like **`useState`**.
+>
+> For example, if I try to add **`onClick`** or use **`window`**, the answer is that the component is rendering on the server, not in the browser. I would add a Client Component for the interactive part.
 
 ---
 
-## 17. What is generateStaticParams()?
+## 9. What are Client Components?
 
-**Keywords:** `Build-time` · `dynamic routes` · `known slugs`
+**Expectations:** `"use client"` · Browser · State · Events · Effects
 
-**Expectations:** Explain that `generateStaticParams()` returns params at build time for dynamic routes, and give typical uses: known catalog slugs, docs, or marketing pages.
+**Example answer:**
 
----
-
-## 18. How does caching work with fetch()?
-
-**Keywords:** `Explicit freshness` · `revalidate` · `per-request` · `secrets`
-
-**Expectations:** State caching and freshness explicitly rather than relying on memorized defaults. Explain caching public slow-changing data with revalidate and keeping user-specific fetches per-request or private. Point out that cached responses must never be shared across users when secrets are involved.
+> Client Components are React components that can run in the browser. I add the **`"use client"`** directive at the top of the file to mark a client boundary.
+>
+> I use Client Components for state, event handlers, effects, browser APIs, focus management, animations that require browser state, and interactive forms.
 
 ---
 
-## 19. What is revalidation?
+## 10. When should you use `"use client"`?
 
-**Keywords:** `Time-based` · `on-demand` · `CMS`
+**Expectations:** Client-only behavior · Hooks · Events · Browser APIs
 
-**Expectations:** Define revalidation as refreshing cached content on a schedule or on demand (for example after a CMS or admin publish). Name the freshness requirement first, then pick the mechanism.
+**Example answer:**
 
----
-
-## 20. How do you avoid stale search results?
-
-**Keywords:** `Query-driven` · `server render` · `client fetch`
-
-**Expectations:** Point out that search is query-driven and should not be treated as fully static. Name the options: server-render per query, fetch on the client, or use a cached shell with client-side refinement.
+> I use **`"use client"`** when the component needs client-only behavior such as **`useState`**, **`useEffect`**, **`useReducer`**, DOM events such as **`onClick`**, or APIs such as **`window`** and **`localStorage`**.
+>
+> I don't add **`"use client"`** to every file. Keeping static and data-heavy UI on the server helps reduce the amount of JavaScript shipped to the browser.
 
 ---
 
-# Data, mutations, and APIs
+## 11. Can a Server Component import a Client Component?
 
-## 21. What are Route Handlers?
+**Expectations:** Server → Client · Serializable props · Component boundaries
 
-**Keywords:** `route.ts` · `APIs` · `webhooks` · `server-only`
+**Example answer:**
 
-**Expectations:** Explain that Route Handlers in `route.ts` expose HTTP endpoints for APIs and webhooks on the server, keeping secrets and backend logic off the client.
-
----
-
-## 22. Where should secrets live?
-
-**Keywords:** `Server only` · `never Client` · `NEXT_PUBLIC_*`
-
-**Expectations:** Explain that secrets belong on the server only, and point out they must never go in Client Components or in `NEXT_PUBLIC_*` environment variables, which are exposed to the browser.
+> Yes. A Server Component can render a Client Component and pass serializable props to it. This is the common pattern for mixing server-rendered data with small interactive widgets.
+>
+> A Client Component cannot directly import a Server Component, because client code runs in the browser. You can pass a Server Component as **`children`** to a Client Component from a server parent.
 
 ---
 
-## 23. What are Server Functions?
+## 12. How do you fetch data in the App Router?
 
-**Keywords:** `Server mutations` · `validate` · `authorize` · `trusted writes`
+**Expectations:** Server Components · `async` · `fetch()` · Client-side fetching
 
-**Expectations:** Explain that Server Functions run mutations and server-side work you trust. Walk through what they do: validate input, authorize the caller, use secrets safely, and perform writes on the server.
+**Example answer:**
 
----
-
-## 24. How do you validate user input?
-
-**Keywords:** `Client = UX` · `Server = trust` · `pending` · `a11y`
-
-**Expectations:** Contrast client validation, which improves UX, with server validation, which enforces trust. Mention handling pending state, preventing double-submit, surfacing errors clearly, and keeping messages accessible.
+> In Server Components, you can use **`async`** components and fetch directly on the server.
+>
+> In Client Components, fetch with a client-side library or a custom hook when the data depends on browser interaction, local state, or live updates.
+>
+> One important point is that server-side **`fetch()`** in Next.js is not always the same as browser **`fetch()`**. Next.js can add caching and revalidation behavior on the server. If the page must always be fresh, I would explicitly configure the relevant cache option or rendering choice.
 
 ---
 
-## 25. How do you handle authentication?
+## 13. What is the difference between static rendering and dynamic rendering?
 
-**Keywords:** `Server cookies/headers` · `redirect` · `Proxy (Middleware)` · `authorize at data layer`
+**Expectations:** Build-time/static output · Request-time/dynamic output · Freshness
 
-**Expectations:** Explain reading auth from server cookies or headers and redirecting before rendering protected UI. Point out that Proxy (Middleware) can gate early, but you must still authorize at the data and mutation layer.
+**Example answer:**
 
----
-
-# Performance and deployment questions
-
-## 26. How do you reduce client JavaScript?
-
-**Keywords:** `Prefer RSC` · `small "use client"` · `bundle size`
-
-**Expectations:** Explain preferring Server Components, keeping `"use client"` boundaries small, and avoiding heavy shared imports in client trees. Mention measuring bundle impact.
+> Static rendering prepares HTML ahead of time and can be served quickly. Dynamic rendering creates the response at request time, which is needed when output depends on request-specific data such as cookies, headers, search params, auth state, or uncached data.
+>
+> A simple rule is to use static rendering for public content that can be reused, and dynamic rendering for personalized or request-dependent content.
 
 ---
 
-## 27. How do images work in Next.js?
+## 14. What is ISR?
 
-**Keywords:** `next/image` · `sized` · `reserve space` · `LCP`
+**Expectations:** Incremental Static Regeneration · Revalidation · Static output
 
-**Expectations:** Explain using `next/image` for responsive sizing, reserved layout space to avoid CLS, and better LCP performance.
+**Example answer:**
 
----
-
-## 28. How do fonts work?
-
-**Keywords:** `next/font` · `CLS` · `perceived perf`
-
-**Expectations:** Explain that `next/font` self-hosts and optimizes fonts to reduce layout shift and improve perceived performance.
+> ISR means Incremental Static Regeneration. It lets static output be refreshed after a configured time or after an explicit revalidation event.
+>
+> In the App Router, I wouldn't treat ISR as only the older Pages Router **`revalidate`** option. You can also use **`revalidatePath()`**, **`revalidateTag()`**, and newer Cache Components APIs such as **`"use cache"`** and cache tags.
 
 ---
 
-## 29. How do you debug a slow route?
+## 15. How does caching work in Next.js at a high level?
 
-**Keywords:** `Fetch` · `blocking data` · `JS size` · `hydration` · `LCP` · `cache`
+**Expectations:** Multiple caches · Freshness rules · Debugging stale data
 
-**Expectations:** Walk through checking whether slow fetch, blocking data, client JS size, hydration cost, images/LCP, or disabled caching is the bottleneck. Mention measuring with build output, DevTools, server logs, and Web Vitals.
+**Example answer:**
 
----
-
-## 30. What changes between local development and production?
-
-**Keywords:** `Dev = feedback` · `Prod = optimized` · `env` · `caching`
-
-**Expectations:** Contrast development, which optimizes for fast feedback, with production, which serves real users with optimized builds. Point out that environment variables, build output, runtime behavior, and caching differ between the two.
+> Next.js has multiple caches. Route output, cached async work, server **`fetch()`** results, and client navigation data can all have different freshness rules.
+>
+> For example, server **`fetch()`** caching can be controlled with **`cache: "force-cache"`**, **`cache: "no-store"`**, or **`next: { revalidate }`**.
+>
+> When debugging stale data, I would first identify which cache is responsible: browser HTTP cache, Next.js server data cache, generated route output, client router cache, or our own data library.
 
 ---
 
-# Senior Next.js questions
+## 16. What is `loading.tsx`?
 
-## 31. How would you design a product detail route?
+**Expectations:** Loading UI · Route segment · Streaming
 
-**Keywords:** `Server page` · `SEO metadata` · `notFound` · `freshness`
+**Example answer:**
 
-**Expectations:** Describe a server-rendered page with SEO metadata, `notFound()` for missing products, and small client widgets for interactivity. Mention an explicit freshness policy for price and inventory.
-
----
-
-## 32. How would you design an authenticated dashboard?
-
-**Keywords:** `Auth gate` · `private server fetch` · `Suspense` · `URL filters`
-
-**Expectations:** Explain gating auth before UI and fetching private per-user server data (no shared cache). Mention Suspense for heavy widgets and driving filters from the URL where it helps sharing and back navigation.
+> **`loading.tsx`** defines loading UI for a route segment. Next.js can show it while the route or a nested part of the route is loading.
+>
+> It supports streaming because the user can see part of the page while slower server work continues.
 
 ---
 
-## 33. How would you migrate from Pages Router to App Router?
+## 17. What is `error.tsx`?
 
-**Keywords:** `Route-by-route` · `layouts` · `client boundaries` · `coexist`
+**Expectations:** Error boundary · Route segment · Client Component
 
-**Expectations:** Explain migrating incrementally: replace data APIs, adopt layouts and client boundaries, and watch for old mental models around RSC and cache. Point out that routes can coexist, use `"use client"` and Route Handlers as needed, and mention testing redirects, metadata, and 404 behavior.
+**Example answer:**
 
----
-
-## 34. How do you prevent hydration mismatches?
-
-**Keywords:** `Match first render to SSR` · `effects` · `cookies on server`
-
-**Expectations:** Explain keeping the first client render aligned with server HTML. Name the techniques: defer browser-only reads to effects, resolve cookies on the server, or isolate unknown state behind a client boundary.
+> **`error.tsx`** defines an error boundary for a route segment. It catches uncaught runtime errors from that segment and lets you render a fallback UI.
+>
+> In the App Router, **`error.tsx`** must be a Client Component because error boundaries use client-side React behavior.
 
 ---
 
-## 35. How do you choose between server and client fetching?
+## 18. What is `not-found.tsx`?
 
-**Keywords:** `Server: SEO/secrets/auth` · `Client: interactive/live` · `loading/error UI`
+**Expectations:** 404 UI · `notFound()` · Missing resource
 
-**Expectations:** Contrast server fetching, suited to SEO, secrets, auth, and avoiding waterfalls, with client fetching, suited to interactivity, browser-only APIs, and live updates after mount. Point out that either path always needs defined loading and error UI.
+**Example answer:**
 
----
-
-## 36. How do you handle partial failures?
-
-**Keywords:** `Route error` · `widget error` · `degrade` · `fatal vs degradable`
-
-**Expectations:** Explain separating route-level failures from local widget errors and degrading optional sections when possible. Point out the distinction between fatal errors and recoverable or degradable ones.
+> **`not-found.tsx`** defines the UI for a route segment's 404 state. You can trigger it by calling **`notFound()`** from **`next/navigation`**.
+>
+> I would use it when the route exists but the resource does not, such as **`/blog/missing-slug`**.
 
 ---
 
-## 37. How do you keep a route maintainable?
+## 19. What are Route Handlers?
 
-**Keywords:** `Split concerns` · `page.tsx`
+**Expectations:** `route.ts` · HTTP methods · API endpoints
 
-**Expectations:** Explain splitting data loading, metadata, UI composition, client widgets, mutations, and error handling instead of dumping everything into `page.tsx`.
+**Example answer:**
 
----
-
-## 38. How do you test a Next.js app?
-
-**Keywords:** `Unit` · `RTL` · `E2E` · `route/integration`
-
-**Expectations:** Walk through the layers: unit tests for utilities, React Testing Library for components, E2E for critical flows, and route or integration tests for redirects, Route Handlers, and server boundaries.
+> Route Handlers let you create API endpoints inside the App Router using **`route.ts`** or **`route.js`**. They support HTTP methods such as **`GET`**, **`POST`**, **`PUT`**, and **`DELETE`**.
+>
+> They fit use cases such as webhooks, BFF endpoints, auth callbacks, and server-only operations that the browser should not implement directly.
 
 ---
 
-## 39. How do you review a Next.js PR?
+## 20. What are Server Functions and Server Actions?
 
-**Keywords:** `Secrets` · `client size` · `route states` · `explicit cache`
+**Expectations:** `"use server"` · Server-side logic · Mutations
 
-**Expectations:** Name what you review for: leaked secrets, oversized client boundaries, loading/error/404 and metadata coverage, and explicit caching choices rather than accidental defaults.
+**Example answer:**
+
+> Server Functions are async server-side functions marked with the **`"use server"`** directive. In form submissions or mutation flows, they are called Server Actions.
+>
+> The main idea is that the browser submits data, but the trusted mutation logic runs on the server.
+
+---
+
+## 21. What is the difference between a Route Handler and a Server Action?
+
+**Expectations:** HTTP endpoint · UI mutation · External clients
+
+**Example answer:**
+
+> A Route Handler exposes an HTTP endpoint. Other clients can call it if they know the URL and have permission.
+>
+> A Server Action is a server function integrated with React and Next.js for form and mutation flows.
+>
+> I would use Route Handlers for external HTTP APIs and webhooks, and Server Actions for app-owned mutations tied to UI flows.
 
 ---
 
-## 40. What is a good final interview answer pattern?
+## 22. What is the difference between SSR, SSG, CSR, and ISR?
 
-**Keywords:** `Boundary` · `freshness` · `server/client` · `Next API` · `failure mode`
+**Expectations:** Know when rendering happens · Server vs browser · Revalidation
 
-**Expectations:** Walk through the structure of a strong answer: name the boundary, state freshness needs, pick server vs client, cite a concrete Next.js API, and mention one failure mode you would handle.
+**Example answer:**
+
+> **SSR** renders HTML on the server for each request. **SSG** creates HTML at build time. **CSR** sends a JavaScript app shell and renders mainly in the browser. **ISR** serves static output but regenerates it after revalidation.
+>
+> Next.js can mix these patterns route by route and even within a route when streaming and caching are involved.
 
 ---
+
+## 23. What is hydration?
+
+**Expectations:** Server HTML · React · Client-side behavior
+
+**Example answer:**
+
+> Hydration is the process where React attaches event handlers and client-side behavior to HTML that was already rendered on the server.
+>
+> Server-rendered HTML can be visible before it is interactive. Client Components need hydration before clicks, inputs, and stateful behavior work.
+
+---
+
+## 24. What causes hydration errors?
+
+**Expectations:** Server/client mismatch · Common causes · Fix
+
+**Example answer:**
+
+> Hydration errors happen when the HTML rendered on the server does not match what React expects on the client.
+>
+> Common causes include rendering **`Date.now()`** or **`Math.random()`** directly in markup, reading **`window`** during server render, changing output based on browser-only state, invalid HTML nesting, or mismatched data between server and client.
+>
+> To fix it, I make the initial server and client render match. I can move browser-only reads to an effect, pass server-known values through cookies or props, or isolate unstable UI in a Client Component with a stable placeholder first.
+
+---
+
+## 25. What is `next/link` used for?
+
+**Expectations:** Client-side navigation · Internal routes · Prefetching
+
+**Example answer:**
+
+> **`next/link`** enables client-side navigation between routes. It avoids a full page reload and can prefetch route data when links are likely to be visited.
+>
+> I would use **`<Link href="/dashboard">Dashboard</Link>`** for internal navigation and a normal **`<a>`** for external links.
+
+---
+
+## 26. What is `useRouter()` used for?
+
+**Expectations:** Client Component · Programmatic navigation
+
+**Example answer:**
+
+> **`useRouter()`** is used in Client Components for programmatic navigation, such as redirecting after a user clicks a button or completes a client-side interaction.
+>
+> In Server Components, I would use server-side helpers such as **`redirect()`** from **`next/navigation`** instead.
+
+---
+
+## 27. How do you add metadata for SEO in Next.js?
+
+**Expectations:** `metadata` · `generateMetadata()` · Dynamic SEO
+
+**Example answer:**
+
+> In the App Router, you can export a static **`metadata`** object or an async **`generateMetadata()`** function from a page or layout.
+>
+> I would use static metadata when the title and description are known. I would use **`generateMetadata()`** when metadata depends on params or fetched data.
+
+---
+
+## 28. What is `next/image`?
+
+**Expectations:** Image optimization · Sizing · Lazy loading · Layout stability
+
+**Example answer:**
+
+> **`next/image`** is Next.js's image component. It handles image sizing, optimization, lazy loading, and layout stability when used correctly.
+>
+> Images are often among the largest page assets, so using the framework image component can reduce layout shift and improve loading behavior.
+
+---
+
+## 29. What is `next/font`?
+
+**Expectations:** Font optimization · Self-hosting · Layout shift
+
+**Example answer:**
+
+> **`next/font`** loads and optimizes fonts. It can self-host supported fonts and reduce layout shift by generating font-related CSS during the build.
+>
+> I would use it instead of manually adding third-party font **`<link>`** tags when possible, because font loading affects performance and visual stability.
+
+---
+
+## 30. What is Proxy in Next.js?
+
+**Expectations:** Modern Middleware name · Request-level logic · Auth/locale
+
+**Example answer:**
+
+> Proxy is the modern name for what older Next.js versions called Middleware. A **`proxy.ts`** file can run before a request completes and can redirect, rewrite, set headers, read cookies, or respond early.
+>
+> I would use it for request-level logic such as auth redirects, locale routing, and header changes. I would not put heavy application logic there.
+>
+> Proxy is not a replacement for server-side authorization. If a dashboard is protected, both the route and the backend operation should still enforce permission.
+
+---
+
+## 31. How do environment variables work in Next.js?
+
+**Expectations:** Server-only variables · `NEXT_PUBLIC_` · Secrets
+
+**Example answer:**
+
+> Server-only environment variables are available to server code and should be used for secrets such as API keys. Variables prefixed with **`NEXT_PUBLIC_`** are bundled for the browser and must not contain secrets.
+>
+> The important point is that anything sent to client JavaScript can be viewed by users, so I don't treat every environment variable as secret.
+
+---
+
+## 32. How do you handle authentication in a Next.js app?
+
+**Expectations:** Session/token · Server validation · Route protection
+
+**Example answer:**
+
+> Authentication involves a session cookie or token, server-side validation, and route protection. Server Components can read request data such as cookies, Route Handlers can implement auth callbacks, and Proxy can redirect unauthenticated users before rendering.
+>
+> I would avoid trusting only client-side checks. The server must protect sensitive data and mutations.
+
+---
+
+## 33. What is the difference between `redirect()` and client-side navigation?
+
+**Expectations:** Server redirect · `router.push()` · When to use each
+
+**Example answer:**
+
+> **`redirect()`** from **`next/navigation`** is used during server rendering or server logic to stop rendering and send the user to another route.
+>
+> Client-side navigation with **`router.push()`** happens in a Client Component after browser interaction.
+>
+> I would use the server redirect when the server already knows the user should not see the current route.
+
+---
+
+## 34. How do you deploy a Next.js app?
+
+**Expectations:** `next build` · Hosting · Runtime requirements
+
+**Example answer:**
+
+> The standard production flow is to run **`next build`**, then host the generated server output on a platform that supports the chosen Next.js features.
+>
+> Vercel supports Next.js features directly, but Next.js can also run on Node-based hosts and other platforms with the right adapter or deployment setup.
+>
+> A static-only export cannot support every server feature. Server rendering, Route Handlers, Server Actions, and request-time data need a runtime.
+
+---
+
+## 35. What should you practice before a Next.js fresher interview?
+
+**Expectations:** Practical project · Routing · Data fetching · Forms · Auth
+
+**Example answer:**
+
+> I would build one small app with public pages, a dynamic detail page, a form, a Route Handler, metadata, a loading state, and a protected dashboard.
+>
+> A mini product catalog or blog is enough: list page, detail page, search params, server-fetched data, a client filter, a form mutation, and a small auth gate. This gives me something practical to discuss for most junior Next.js topics.
+
+---
+
+# Scenarios
+
+## Scenario 1: Product detail page with stale price
+
+> "A product detail page is server-rendered. Marketing wants it fast for SEO, but price and stock change every few minutes. How would you build it?"
+
+Separate stable and volatile data. Product title, description, images, and SEO metadata can be cached or statically generated. Price and stock may need short revalidation, tag-based revalidation after catalog updates, or request-time fetching if showing stale values would be harmful.
+
+The mistake is treating the whole page as one rendering mode. Next.js lets you split the problem: keep the mostly static shell fast, then choose explicit freshness rules for the data that changes.
+
+---
+
+## Scenario 2: Cart button on a Server Component page
+
+> "The product page is a Server Component, but the Add to Cart button needs click state. What do you do?"
+
+Keep the page as a Server Component and move only the interactive button into a Client Component.
+
+```tsx
+// app/products/[id]/page.tsx
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getProduct(id);
+
+  return (
+    <>
+      <h1>{product.name}</h1>
+      <AddToCartButton productId={id} />
+    </>
+  );
+}
+```
+
+Do not move the whole route to the client. Put the client boundary at the smallest component that needs browser behavior.
+
+---
+
+## Scenario 3: Search page with query params
+
+> "Should `/search?q=react` be statically generated?"
+
+Probably not as a fully static page for every possible query. The route can render a reusable shell, but results depend on `searchParams`, user input, ranking, and freshness. Explain whether the results should be fetched on the server for SEO/shareable URLs, on the client for highly interactive filtering, or through a mix.
+
+Mention loading, empty, and error states. Search pages fail interviews when candidates only talk about routing and forget the UI states users will actually see.
+
+---
+
+## Scenario 4: Auth-protected dashboard
+
+> "A logged-out user visits `/dashboard`. Where should the redirect happen?"
+
+If the server can know from cookies that the user is logged out, redirect before rendering protected UI. Depending on the app, that can happen in server route logic or Proxy for broad route gates.
+
+Do not rely only on `useEffect(() => router.push('/login'))`. That flashes protected UI and ships dashboard JavaScript to a user who should not see it.
+
+---
+
+## Scenario 5: Hydration mismatch from local storage
+
+> "The server renders light theme, but the client reads `localStorage.theme` and switches to dark during hydration. Why is React warning?"
+
+The first client render does not match the server HTML. Fix it by making the initial render deterministic, delaying browser-only reads until after hydration, using a cookie-backed theme available to the server, or rendering a small client theme boundary that handles the mismatch intentionally.
+
+The word "hydration" alone does not answer the question. Name the mismatch and fix the first render.
+
+---
+
