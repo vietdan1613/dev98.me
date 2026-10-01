@@ -11,33 +11,75 @@ thumbnailText: Daily
 
 ## 1. What are semantic HTML elements, and why are they important?
 
-**Keywords:** `semantic` · `meaning` · `header` · `nav` · `main` · `article` · `section` · `footer`
+**Expectations:** Semantic · Meaning · `header` · `nav` · `main` · `article` · `section` · `footer`
 
-**Expectations:** Explain that semantic HTML elements describe their meaning clearly for both humans and machines, and name examples such as `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, and `<footer>`.
+**Example answer:**
+
+> Semantic HTML elements describe what their content is, not just how it looks. `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, and `<footer>` tell both developers and machines the role of each part of the page, while a `<div>` says nothing.
+>
+> They matter for three reasons: screen readers can expose the page structure to users, search engines understand the content better, and the code is easier to read and maintain. I also use the right element for the behavior, like `<button>` for actions and `<a>` for navigation, because they come with keyboard support built in.
+
+```html
+<header>…</header>
+<nav>…</nav>
+<main>
+  <article>
+    <h1>Post title</h1>
+    <section>…</section>
+  </article>
+</main>
+<footer>…</footer>
+```
 
 ---
 
 ## 2. How do semantic elements improve accessibility?
 
-**Keywords:** `screen readers` · `structure` · `purpose` · `a11y`
+**Expectations:** Screen readers · Structure · Purpose · a11y
 
-**Expectations:** Explain that when landmarks and semantic tags are used correctly, screen readers can better understand the structure and purpose of the page.
+**Example answer:**
+
+> Screen readers use semantic elements to build a map of the page. Landmarks like `<nav>`, `<main>`, and `<footer>` let users jump straight to a region, and headings from `<h1>` to `<h6>` let them skim the outline, the same way sighted users scan visually.
+>
+> Native elements also carry roles and states for free. A `<button>` is announced as a button, is focusable, and responds to Enter and Space. A clickable `<div>` needs ARIA roles, `tabindex`, and keyboard handlers to get the same behavior, and it's easy to miss one.
 
 ---
 
 ## 3. Inline vs inline-block vs block?
 
-**Keywords:** `inline` · `no new line` · `block` · `new line` · `inline-block` · `width/height`
+**Expectations:** Inline → no new line · Block → new line · Inline-block → width/height
 
-**Expectations:** Contrast the three: inline elements stay in the text flow and do not start on a new line, block elements start on a new line and take the full available width, and inline-block stays in flow like inline but allows setting width and height.
+**Example answer:**
+
+> - **Inline** elements, like `<span>` and `<a>`, stay in the text flow and don't start a new line. Width and height don't apply, and vertical margins don't push other lines away.
+> - **Block** elements, like `<div>` and `<p>`, start on a new line and take the full available width by default. Width, height, margin, and padding all apply.
+> - **Inline-block** stays in the flow like inline, but accepts width, height, and vertical spacing like block. I use it for things like badges or buttons that sit inside a line of text.
 
 ---
 
 ## 4. How do you improve accessibility on a website?
 
-**Keywords:** `semantic HTML` · `alt text` · `labels` · `keyboard navigation` · `focus` · `color contrast` · `ARIA` · `testing`
+**Expectations:** Semantic HTML · Alt text · Labels · Keyboard · Focus · Contrast · ARIA · Testing
 
-**Expectations:** Start with semantic HTML and landmarks, meaningful `alt` text on images, and form inputs connected to `<label>` elements. Mention making everything usable with the keyboard with a visible focus state, keeping enough color contrast, and using ARIA only when native HTML can't express the behavior. Finish by explaining that you test with a screen reader and tools like Lighthouse or axe.
+**Example answer:**
+
+> I start with the basics that cover most issues:
+>
+> - **Semantic HTML and landmarks**, with a logical heading order.
+> - **Meaningful `alt` text** on informative images, and empty `alt=""` on decorative ones.
+> - **Form inputs connected to `<label>` elements**, with clear error messages.
+> - **Full keyboard support**, with a visible focus state and a sensible tab order.
+> - **Enough color contrast**, and never using color alone to convey meaning.
+> - **ARIA only when native HTML can't express the behavior**, such as a custom combobox.
+>
+> Then I test: automated checks with Lighthouse or axe catch the obvious problems, and I navigate key flows with only the keyboard and with a screen reader like VoiceOver or NVDA.
+
+```html
+<label for="email">Email</label>
+<input id="email" type="email" autocomplete="email" />
+
+<img src="chart.png" alt="Revenue grew 20% from Q1 to Q2" />
+```
 
 ---
 
@@ -45,97 +87,206 @@ thumbnailText: Daily
 
 ## 1. How do you use CSS in a React project?
 
-**Keywords:** `Tailwind CSS` · `utility-first` · `styling`
+**Expectations:** Tailwind CSS · Utility-first · Styling
 
-**Expectations:** Mention using Tailwind CSS for utility-first styling, so most UI can be built with small, composable classes in the markup.
+**Example answer:**
+
+> My default is Tailwind CSS. Most UI is built with small, composable utility classes directly in the JSX, so I rarely switch files or invent class names, and the design stays consistent through shared tokens for spacing, colors, and typography.
+>
+> I know the alternatives too: CSS Modules for scoped plain CSS, Sass for larger traditional stylesheets, and CSS-in-JS libraries. For conditional classes, I use a helper like `clsx`, and for reusable variants I wrap the classes in a component instead of repeating them.
+
+```jsx
+<button className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+  Save
+</button>
+```
 
 ---
 
 ## 2. Difference between Flexbox and Grid?
 
-**Keywords:** `Flexbox` · `one-dimensional` · `Grid` · `two-dimensional`
+**Expectations:** Flexbox → one-dimensional · Grid → two-dimensional
 
-**Expectations:** Contrast the two: Flexbox lays out items in one direction (row or column), while Grid lays out items in two dimensions (rows and columns).
+**Example answer:**
+
+> Flexbox lays out items in one direction, a row or a column, and is driven by the content: items grow and shrink to share space. I use it for navbars, button groups, and centering.
+>
+> Grid lays out items in two dimensions, rows and columns at the same time, and is driven by the layout I define. I use it for page layouts, card grids, and anything where items must line up in both directions.
+>
+> They work well together: Grid for the overall layout, Flexbox inside each piece.
+
+```css
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+```
 
 ---
 
 ## 3. What are the CSS `position` values?
 
-**Keywords:** `static` · `relative` · `absolute` · `fixed` · `sticky`
+**Expectations:** `static` · `relative` · `absolute` · `fixed` · `sticky`
 
-**Expectations:** Name the common values `static`, `relative`, `absolute`, `fixed`, and `sticky`, and explain that each controls how an element is placed relative to the normal flow, a positioned ancestor, or the viewport.
+**Example answer:**
+
+> - `static` is the default: the element follows normal flow, and `top` or `left` have no effect.
+> - `relative` keeps the element in the flow but lets me offset it from its normal position. It also becomes the reference point for absolutely positioned children.
+> - `absolute` removes the element from the flow and positions it relative to the nearest positioned ancestor.
+> - `fixed` positions the element relative to the viewport, so it stays in place while scrolling.
+> - `sticky` behaves like `relative` until a scroll threshold is reached, then sticks like `fixed` within its container. It's common for table headers and section titles.
 
 ---
 
 ## 4. `display: none` vs `visibility: hidden`?
 
-**Keywords:** `display: none` · `remove from layout` · `visibility: hidden` · `hide but keep space`
+**Expectations:** `display: none` → removed from layout · `visibility: hidden` → hidden, space kept
 
-**Expectations:** Contrast them: `display: none` removes the element from the layout, while `visibility: hidden` hides it visually but still reserves its space.
+**Example answer:**
+
+> `display: none` removes the element from the layout entirely, so it takes no space and surrounding content moves into its place. `visibility: hidden` hides the element visually but still reserves its space.
+>
+> In both cases, the element is hidden from screen readers and can't be clicked or focused. If I want something hidden visually but still announced by screen readers, I use a visually hidden utility, like Tailwind's `sr-only`.
 
 ---
 
 ## 5. What are CSS pre-processors?
 
-**Keywords:** `Sass` · `Less` · `variables` · `nesting` · `mixins` · `functions`
+**Expectations:** Sass · Less · Variables · Nesting · Mixins · Functions
 
-**Expectations:** Name pre-processors like Sass and Less, and explain that they extend CSS with variables, nesting, mixins, and functions to make styles more modular and reusable.
+**Example answer:**
+
+> A CSS pre-processor is a language that extends CSS and compiles down to plain CSS. The common ones are Sass, usually written as SCSS, and Less.
+>
+> They add variables, nesting, mixins for reusable blocks of styles, functions, and partials for splitting styles across files. That makes large stylesheets more modular and reusable. Modern CSS has caught up on some of this with custom properties and native nesting, so pre-processors are less essential than they used to be.
+
+```scss
+$primary: #2563eb;
+
+@mixin card {
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.card {
+  @include card;
+
+  &:hover {
+    border-color: $primary;
+  }
+}
+```
 
 ---
 
 ## 6. When would you use a pre-processor?
 
-**Keywords:** `large projects` · `modular` · `maintainable` · `reusable`
+**Expectations:** Large projects · Modular · Maintainable · Reusable
 
-**Expectations:** Explain that you'd use a pre-processor on larger projects that need modular, maintainable, and reusable stylesheets.
+**Example answer:**
+
+> I'd use one on larger projects with a lot of hand-written CSS, where variables, mixins, and partials keep the stylesheets modular and maintainable. It's also the natural choice when the project or design system already uses Sass, for example with Bootstrap's source files.
+>
+> For a new React project, I'd usually pick Tailwind or CSS Modules with native CSS variables instead, because they cover most of the same needs without another build step.
 
 ---
 
 ## 7. What is Tailwind CSS?
 
-**Keywords:** `utility-first` · `CSS framework` · `small classes`
+**Expectations:** Utility-first · CSS framework · Small classes
 
-**Expectations:** Define Tailwind CSS as a utility-first CSS framework that builds UI from small, single-purpose classes.
+**Example answer:**
+
+> Tailwind CSS is a utility-first CSS framework. Instead of prebuilt components, it provides small, single-purpose classes like `flex`, `p-4`, and `text-lg` that I combine in the markup to build any design.
+>
+> At build time, it scans my files and generates only the classes I actually use, so the final CSS stays small. Its design tokens for spacing, colors, and breakpoints keep the UI consistent across the team.
 
 ---
 
 ## 8. When would you choose Tailwind over SCSS or CSS Modules?
 
-**Keywords:** `rapid development` · `consistent design` · `less CSS bloat`
+**Expectations:** Rapid development · Consistent design · Less CSS bloat
 
-**Expectations:** Explain that you'd choose Tailwind when you want faster UI work, consistent design tokens, and less custom CSS to maintain.
+**Example answer:**
+
+> I choose Tailwind when I want to build UI quickly, keep the design consistent through shared tokens, and avoid a growing pile of custom CSS. With Tailwind, CSS size stays roughly flat as the app grows, because new features reuse the same utilities instead of adding new rules.
+>
+> I'd lean toward SCSS or CSS Modules when the team prefers writing traditional CSS, when there's an existing Sass codebase or design system, or for highly custom styling, like complex animations, that's clearer in a stylesheet.
 
 ---
 
 ## 9. What does utility-first mean?
 
-**Keywords:** `single-purpose classes` · `compose in markup`
+**Expectations:** Single-purpose classes · Compose in markup
 
-**Expectations:** Explain that a utility-first approach builds components by composing small utility classes directly in the markup, instead of writing large custom CSS rules first.
+**Example answer:**
+
+> Utility-first means building components by composing small, single-purpose classes directly in the markup, instead of writing a custom CSS class for each component first.
+>
+> Each utility does one thing, like `mt-4` for margin-top or `font-bold` for weight. The benefit is that I don't have to name things or jump between files, and changing one component can't accidentally break another. When a combination repeats, I extract a component rather than a CSS class.
 
 ---
 
 ## 10. How does Tailwind handle responsive design?
 
-**Keywords:** `mobile-first` · `breakpoints` · `responsive prefixes`
+**Expectations:** Mobile-first · Breakpoints · Responsive prefixes
 
-**Expectations:** Explain that Tailwind uses mobile-first breakpoints, so styles scale up with prefixes like `sm:`, `md:`, and `lg:`.
+**Example answer:**
+
+> Tailwind is mobile-first. Unprefixed classes apply to all screen sizes, and prefixes like `sm:`, `md:`, and `lg:` apply styles from that breakpoint and up.
+>
+> So I style the small screen first, then layer changes for larger screens. In this example, the grid has one column on mobile, two from `md`, and four from `lg`.
+
+```html
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">…</div>
+```
 
 ---
 
 ## 11. How does dark mode work in Tailwind?
 
-**Keywords:** `dark class` · `root element` · `variant`
+**Expectations:** `dark:` variant · Class on root element · System preference
 
-**Expectations:** Explain that dark mode is typically enabled by adding a `dark` class on a root element and using `dark:` variants for alternate styles.
+**Example answer:**
+
+> I write alternate styles with the `dark:` variant, like `bg-white dark:bg-gray-900`.
+>
+> By default, `dark:` follows the operating system's `prefers-color-scheme` setting. To let users toggle the theme, I switch to a class strategy, so dark styles apply when a `dark` class is on the root `<html>` element, and I save the user's choice, for example in `localStorage` or a cookie. In Tailwind v4, that's configured with a custom variant in CSS; in v3, with `darkMode: "class"` in the config.
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+```html
+<html class="dark">
+  <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">…</body>
+</html>
+```
 
 ---
 
 ## 12. What is `@apply`, and when should you use it?
 
-**Keywords:** `@apply` · `compose utilities` · `custom class` · `use sparingly`
+**Expectations:** `@apply` · Compose utilities · Custom class · Use sparingly
 
-**Expectations:** Explain that `@apply` lets you compose utility classes into a custom CSS class. Point out that you should prefer utilities in markup first and use `@apply` sparingly, when a repeated pattern needs a named class.
+**Example answer:**
+
+> `@apply` lets me compose Tailwind utilities into a custom CSS class.
+>
+> I use it sparingly. In a component-based app, the better way to reuse styles is a component, like a `Button`, that holds the utility classes. `@apply` makes sense when I can't control the markup, such as styling HTML rendered from Markdown, or for a few very common patterns. Overusing it brings back the problems utility-first avoids: naming everything and large custom stylesheets.
+
+```css
+.btn-primary {
+  @apply rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700;
+}
+```
 
 ---
 
@@ -143,193 +294,492 @@ thumbnailText: Daily
 
 ## 1. What is a closure in JavaScript?
 
-**Keywords:** `Function` · `Lexical Scope` · `Remember Variables`
+**Expectations:** Function · Lexical scope · Remember variables
 
-**Expectations:** Define a closure as a function that remembers and can access variables from its enclosing scope, even after that outer function has finished running.
+**Example answer:**
+
+> A closure is a function that remembers the variables from the scope where it was created, and can still access them after the outer function has finished running.
+>
+> Closures are how JavaScript gives functions private state. They power patterns like counters, memoization, event handlers that remember their data, and React hooks. In this example, `count` can't be accessed from outside, but the returned function can still read and update it.
+
+```js
+function createCounter() {
+  let count = 0;
+  return () => ++count;
+}
+
+const next = createCounter();
+next(); // 1
+next(); // 2
+```
 
 ---
 
 ## 2. What is hoisting?
 
-**Keywords:** `Declarations` · `Top of Scope` · `TDZ`
+**Expectations:** Declarations · Top of scope · TDZ
 
-**Expectations:** Explain that hoisting moves variable and function declarations to the top of their scope during compilation. Contrast `var`, which is hoisted and initialized as `undefined`, with `let` and `const`, which are hoisted but sit in the temporal dead zone until their declaration line runs.
+**Example answer:**
+
+> Hoisting means JavaScript registers declarations before running the code in a scope, so it behaves as if they were moved to the top. The code isn't actually moved; the engine sets up the bindings first.
+>
+> Function declarations are fully hoisted, so I can call them before they appear. `var` is hoisted and initialized to `undefined`. `let` and `const` are hoisted too, but they sit in the temporal dead zone until their declaration runs, so accessing them early throws a `ReferenceError`.
+
+```js
+sayHi(); // works
+function sayHi() {}
+
+console.log(a); // undefined
+var a = 1;
+
+console.log(b); // ReferenceError
+let b = 2;
+```
 
 ---
 
 ## 3. How does scope work in JavaScript?
 
-**Keywords:** `Global` · `Function` · `Block`
+**Expectations:** Global · Function · Block
 
-**Expectations:** Name the three kinds of scope in JavaScript: global scope, function scope, and block scope (for `let` and `const`).
+**Example answer:**
+
+> Scope decides where a variable is visible. There are three main kinds:
+>
+> - **Global scope**: variables declared outside any function or block, visible everywhere.
+> - **Function scope**: variables declared inside a function, visible only inside it. `var` is function-scoped.
+> - **Block scope**: variables declared with `let` or `const` inside `{}`, such as an `if` or `for` block, visible only in that block.
+>
+> JavaScript uses lexical scope: when a variable isn't found in the current scope, the engine looks outward through the enclosing scopes where the code was written, up to the global scope. That chain is also what makes closures work.
 
 ---
 
 ## 4. What is the difference between `var`, `let`, and `const`?
 
-**Keywords:** `Function-scoped` · `Block-scoped` · `Reassignment`
+**Expectations:** Function-scoped · Block-scoped · Reassignment
 
-**Expectations:** Contrast the three: `var` is function-scoped and can be redeclared, `let` is block-scoped and cannot be redeclared in the same scope, and `const` is block-scoped and cannot be reassigned after initialization.
+**Example answer:**
+
+> - `var` is function-scoped, can be redeclared, and is initialized to `undefined` when hoisted.
+> - `let` is block-scoped, can't be redeclared in the same scope, and can be reassigned.
+> - `const` is block-scoped and can't be reassigned after initialization.
+>
+> `const` doesn't make the value immutable: I can't reassign a `const` object, but I can still change its properties. My default is `const`, then `let` when a value must change, and I avoid `var`.
+
+```js
+const user = { name: "Ana" };
+user.name = "Bo"; // allowed
+user = {};        // TypeError
+```
 
 ---
 
 ## 5. How does `this` work in JavaScript?
 
-**Keywords:** `Call Site` · `Context` · `Binding`
+**Expectations:** Call site · Context · Binding
 
-**Expectations:** Explain that the value of `this` depends on how the function is called, not where it is defined.
+**Example answer:**
+
+> The value of `this` depends on how a function is called, not where it's defined:
+>
+> - Called as a method, `obj.method()`, `this` is `obj`.
+> - Called as a plain function, `this` is `undefined` in strict mode, or the global object otherwise.
+> - Called with `new`, `this` is the newly created object.
+> - Called with `call`, `apply`, or `bind`, `this` is the value I pass.
+>
+> Arrow functions are the exception: they don't have their own `this` and use the `this` of the surrounding scope. A common bug is passing a method as a callback, like `setTimeout(obj.method)`, which loses `this`.
+
+```js
+const user = {
+  name: "Ana",
+  greet() {
+    return `Hi, ${this.name}`;
+  },
+};
+
+user.greet();          // "Hi, Ana"
+const greet = user.greet;
+greet();               // this is lost
+```
 
 ---
 
 ## 6. What is the difference between `call`, `apply`, and `bind`?
 
-**Keywords:** `Invoke` · `Arguments` · `Fixed this`
+**Expectations:** Invoke · Arguments · Fixed `this`
 
-**Expectations:** Contrast the three: `call` invokes a function with a given `this` and arguments listed individually, `apply` invokes it with arguments as an array, and `bind` returns a new function with `this` permanently bound.
+**Example answer:**
+
+> All three set `this` explicitly:
+>
+> - `call` invokes the function immediately, with arguments listed individually.
+> - `apply` invokes it immediately, with arguments passed as an array.
+> - `bind` doesn't invoke it; it returns a new function with `this`, and optionally some arguments, permanently bound.
+>
+> I use `bind` most, for example when passing a method as a callback. Today, spread syntax has mostly replaced `apply`.
+
+```js
+function greet(greeting, punctuation) {
+  return `${greeting}, ${this.name}${punctuation}`;
+}
+
+const user = { name: "Ana" };
+
+greet.call(user, "Hi", "!");     // "Hi, Ana!"
+greet.apply(user, ["Hi", "!"]);  // "Hi, Ana!"
+const hi = greet.bind(user, "Hi");
+hi("?");                         // "Hi, Ana?"
+```
 
 ---
 
 ## 7. What happens when you use `new` with a function?
 
-**Keywords:** `Object` · `Prototype` · `Constructor`
+**Expectations:** Object · Prototype · Constructor
 
-**Expectations:** Walk through the steps: `new` creates a new object, sets its prototype, binds `this` to that object, runs the function body, and returns the object (unless the constructor explicitly returns something else).
+**Example answer:**
+
+> `new` does four things:
+>
+> 1. Creates a new empty object.
+> 2. Sets that object's prototype to the function's `prototype` property.
+> 3. Runs the function with `this` bound to the new object.
+> 4. Returns the new object, unless the function explicitly returns a different object.
+>
+> ES6 `class` syntax does the same thing under the hood. Classes are built on constructor functions and prototypes.
+
+```js
+function Person(name) {
+  this.name = name;
+}
+Person.prototype.greet = function () {
+  return `Hi, ${this.name}`;
+};
+
+const ana = new Person("Ana");
+ana.greet(); // "Hi, Ana"
+```
 
 ---
 
 ## 8. What is the JavaScript event loop?
 
-**Keywords:** `Call Stack` · `Tasks` · `Non-blocking`
+**Expectations:** Call stack · Tasks · Non-blocking
 
-**Expectations:** Explain that the event loop coordinates running synchronous code on the call stack, then draining microtasks, then macrotasks, so JavaScript can stay responsive while handling async work.
+**Example answer:**
+
+> JavaScript runs on a single thread with one call stack. Slow work, like timers, network requests, and I/O, is handled by the browser or Node.js, and when it finishes, its callback is queued.
+>
+> The event loop decides what runs next. When the call stack is empty, it first drains the whole microtask queue, such as Promise callbacks, then takes one macrotask, such as a `setTimeout` callback, and repeats. In the browser, rendering happens between those tasks.
+>
+> That's how JavaScript stays responsive while handling async work. It's also why a long synchronous loop freezes the page: nothing else can run until the stack is empty.
 
 ---
 
 ## 9. What are microtasks vs macrotasks?
 
-**Keywords:** `Promises` · `setTimeout` · `Order`
+**Expectations:** Promises · `setTimeout` · Order
 
-**Expectations:** Explain that microtasks (for example Promise callbacks) run before the next macrotask (for example `setTimeout` callbacks), and point out that this ordering affects when async code runs relative to timers and I/O.
+**Example answer:**
+
+> Microtasks include Promise callbacks (`then`, `catch`, `finally`), code after `await`, and `queueMicrotask`. Macrotasks, also just called tasks, include `setTimeout`, `setInterval`, I/O, and UI events.
+>
+> After each macrotask, the event loop runs all queued microtasks before moving on, so a resolved Promise always runs before a `setTimeout` with a delay of `0`. This example logs `1`, `4`, `3`, `2`.
+>
+> One side effect is that microtasks that keep queuing more microtasks can starve rendering and timers.
+
+```js
+console.log(1);
+setTimeout(() => console.log(2), 0);
+Promise.resolve().then(() => console.log(3));
+console.log(4);
+// 1, 4, 3, 2
+```
 
 ---
 
 ## 10. What are common async patterns?
 
-**Keywords:** `Callbacks` · `Promises` · `async/await`
+**Expectations:** Callbacks · Promises · `async/await`
 
-**Expectations:** Name the common patterns: callbacks, Promises (chaining and `Promise.all`), and `async/await` for writing asynchronous code in a more synchronous style.
+**Example answer:**
+
+> - **Callbacks**: pass a function to run when the work finishes. It's simple, but nesting leads to "callback hell" and scattered error handling.
+> - **Promises**: an object representing a future value, with `then` and `catch` chaining. `Promise.all` runs tasks in parallel and fails fast, `Promise.allSettled` waits for every result, and `Promise.race` and `Promise.any` take the first to settle or succeed.
+> - **`async/await`**: syntax on top of Promises that lets me write async code that reads like synchronous code, with `try/catch` for errors.
+>
+> A common mistake is awaiting independent requests one after another. If they don't depend on each other, I start them together with `Promise.all`.
+
+```js
+async function loadDashboard() {
+  try {
+    const [user, orders] = await Promise.all([fetchUser(), fetchOrders()]);
+    return { user, orders };
+  } catch (error) {
+    console.error(error);
+  }
+}
+```
 
 ---
 
 ## 11. What is the difference between `setTimeout` and `setInterval`?
 
-**Keywords:** `Once` · `Repeat` · `Delay`
+**Expectations:** Once · Repeat · Delay
 
-**Expectations:** Contrast them: `setTimeout` runs a callback once after a delay, while `setInterval` runs a callback repeatedly on a fixed interval until cleared.
+**Example answer:**
+
+> `setTimeout` runs a callback once after a delay. `setInterval` runs it repeatedly at a fixed interval until I call `clearInterval`.
+>
+> The delay is a minimum, not a guarantee: the callback only runs when the call stack is free. With `setInterval`, if the callback takes longer than the interval, runs can bunch up, so for polling I often use a recursive `setTimeout` that schedules the next run after the current one finishes. Either way, I clear timers when a component unmounts.
+
+```js
+const id = setInterval(() => console.log("tick"), 1000);
+clearInterval(id);
+
+function poll() {
+  fetchStatus().finally(() => setTimeout(poll, 5000));
+}
+```
 
 ---
 
 ## 12. What is prototype inheritance?
 
-**Keywords:** `Prototype Chain` · `Objects` · `Lookup`
+**Expectations:** Prototype chain · Objects · Lookup
 
-**Expectations:** Explain that objects inherit properties and methods from their prototype via the prototype chain, and that when a property is missing on the object, JavaScript looks it up the chain.
+**Example answer:**
+
+> Every JavaScript object has an internal link to another object, its prototype. When I access a property that isn't on the object itself, JavaScript looks it up on the prototype, then the prototype's prototype, and so on until it reaches `null`. That's the prototype chain.
+>
+> That's how arrays get methods like `map`: they live on `Array.prototype`, not on each array. Classes use the same mechanism: `class Dog extends Animal` links `Dog.prototype` to `Animal.prototype`.
+
+```js
+const animal = {
+  speak() {
+    return "...";
+  },
+};
+
+const dog = Object.create(animal);
+dog.speak(); // "...", found on the prototype
+```
 
 ---
 
 ## 13. What is the difference between `==` and `===`?
 
-**Keywords:** `Coercion` · `Strict` · `Type`
+**Expectations:** Coercion · Strict · Type
 
-**Expectations:** Contrast them: `==` compares with type coercion when types differ, while `===` is strict equality with no coercion, so type and value must match.
+**Example answer:**
+
+> `==` is loose equality: if the types differ, it converts them before comparing. `===` is strict equality: no conversion, so both type and value must match.
+>
+> Loose equality has surprising results, like `0 == ""` being `true`. I use `===` by default. The one common exception is `value == null`, which checks for both `null` and `undefined` at once.
+
+```js
+0 == "";            // true
+0 === "";           // false
+null == undefined;  // true
+null === undefined; // false
+```
 
 ---
 
 ## 14. What is the difference between `null` and `undefined`?
 
-**Keywords:** `No Value` · `Unassigned` · `Intentional`
+**Expectations:** No value · Unassigned · Intentional
 
-**Expectations:** Contrast them: `null` is an assigned value meaning “no value” (often intentional), while `undefined` means a variable was declared but not assigned, or a property is missing.
+**Example answer:**
+
+> `undefined` means a value hasn't been assigned: a declared variable without a value, a missing object property, a missing function argument, or a function with no `return`.
+>
+> `null` is a value I assign on purpose to say "no value here".
+>
+> Two details interviewers like: `typeof null` is `"object"`, which is a historical bug, and `null == undefined` is `true` but `null === undefined` is `false`. The `??` operator treats both as missing.
 
 ---
 
 ## 15. What are JavaScript data types?
 
-**Keywords:** `Primitive` · `Object` · `typeof`
+**Expectations:** Primitive · Object · `typeof`
 
-**Expectations:** Name the primitives (string, number, boolean, null, undefined, symbol, and bigint) and the non-primitive object type, pointing out that arrays and functions are objects too.
+**Example answer:**
+
+> There are seven primitive types: `string`, `number`, `boolean`, `null`, `undefined`, `symbol`, and `bigint`. Primitives are immutable and compared by value.
+>
+> Everything else is an object, including arrays, functions, dates, and maps. Objects are compared by reference, so two objects with the same content aren't equal.
+>
+> `typeof` has two quirks: `typeof null` is `"object"`, and `typeof` for a function returns `"function"`. To check for an array, I use `Array.isArray()`.
 
 ---
 
 ## 16. Shallow copy vs deep copy?
 
-**Keywords:** `Reference` · `Nested Objects` · `Clone`
+**Expectations:** Reference · Nested objects · Clone
 
-**Expectations:** Contrast them: a shallow copy duplicates the top level but keeps references to nested objects, while a deep copy recursively clones nested structures so the copies are independent.
+**Example answer:**
+
+> A shallow copy duplicates the top level but keeps references to nested objects, so changing a nested object affects both copies. Spread syntax, `Object.assign`, and `Array.from` make shallow copies.
+>
+> A deep copy recursively clones nested structures, so the copies are fully independent. The modern way is `structuredClone()`. The older `JSON.parse(JSON.stringify(obj))` trick loses dates, `undefined`, functions, and `Map` or `Set` values.
+
+```js
+const original = { user: { name: "Ana" } };
+
+const shallow = { ...original };
+const deep = structuredClone(original);
+
+original.user.name = "Bo";
+shallow.user.name; // "Bo"
+deep.user.name;    // "Ana"
+```
 
 ---
 
 ## 17. What is immutability?
 
-**Keywords:** `No Mutation` · `New Data` · `Predictable State`
+**Expectations:** No mutation · New data · Predictable state
 
-**Expectations:** Define immutability as not changing existing data in place and creating new data instead. Explain that this makes state updates easier to reason about and debug.
+**Example answer:**
+
+> Immutability means not changing existing data in place, and creating a new copy with the change instead.
+>
+> It makes state changes easier to reason about and debug, because old values never change unexpectedly. It also enables cheap change detection: React compares references, so it only knows state changed if I pass a new object or array. In practice, I use spread syntax and non-mutating methods like `map`, `filter`, `toSorted`, and `with`.
+
+```js
+const todos = [{ id: 1, done: false }];
+
+const updated = todos.map((todo) =>
+  todo.id === 1 ? { ...todo, done: true } : todo
+);
+```
 
 ---
 
 ## 18. What is event delegation?
 
-**Keywords:** `Bubbling` · `Parent Listener` · `Dynamic Children`
+**Expectations:** Bubbling · Parent listener · Dynamic children
 
-**Expectations:** Explain that event delegation attaches one listener on a parent and handles events from children using event bubbling. Mention that it works well for lists and dynamically added elements.
+**Example answer:**
+
+> Event delegation means attaching one listener to a parent element and handling events from its children through event bubbling. Inside the handler, I use `event.target` and `closest()` to find which child was clicked.
+>
+> It works well for long lists and dynamically added elements: there's one listener instead of hundreds, and new children work automatically without adding listeners.
+
+```js
+document.querySelector("#todo-list").addEventListener("click", (event) => {
+  const item = event.target.closest("li");
+  if (item) {
+    toggleTodo(item.dataset.id);
+  }
+});
+```
 
 ---
 
 ## 19. How do you stop event propagation?
 
-**Keywords:** `stopPropagation` · `Bubbling` · `Capture`
+**Expectations:** `stopPropagation` · Bubbling · Capture
 
-**Expectations:** Explain that you call `event.stopPropagation()` on the event object to prevent the event from bubbling (or capturing) to ancestor elements.
+**Example answer:**
+
+> I call `event.stopPropagation()` to stop the event from moving further, through the capture or bubbling phase, to other elements. `event.stopImmediatePropagation()` also stops other listeners on the same element.
+>
+> That's different from `event.preventDefault()`, which stops the browser's default action, like following a link or submitting a form, without stopping propagation.
+>
+> I use `stopPropagation` sparingly, because it can break event delegation and analytics listeners higher up the tree.
 
 ---
 
 ## 20. What is a memory leak in JavaScript?
 
-**Keywords:** `Unreachable` · `Retained` · `Heap`
+**Expectations:** Unreachable · Retained · Heap
 
-**Expectations:** Define a memory leak as memory that is no longer needed but stays allocated because something still holds a reference to it.
+**Example answer:**
+
+> A memory leak is memory that the app no longer needs but that can't be freed, because something still holds a reference to it. The garbage collector only frees unreachable objects, so a forgotten reference keeps the whole object graph alive.
+>
+> In long-running pages, like single-page apps or dashboards, leaks show up as memory that keeps growing, slowing the page down until it crashes.
 
 ---
 
 ## 21. What are common causes of memory leaks?
 
-**Keywords:** `Listeners` · `Timers` · `Closures`
+**Expectations:** Listeners · Timers · Closures
 
-**Expectations:** Name the common causes: event listeners that are never removed, timers that are never cleared, and closures that keep large objects alive longer than necessary.
+**Example answer:**
+
+> The common causes are:
+>
+> - **Event listeners that are never removed**, especially on `window` or `document`.
+> - **Timers and intervals that are never cleared**, whose callbacks keep their data alive.
+> - **Closures that hold large objects** longer than necessary.
+> - **Detached DOM nodes**: elements removed from the page but still referenced from JavaScript.
+> - **Unbounded caches or global variables** that keep growing.
+> - **Subscriptions**, like WebSockets or observables, that are never unsubscribed.
 
 ---
 
 ## 22. How can you prevent memory leaks?
 
-**Keywords:** `Cleanup` · `removeEventListener` · `clearTimeout`
+**Expectations:** Cleanup · `removeEventListener` · `clearTimeout`
 
-**Expectations:** Explain that you remove event listeners when components or nodes are destroyed, clear timers and intervals, and avoid keeping unnecessary references in globals or long-lived closures.
+**Example answer:**
+
+> I clean up everything I set up. I remove event listeners when components or nodes are destroyed, clear timers and intervals, close subscriptions and connections, and avoid keeping unnecessary references in globals or long-lived closures. In React, that cleanup goes in the function returned from `useEffect`.
+>
+> For caches keyed by objects, a `WeakMap` lets entries be collected when the key object is gone. To find leaks, I use the Memory panel in Chrome DevTools to compare heap snapshots and look for growing object counts or detached DOM nodes.
+
+```js
+useEffect(() => {
+  const onResize = () => setWidth(window.innerWidth);
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, []);
+```
 
 ---
 
 ## 23. What is garbage collection?
 
-**Keywords:** `Reachability` · `Automatic` · `GC`
+**Expectations:** Reachability · Automatic · GC
 
-**Expectations:** Define garbage collection as automatic memory management, where the runtime frees objects that are no longer reachable from the root set (globals, active stack, etc.).
+**Example answer:**
+
+> Garbage collection is automatic memory management: the JavaScript engine frees memory for objects the program can no longer reach.
+>
+> Modern engines use mark-and-sweep. Starting from roots, like global variables and the current call stack, the collector marks every object it can reach, then frees everything that wasn't marked. Because it's based on reachability, two objects referencing each other are still collected if nothing else reaches them.
+>
+> I don't control when it runs. My job is to avoid keeping references to things I no longer need.
 
 ---
 
 ## 24. How do you improve JavaScript performance?
 
-**Keywords:** `DOM` · `Debounce` · `Cache`
+**Expectations:** DOM · Debounce · Cache
 
-**Expectations:** Mention minimizing DOM reads and writes, using debouncing or throttling for high-frequency handlers, and caching expensive computations when inputs repeat.
+**Example answer:**
+
+> I measure first with the Performance panel or Lighthouse, then focus on the usual wins:
+>
+> - **Minimize DOM work**: batch reads and writes to avoid layout thrashing, and use virtualization for long lists.
+> - **Debounce or throttle** high-frequency handlers like `input`, `scroll`, and `resize`.
+> - **Cache expensive computations**, with memoization when the same inputs repeat.
+> - **Ship less JavaScript**: code splitting, lazy loading, and removing unused dependencies.
+> - **Keep the main thread free**: break up long tasks, and move heavy computation to a Web Worker.
+
+```js
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+input.addEventListener("input", debounce(search, 300));
+```
 
 ---
 
@@ -337,86 +787,253 @@ thumbnailText: Daily
 
 ## 1. What are the main differences between TypeScript and JavaScript?
 
-**Keywords:** `Static Types` · `Compile Time` · `Tooling`
+**Expectations:** Static types · Compile time · Tooling
 
-**Expectations:** Explain that TypeScript is JavaScript with optional static typing that catches many type errors at compile time. Mention that it adds types, interfaces, enums, generics, and utility types, and compiles down to JavaScript.
+**Example answer:**
+
+> TypeScript is JavaScript with optional static types. It catches many errors at compile time, like typos in property names, wrong argument types, or forgetting to handle `null`, before the code runs.
+>
+> It adds type annotations, interfaces, generics, enums, and utility types, and compiles down to plain JavaScript. The types are erased at runtime, so TypeScript doesn't validate external data like API responses; for that I use a runtime validator such as Zod.
+>
+> The other big benefit is tooling: autocomplete, safe refactoring, and code that documents itself.
 
 ---
 
 ## 2. What is the difference between `type`, `interface`, and `enum`?
 
-**Keywords:** `Merge` · `Unions` · `Named Constants`
+**Expectations:** Merge · Unions · Named constants
 
-**Expectations:** Contrast the three: interfaces can be extended and declaration-merged; `type` aliases can express unions, intersections, and more complex shapes; and enums define a set of named numeric or string constants.
+**Example answer:**
+
+> - An `interface` describes the shape of an object. It can be extended with `extends`, and two declarations with the same name merge, which is useful for augmenting library types.
+> - A `type` alias can name any type: object shapes, but also unions, intersections, tuples, and mapped types.
+> - An `enum` defines a set of named numeric or string constants, and unlike the other two, it exists at runtime.
+>
+> For object shapes, either works. I use `type` when I need unions, and I often prefer a union of string literals over an `enum`, because it's simpler and has no runtime code.
+
+```ts
+interface User {
+  id: number;
+  name: string;
+}
+
+type Status = "idle" | "loading" | "error";
+
+enum Role {
+  Admin = "admin",
+  Member = "member",
+}
+```
 
 ---
 
 ## 3. How do unions and intersections work?
 
-**Keywords:** `|` · `&` · `Combined Types`
+**Expectations:** `|` · `&` · Combined types
 
-**Expectations:** Explain that a union (`A | B`) means a value can be one of several types, while an intersection (`A & B`) combines types so a value must satisfy all of them.
+**Example answer:**
+
+> A union, `A | B`, means a value can be one of several types. Before using properties that only exist on one member, I narrow the type. Discriminated unions, where each member has a shared literal field like `status`, make that narrowing easy.
+>
+> An intersection, `A & B`, combines types, so a value must satisfy all of them. I use it to compose object types, like adding timestamps to an entity.
+
+```ts
+type Result =
+  | { status: "success"; data: string }
+  | { status: "error"; message: string };
+
+type WithTimestamps<T> = T & { createdAt: Date; updatedAt: Date };
+```
 
 ---
 
 ## 4. How do deriving and narrowing types work?
 
-**Keywords:** `Inference` · `Type Guards` · `Control Flow`
+**Expectations:** Inference · Type guards · Control flow
 
-**Expectations:** Explain that TypeScript infers types from initialization and usage, and that narrowing refines a type inside branches using checks such as `typeof`, `instanceof`, or custom type guards.
+**Example answer:**
+
+> TypeScript infers types from initial values and usage, so I don't annotate everything. I can also derive types from existing ones, with utility types or `typeof`, instead of repeating them.
+>
+> Narrowing refines a type inside a branch. TypeScript follows the control flow: after checks like `typeof`, `instanceof`, `in`, equality, or a custom type guard, it knows the more specific type in that branch.
+
+```ts
+function format(value: string | number) {
+  if (typeof value === "string") {
+    return value.toUpperCase(); // string here
+  }
+  return value.toFixed(2); // number here
+}
+
+function isUser(value: unknown): value is User {
+  return typeof value === "object" && value !== null && "id" in value;
+}
+```
 
 ---
 
 ## 5. What are `keyof` and `typeof` operators?
 
-**Keywords:** `Keys Union` · `Type of Value` · `Generics`
+**Expectations:** Keys union · Type of value · Generics
 
-**Expectations:** Explain that `keyof T` produces a union of property names of type `T`, and that `typeof x` in type position gives the type of a variable or expression, which is useful for tying types to runtime values.
+**Example answer:**
+
+> `keyof T` produces a union of the property names of type `T`. With generics, it lets me write type-safe property access.
+>
+> `typeof x` in a type position gives the type of a variable or expression. It ties types to runtime values, so the type updates automatically when the value changes. Combining them, `keyof typeof config` gives the keys of an object value.
+
+```ts
+function getProp<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+
+const config = { theme: "dark", pageSize: 20 };
+type Config = typeof config;        // { theme: string; pageSize: number }
+type ConfigKey = keyof typeof config; // "theme" | "pageSize"
+```
 
 ---
 
 ## 6. What are `Record`, `Partial`, `Pick`, and `Omit`?
 
-**Keywords:** `Utility Types` · `Shape` · `Optional`
+**Expectations:** Utility types · Shape · Optional
 
-**Expectations:** Define each utility type: `Record<K, V>` maps keys `K` to values `V`, `Partial<T>` makes all properties of `T` optional, `Pick<T, K>` selects a subset of properties, and `Omit<T, K>` removes properties from `T`.
+**Example answer:**
+
+> They're built-in utility types for deriving new types from existing ones:
+>
+> - `Record<K, V>` creates an object type with keys `K` and values `V`.
+> - `Partial<T>` makes every property of `T` optional, which is useful for update payloads.
+> - `Pick<T, K>` keeps only the listed properties.
+> - `Omit<T, K>` removes the listed properties.
+>
+> Deriving types this way keeps everything in sync with one source type.
+
+```ts
+type UserUpdate = Partial<User>;
+type UserPreview = Pick<User, "id" | "name">;
+type NewUser = Omit<User, "id">;
+type UsersById = Record<number, User>;
+```
 
 ---
 
 ## 7. What are generic types in TypeScript?
 
-**Keywords:** `Type Parameter` · `Reusable` · `Type Safety`
+**Expectations:** Type parameter · Reusable · Type safety
 
-**Expectations:** Explain that generics let you write functions and types that work across many types while keeping compile-time type safety, and give an example such as `function identity<T>(x: T): T`.
+**Example answer:**
+
+> Generics let me write functions and types that work with many types while keeping type safety. A type parameter, like `T`, is a placeholder that gets filled in when the function is used, often by inference.
+>
+> Without generics, I'd either duplicate code for each type or use `any` and lose type checking. I can also constrain a type parameter with `extends`, for example to require an `id` field.
+
+```ts
+function identity<T>(value: T): T {
+  return value;
+}
+
+function findById<T extends { id: number }>(items: T[], id: number): T | undefined {
+  return items.find((item) => item.id === id);
+}
+
+type ApiResponse<T> = { data: T; error?: string };
+```
 
 ---
 
 ## 8. What is the `satisfies` operator?
 
-**Keywords:** `Check Shape` · `Preserve Inference` · `Literal Types`
+**Expectations:** Check shape · Preserve inference · Literal types
 
-**Expectations:** Explain that `satisfies` checks that a value matches a type without widening the inferred type of the value. Mention using it when you want validation plus precise literal inference.
+**Example answer:**
+
+> `satisfies` checks that a value matches a type without changing the value's inferred type.
+>
+> With a normal annotation, the variable takes the annotated type, so specific information is lost. With `satisfies`, I still get an error if the shape is wrong, but TypeScript keeps the precise inferred type, including literal types and exact keys.
+
+```ts
+type Theme = Record<string, string>;
+
+const colors = {
+  primary: "#2563eb",
+  danger: "#dc2626",
+} satisfies Theme;
+
+colors.primary; // still known to exist
+colors.missing; // error, unlike with `const colors: Theme`
+```
 
 ---
 
 ## 9. What is `any` vs `unknown` vs `never`?
 
-**Keywords:** `Escape Hatch` · `Safe Top` · `Uninhabited`
+**Expectations:** Escape hatch · Safe top type · Uninhabited
 
-**Expectations:** Contrast the three: `any` turns off type checking for that value; `unknown` accepts any value but requires narrowing before use; and `never` is the type of values that never occur (for example a function that always throws).
+**Example answer:**
+
+> - `any` turns off type checking for that value. Anything goes, which defeats the point of TypeScript, so I avoid it.
+> - `unknown` also accepts any value, but I must narrow it before using it. It's the safe choice for data from outside, like parsed JSON or a `catch` error.
+> - `never` is the type of values that never occur, like the return type of a function that always throws. I also use it for exhaustive checks: if a new union member isn't handled, assigning it to `never` fails to compile.
+
+```ts
+function assertNever(value: never): never {
+  throw new Error(`Unhandled value: ${value}`);
+}
+
+function label(status: "idle" | "loading") {
+  switch (status) {
+    case "idle":
+      return "Idle";
+    case "loading":
+      return "Loading";
+    default:
+      return assertNever(status);
+  }
+}
+```
 
 ---
 
 ## 10. What are optional properties and `readonly`?
 
-**Keywords:** `?` · `Immutable Field` · `Object Types`
+**Expectations:** `?` · Immutable field · Object types
 
-**Expectations:** Explain that optional properties use `?` and may be absent, while `readonly` marks properties that cannot be reassigned after the object is created (shallow immutability for that field).
+**Example answer:**
+
+> An optional property, marked with `?`, may be missing. Its type includes `undefined`, so TypeScript makes me handle that case, often with optional chaining or a default.
+>
+> `readonly` marks a property that can't be reassigned after the object is created. It's shallow: nested objects can still change, and it only exists at compile time. For arrays, `readonly string[]` blocks methods like `push`.
+
+```ts
+interface User {
+  readonly id: number;
+  name: string;
+  nickname?: string;
+}
+
+const user: User = { id: 1, name: "Ana" };
+user.id = 2; // error
+user.nickname?.toUpperCase();
+```
 
 ---
 
 ## 11. How does TypeScript work with third-party JavaScript libraries?
 
-**Keywords:** `.d.ts` · `DefinitelyTyped` · `@types`
+**Expectations:** `.d.ts` · DefinitelyTyped · `@types`
 
-**Expectations:** Explain that libraries without built-in types are described with declaration files (`.d.ts`), and mention that community packages under `@types/*` or hand-written declarations supply types for plain JavaScript modules.
+**Example answer:**
+
+> Many libraries ship their own type definitions, so they just work. For libraries written in plain JavaScript without types, the community maintains declaration files on DefinitelyTyped, which I install as `@types/library-name`.
+>
+> If no types exist, I write a declaration file (`.d.ts`) describing the parts I use. As a last resort, a one-line `declare module` makes the import compile, but it's typed as `any`.
+
+```ts
+// types/legacy-lib.d.ts
+declare module "legacy-lib" {
+  export function formatDate(date: Date, pattern: string): string;
+}
+```
+
+---
