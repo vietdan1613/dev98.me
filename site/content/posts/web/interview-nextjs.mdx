@@ -441,7 +441,60 @@ thumbnailText: Daily
 
 ---
 
-## 35. What should you practice before a Next.js fresher interview?
+## 35. How do you validate user input?
+
+**Expectations:** Client = UX · Server = trust · Pending state · Accessible errors
+
+**Example answer:**
+
+> Validate on the client for fast feedback and on the server for trust. Client validation improves UX. Server validation enforces the rule.
+>
+> A good form answer includes pending state, duplicate-submit prevention, error display, and accessible field messages.
+
+---
+
+## 36. How do you reduce client JavaScript?
+
+**Expectations:** Server Components · Small `"use client"` boundaries · Heavy imports · Measure
+
+**Example answer:**
+
+> Keep non-interactive UI as Server Components, put **`"use client"`** at small boundaries, avoid importing large browser-only libraries into shared parents, and measure bundle output before optimizing blindly.
+
+---
+
+## 37. How do you debug a slow route?
+
+**Expectations:** Data fetching · Blocking data · JS size · Hydration · LCP · Caching · Measure
+
+**Example answer:**
+
+> Split the problem:
+>
+> - Is the server slow to fetch data?
+> - Is the page waiting on unnecessary blocking data?
+> - Is too much JavaScript sent to the browser?
+> - Is hydration expensive?
+> - Is an image hurting LCP?
+> - Is caching disabled by accident?
+>
+> Then measure with framework build output, browser DevTools, server logs, and Web Vitals.
+
+---
+
+## 38. What changes between local development and production?
+
+**Expectations:** Dev = feedback · Prod = optimized output · Env vars · Caching
+
+**Example answer:**
+
+> Development mode optimizes feedback for engineers. Production builds optimize output for users. Caching, bundling, minification, image behavior, and deployment environment can differ.
+>
+> If a bug appears only in production, check environment variables, build-time assumptions, server/runtime differences, and caching.
+
+---
+
+## 39. What should you practice before a Next.js fresher interview?
 
 **Expectations:** Practical project · Routing · Data fetching · Forms · Auth
 
@@ -450,6 +503,80 @@ thumbnailText: Daily
 > I would build one small app with public pages, a dynamic detail page, a form, a Route Handler, metadata, a loading state, and a protected dashboard.
 >
 > A mini product catalog or blog is enough: list page, detail page, search params, server-fetched data, a client filter, a form mutation, and a small auth gate. This gives me something practical to discuss for most junior Next.js topics.
+
+---
+
+## 40. How would you design a product detail route?
+
+**Expectations:** Server page · Metadata · `notFound()` · Small client widgets · Freshness
+
+**Example answer:**
+
+> Use a Server Component page for product data and SEO. Generate metadata from product data. Return **`notFound()`** for missing products. Keep interactive parts such as cart controls, variant selectors, and wishlist buttons in small Client Components. Make freshness explicit for price and inventory.
+
+---
+
+## 41. How would you design an authenticated dashboard?
+
+**Expectations:** Auth gate · Private server data · No shared cache · Suspense · URL state
+
+**Example answer:**
+
+> Check auth before rendering protected UI. Fetch user-specific data on the server with request-aware credentials. Avoid sharing cached private responses. Split slow widgets with Suspense when possible. Keep URL state for filters that users expect to share or revisit.
+
+---
+
+## 42. How do you choose between server and client fetching?
+
+**Expectations:** Server: SEO/secrets/auth · Client: interactive/live · UI states
+
+**Example answer:**
+
+> Use server fetching when data improves SEO, uses secrets, depends on trusted auth, or should avoid extra client waterfalls. Use client fetching for highly interactive data, browser-only context, live updates, or user actions after initial render.
+>
+> The answer should include the UI states either way.
+
+---
+
+## 43. How do you handle partial failures?
+
+**Expectations:** Route error · Widget error · Degrade · Fatal vs degradable
+
+**Example answer:**
+
+> Do not let one optional widget break an entire page. Use route error boundaries for route-level failures, local error UI for widget-level failures, and server-side validation for expected missing data.
+>
+> Name which failures are fatal and which can degrade.
+
+---
+
+## 44. How do you keep a route maintainable?
+
+**Expectations:** Separate concerns · Small `page.tsx`
+
+**Example answer:**
+
+> Separate route concerns: data loading, metadata, UI composition, interactive client widgets, mutation boundaries, and error states. Avoid making **`page.tsx`** a long file that owns every detail.
+
+---
+
+## 45. How do you test a Next.js app?
+
+**Expectations:** Unit · Component · E2E · Route/integration
+
+**Example answer:**
+
+> Test pure utilities with unit tests, components with user-focused component tests, and critical flows with E2E tests. For framework-specific behavior such as redirects, route handlers, and server boundaries, test at the route or integration level where possible.
+
+---
+
+## 46. How do you review a Next.js PR?
+
+**Expectations:** Secrets · Client boundaries · Route states · Metadata · Explicit caching
+
+**Example answer:**
+
+> Check whether secrets stay on the server, client boundaries are small, route states are handled, metadata is correct, caching is explicit where freshness matters, and loading/error/not-found states match the product requirement.
 
 ---
 
