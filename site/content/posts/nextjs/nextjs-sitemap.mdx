@@ -121,3 +121,13 @@ If your website supports multiple languages, you can define language alternative
 Next.js generates the corresponding `hreflang` information in the sitemap.
 
 This is especially useful for websites using **Next.js + next-intl**.
+
+---
+
+## 5. Check Your Sitemap
+
+After deploying, open `https://example.com/sitemap.xml` to confirm it is generated.
+
+To inspect it in more detail, use [SitemapKit's Sitemap Extractor](https://sitemapkit.com/tools/sitemap-extractor). Enter your sitemap URL, and it lists every URL with its `lastmod`, `changefreq`, and `priority` values (the XML names for `lastModified`, `changeFrequency`, and `priority`). It also follows sitemap index files, counts duplicate URLs, and lets you download the list as CSV, TXT, or JSON.
+
+This is a quick way to check that dynamic pages, such as products or blog posts, actually appear in the sitemap.
