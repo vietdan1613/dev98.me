@@ -7,132 +7,140 @@ date: 2026-10-16
 thumbnailText: FastAPI
 ---
 
-When a FastAPI application is small, you can keep most of the code in a few files. As the system grows, this becomes harder to maintain.
+As a FastAPI application grows, organizing everything into global folders such as `routers`, `schemas`, `services`, and `models` can become difficult to maintain.
 
-A production application should separate responsibilities such as:
+A feature-based structure groups code by **business domain** instead.
 
-- HTTP and API handling
-- Validation
-- Business logic
-- Database access
-- Authentication and authorization
-- Dependencies
-- Real-time communication
-
-A practical approach is **feature-based architecture**.
-
-# Organize by Feature
-
-Instead of putting all routers, schemas, models, and services into separate global folders:
+## The Overall Structure
 
 ```text
 app/
-├── routers/
-├── schemas/
-├── models/
-└── services/
-```
-
-Group code by business feature:
-
-```text
-app/
-├── modules/
-│   ├── users/
-│   │   ├── router.py
-│   │   ├── schema.py
-│   │   ├── model.py
-│   │   ├── service.py
-│   │   └── repository.py
-│   │
-│   └── orders/
-│       ├── router.py
-│       ├── schema.py
-│       ├── model.py
-│       ├── service.py
-│       └── repository.py
+├── main.py
+├── cli.py
+│
+├── api/
+│   └── router.py
 │
 ├── core/
+│   ├── config.py
+│   ├── database.py
+│   ├── security.py
+│   ├── cookies.py
+│   ├── sse.py
+│   └── text.py
+│
 ├── db/
-└── main.py
+│   ├── base.py
+│   └── registry.py
+│
+├── shared/
+│   └── bot_protection/
+│
+├── data/
+│   └── faqs.json
+│
+└── features/
+    ├── auth/
+    ├── admins/
+    ├── categories/
+    ├── plants/
+    ├── customers/
+    ├── orders/
+    ├── payments/
+    ├── reviews/
+    ├── notifications/
+    ├── overview/
+    ├── knowledge/
+    └── chat/
 ```
 
-For example, everything related to users stays inside:
+## Main Components
+
+### `main.py`
+
+The entry point of the FastAPI application. It creates the app, configures middleware such as CORS, and mounts the main API router.
+
+### `cli.py`
+
+Contains command-line commands for tasks that are not HTTP requests, such as creating an admin account.
+
+### `api/`
+
+The API layer aggregates routers from all features.
 
 ```text
-modules/users/
-```
-
-while order-related code stays inside:
-
-```text
-modules/orders/
-```
-
-As the application grows, you can add more features:
-
-```text
-modules/
-├── users/
-├── orders/
-├── products/
-├── payments/
-├── reviews/
-└── notifications/
-```
-
-# Separate Responsibilities
-
-Inside each feature:
-
-```text
-Feature
-├── Router
-├── Schema
-├── Service
-├── Repository
-└── Model
-```
-
-A typical request flow is:
-
-```text
-Client
-  ↓
-Router
-  ↓
-Schema
-  ↓
-Service
-  ↓
-Repository
-  ↓
-Database
-```
-
-Each layer has a clear responsibility:
-
-- **Router** → handles HTTP requests and responses
-- **Schema** → validates request and response data
-- **Service** → contains business logic
-- **Repository** → handles database operations
-- **Model** → represents database entities
-
-Shared infrastructure stays outside the features:
-
-```text
-core/
-  → config, security, shared dependencies
-
-db/
-  → database connection and session
-
 main.py
-  → application setup and router registration
+   ↓
+api/router.py
+   ↓
+feature routers
 ```
 
-The main idea is:
+### `core/`
 
-> **Organize the application by business features, while keeping responsibilities separated inside each feature.**
+Contains application-wide infrastructure that is not specific to a business feature.
 
-This makes a large FastAPI codebase easier to navigate, test, and maintain.
+For example:
+
+- configuration
+- database sessions
+- authentication/security
+- cookies
+- SSE
+- text normalization
+
+Features can use `core`, but `core` should not depend on business features.
+
+### `db/`
+
+Contains the SQLAlchemy foundation.
+
+`base.py` defines `Base` and common model mixins, while `registry.py` imports all feature models so SQLAlchemy and Alembic can discover the complete database schema.
+
+### `shared/`
+
+Contains reusable application-level logic shared by multiple features.
+
+For example, bot protection can be used by both orders and reviews without belonging to either feature.
+
+### `data/`
+
+Contains static application data, such as the FAQ data used to build the chatbot's knowledge base.
+
+### `features/`
+
+Contains the actual business domains of the application.
+
+Each feature owns the code related to that domain:
+
+```text
+features/plants/
+├── router.py
+├── public_router.py
+├── service.py
+├── schemas.py
+├── models.py
+└── dependencies.py
+```
+
+The common responsibility is:
+
+```text
+router
+   ↓
+service
+   ↓
+models
+   ↓
+database
+```
+
+`schemas` define the API data contract, while `dependencies` contain reusable dependencies for that feature.
+
+### `knowledge/`
+
+Handles the application's RAG and Weaviate functionality, such as indexing plants, FAQs, and blogs and retrieving relevant information.
+
+### `chat/`
+
+Handles the chatbot API and DeepSeek integration. It can use the `knowledge` feature to retrieve relevant information before generating a response.
