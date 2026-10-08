@@ -1,0 +1,66 @@
+---
+title: "ASGI in FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-07
+thumbnailText: FastAPI
+---
+
+```text
+Uvicorn = Server
+ASGI    = Interface
+FastAPI = Application
+```
+
+# What is ASGI?
+
+**ASGI (Asynchronous Server Gateway Interface)** is a standard interface between a Python web server and a Python web application.
+
+In FastAPI:
+
+```text
+Client → Uvicorn → ASGI → FastAPI → Route
+```
+
+- **Uvicorn**: the ASGI server that receives requests and runs the application.
+- **ASGI**: the interface/contract between the server and application.
+- **FastAPI**: the ASGI application that handles requests.
+
+ASGI is designed to support asynchronous operations and long-lived connections such as WebSockets and streaming.
+
+# ASGI vs WSGI
+
+WSGI was designed mainly for synchronous request/response applications. ASGI extends this model to support asynchronous applications and long-lived connections.
+
+| WSGI | ASGI |
+|---|---|
+| Synchronous | Asynchronous |
+| HTTP request/response | HTTP, WebSockets, streaming |
+| Flask, classic Django | FastAPI, Starlette |
+| Gunicorn, uWSGI | Uvicorn, Hypercorn |
+
+The key idea:
+
+> **ASGI allows FastAPI to use `async/await` effectively for I/O-bound operations.**
+
+# 3. ASGI in Practice
+
+When you run:
+
+```bash
+uvicorn main:app
+```
+
+Uvicorn receives requests and communicates with FastAPI through ASGI.
+
+FastAPI and Starlette handle the low-level ASGI details, so developers normally just write:
+
+```python
+@app.get("/users")
+async def get_users():
+    users = await db.fetch_users()
+    return users
+```
+
+You usually don't need to work directly with `scope`, `receive`, or `send`.

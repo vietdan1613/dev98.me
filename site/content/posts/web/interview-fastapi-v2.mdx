@@ -1,0 +1,759 @@
+---
+title: "Interview: FastAPI v2"
+category: Unknown
+author: Daniel Nguyen
+tags: ['#Interview']
+date: 2000-01-15
+thumbnailText: Daily
+---
+
+# Pydantic
+
+## 1. What is Pydantic?
+
+> Pydantic is a data validation and serialization library used by FastAPI. It validates incoming data based on Python type hints and converts it into typed Python objects.
+
+```python
+from pydantic import BaseModel
+
+class Product(BaseModel):
+    name: str
+    price: float
+```
+
+## 2. What is `Field()`?
+
+> `Field()` is used to add constraints and metadata to Pydantic fields, such as minimum length, maximum value, or default values.
+
+```python
+price: float = Field(gt=0)
+```
+
+## 3. `field_validator` vs `model_validator`?
+
+> `field_validator` validates a specific field, while `model_validator` validates multiple fields or the entire model.
+
+```text
+field_validator → one field
+model_validator → multiple fields / whole model
+```
+
+## 4. `model_validate()` vs `model_dump()`?
+
+> `model_validate()` converts external data into a validated Pydantic model, while `model_dump()` converts a Pydantic model into a Python dictionary.
+
+```text
+data  → model_validate() → Pydantic Model
+Model → model_dump()     → dict
+```
+
+## 5. Pydantic vs SQLAlchemy?
+
+> Pydantic is responsible for API data validation and serialization, while SQLAlchemy is responsible for interacting with the database.
+
+```text
+Pydantic    → API data
+SQLAlchemy  → Database
+```
+
+## 6. Where should business validation live?
+
+> Data validation should live in Pydantic, while business rules and database-dependent validation should live in the service layer.
+
+For example:
+
+```text
+price > 0            → Pydantic
+email already exists → Service layer
+```
+
+## 7. Why separate Create / Update / Response schemas?
+
+> Because they have different purposes. Create defines the input required to create a resource, Update supports partial changes, and Response defines the data exposed to the client.
+
+```text
+Create   → Required input
+Update   → Optional fields
+Response → Public/safe data
+```
+
+# ASGI
+
+## 1. What is ASGI?
+
+> ASGI is the interface between an asynchronous Python server and application. Uvicorn uses ASGI to communicate with FastAPI.
+
+```text
+Client → Uvicorn → ASGI → FastAPI → Route
+```
+
+## 2. What is the difference between WSGI and ASGI?
+
+> WSGI is mainly synchronous, while ASGI supports asynchronous operations, WebSockets, and streaming.
+
+```text
+WSGI → synchronous, HTTP request/response   (Flask, Gunicorn)
+ASGI → async, WebSockets, streaming          (FastAPI, Uvicorn)
+```
+
+## 3. Why does FastAPI use Uvicorn?
+
+> FastAPI is an ASGI application, so it needs an ASGI server like Uvicorn to receive and handle client connections.
+
+```bash
+uvicorn main:app
+```
+
+# Dependency Injection
+
+## 1. What is Dependency Injection?
+
+> Dependency Injection is a design pattern where a function declares what it needs, and those dependencies are provided from outside instead of being created inside the function. In FastAPI, this is mainly done with `Depends()`.
+
+## 2. Why use `yield` in dependencies?
+
+> `yield` is useful when a dependency needs both setup and cleanup. For example, our `get_db` dependency creates a database session before `yield` and closes it in `finally` after the request finishes.
+
+```python
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+```
+
+Remember: **before `yield` = setup, after `yield` = cleanup.**
+
+## 3. Can dependencies depend on other dependencies?
+
+> Yes. FastAPI supports dependency chains. For example, `get_current_admin` depends on `get_db` to load the authenticated admin from the database. FastAPI resolves the dependency graph automatically.
+
+```text
+Route
+  ↓
+get_current_admin
+  ↓
+get_db
+```
+
+## 4. How do you use DI for authentication?
+
+> I use a dependency like `get_current_admin` to verify the access token and load the current admin. I can apply it to an entire router or to individual routes, depending on the authorization requirement.
+
+For the whole router:
+
+```python
+router = APIRouter(
+    dependencies=[Depends(get_current_admin)]
+)
+```
+
+Or for a single route:
+
+```python
+async def get_admins(
+    _: Admin = Depends(get_current_admin)
+):
+    ...
+```
+
+`_` means the route only needs the authentication check and doesn't use the `Admin` object.
+
+## 5. Should services use `Depends()`? Why?
+
+> I prefer not to use `Depends()` in services. In my project, dependencies are resolved at the API layer, and routes pass them to services as normal arguments. This keeps services independent from FastAPI and makes them easier to test and reuse.
+
+```python
+# Route
+async def get_admins(
+    db: AsyncSession = Depends(get_db)
+):
+    return await list_admins(db)
+```
+
+```python
+# Service
+async def list_admins(db: AsyncSession):
+    ...
+```
+
+## 6. How do you override dependencies for testing?
+
+> FastAPI provides `app.dependency_overrides` to replace a real dependency with a test implementation. This allows us to test routes without using real infrastructure.
+
+```python
+app.dependency_overrides[get_db] = get_test_db
+```
+
+In the project, the tests take a different approach: they replace `AsyncSessionLocal` with a test session factory. The concept is the same:
+
+> Replace the real dependency with a test dependency without changing the route code.
+
+# Exception Handling
+
+## 1. What is `HTTPException` in FastAPI?
+
+> `HTTPException` is FastAPI's built-in exception for returning an HTTP error response. It allows us to specify a status code and a detail message, such as `404 Not Found` or `401 Unauthorized`.
+
+```python
+raise HTTPException(
+    status_code=404,
+    detail="Plant not found",
+)
+```
+
+## 2. When should you use `HTTPException` vs custom exceptions?
+
+> I use `HTTPException` for simple HTTP-level errors, usually in routes or dependencies. For business logic, I prefer custom exceptions because they keep the service layer independent from FastAPI and HTTP concerns.
+
+```text
+Simple HTTP error → HTTPException
+Business error    → Custom Exception
+```
+
+## 3. What is an exception handler in FastAPI?
+
+> An exception handler defines how FastAPI should respond when a specific exception occurs. It's useful when we want to centralize error handling and return a consistent response format.
+
+```python
+@app.exception_handler(PlantNotFoundError)
+async def handler(request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={"error": "PLANT_NOT_FOUND"},
+    )
+```
+
+## 4. Should the service layer raise `HTTPException`? Why?
+
+> Generally, no. The service layer should raise business exceptions instead of HTTP exceptions. This keeps the business logic independent from FastAPI and makes it easier to reuse and test.
+
+```text
+Service
+   ↓
+PlantNotFoundError
+   ↓
+Exception Handler
+   ↓
+404 Response
+```
+
+## 5. How do you handle database exceptions and rollback?
+
+> When a database operation fails, I rollback the transaction and re-raise the exception. This prevents partial changes from being committed and allows the upper layer to handle the error.
+
+```python
+try:
+    await session.commit()
+except Exception:
+    await session.rollback()
+    raise
+```
+
+> I also log the original error when appropriate.
+
+## 6. How do you handle unexpected exceptions?
+
+> I use a global exception handler for unexpected errors. I log the full exception internally for debugging, but return a safe generic `500` response to the client instead of exposing internal details.
+
+```python
+@app.exception_handler(Exception)
+async def handler(request, exc):
+    logger.exception("Unexpected error")
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "INTERNAL_SERVER_ERROR",
+            "message": "Something went wrong",
+        },
+    )
+```
+
+## 7. Explain your exception-handling architecture in FastAPI.
+
+> I separate business errors from HTTP concerns. The service layer raises custom business exceptions. Then the route or a centralized exception handler converts those exceptions into appropriate HTTP responses. Database errors are rolled back and unexpected errors are logged and handled by a global handler.
+
+```text
+Request
+   ↓
+Route
+   ↓
+Service
+   ↓
+Business Exception
+   ↓
+Route / Exception Handler
+   ↓
+HTTP Response
+```
+
+Remember: **The service layer is responsible for business errors, while the API layer is responsible for translating those errors into HTTP responses.**
+
+# Middleware
+
+## 1. What is Middleware in FastAPI?
+
+> Middleware is a layer that wraps the request and response lifecycle. It can run code before the request reaches the endpoint and after the endpoint returns a response. It's commonly used for cross-cutting concerns such as logging, CORS, request IDs, security headers, and rate limiting.
+
+## 2. How does `call_next()` work?
+
+> `call_next()` passes the request to the next layer of the application and returns the response. Code before `call_next()` runs on the incoming request, while code after it runs on the outgoing response.
+
+```python
+async def middleware(request, call_next):
+    # Before
+    response = await call_next(request)
+    # After
+    return response
+```
+
+## 3. What is the difference between Middleware and Dependency?
+
+> Middleware is used for cross-cutting concerns that apply broadly across the application, while Dependencies are used for route-specific logic such as authentication, authorization, and database sessions.
+
+```text
+Middleware
+→ Logging
+→ CORS
+→ Request ID
+
+Dependency
+→ Current User
+→ Require Admin
+→ Database Session
+```
+
+## 4. What is the difference between `@app.middleware("http")` and `app.add_middleware()`?
+
+> `@app.middleware("http")` is a simple way to create custom HTTP middleware using `request`, `call_next`, and `response`. `app.add_middleware()` registers a Starlette middleware class, such as `CORSMiddleware`, which operates at the ASGI middleware layer.
+
+```python
+@app.middleware("http")
+async def timing(request, call_next):
+    ...
+```
+
+versus:
+
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://example.com"],
+)
+```
+
+## 5. What is ASGI Middleware?
+
+> ASGI Middleware is middleware implemented at the ASGI protocol level. It sits between the ASGI server, such as Uvicorn, and the FastAPI application. It works directly with `scope`, `receive`, and `send`, providing lower-level control than FastAPI's HTTP middleware.
+
+```text
+Client
+   ↓
+Uvicorn
+   ↓
+ASGI Middleware
+   ↓
+FastAPI
+   ↓
+Endpoint
+```
+
+## 6. How do you handle API versioning in FastAPI?
+
+> I usually use URL-based versioning, such as `/api/v1/users` and `/api/v2/users`. Each version has its own routers and schemas. I keep the old version for backward compatibility and introduce a new version only when there are breaking changes. Once clients migrate, I can deprecate the old version.
+
+```python
+app.include_router(v1_router, prefix="/api/v1")
+app.include_router(v2_router, prefix="/api/v2")
+```
+
+# Authentication & Authorization
+
+## 1. Authentication vs Authorization?
+
+> Authentication verifies who the user is, while authorization determines what the authenticated user is allowed to do.
+
+```text
+Authentication → Is this Viet?
+Authorization  → Can Viet delete users?
+```
+
+## 2. How does JWT authentication work?
+
+> The user logs in with credentials. The server verifies them and issues a signed JWT. The client sends the JWT with subsequent requests, and FastAPI validates the token before allowing access.
+
+```text
+Login
+ ↓
+Verify credentials
+ ↓
+Create JWT
+ ↓
+Client sends JWT
+ ↓
+Validate JWT
+ ↓
+Protected endpoint
+```
+
+A JWT usually contains claims such as `sub` and `exp`. It is **signed, not encrypted**.
+
+## 3. Access token vs Refresh token?
+
+> An access token is short-lived and used to access APIs. A refresh token is longer-lived and is used to obtain a new access token when the access token expires.
+
+```text
+Access token  → API requests         → short-lived
+Refresh token → Get new access token → long-lived
+```
+
+## 4. Middleware vs `Depends()` for authentication?
+
+> I prefer `Depends()` for authentication that is specific to protected endpoints because it is explicit and works well with FastAPI's dependency injection. Middleware is more suitable when authentication or request processing needs to happen globally.
+
+```python
+async def get_current_user(...):
+    ...
+```
+
+```python
+@app.get("/profile")
+async def profile(
+    user = Depends(get_current_user)
+):
+    ...
+```
+
+```text
+Global request logic                  → Middleware
+Endpoint authentication/authorization → Depends()
+```
+
+## 5. How do you implement `get_current_user()`?
+
+> I extract the token, validate the JWT, get the user ID from the token, load the user from the database, and reject the request if the token or user is invalid.
+
+```python
+async def get_current_user(
+    token: str = Depends(oauth2_scheme)
+):
+    payload = decode_access_token(token)
+
+    user_id = payload.get("sub")
+
+    user = await get_user(user_id)
+
+    if user is None:
+        raise HTTPException(401, "Invalid credentials")
+
+    return user
+```
+
+Then an endpoint only needs:
+
+```python
+user = Depends(get_current_user)
+```
+
+This is the main pattern for avoiding repeated authentication logic in every endpoint.
+
+## 6. 401 vs 403?
+
+> 401 means the user is not authenticated or the credentials are invalid. 403 means the user is authenticated but doesn't have permission to perform the action.
+
+```text
+401 → Who are you?
+403 → I know who you are, but you can't do this.
+```
+
+```text
+No JWT                           → 401
+Invalid JWT                      → 401
+Admin required, but role is user → 403
+```
+
+## 7. How would you structure authentication in a FastAPI project?
+
+> I would separate security utilities, authentication services, dependencies, routes, schemas, and models so each layer has one responsibility.
+
+```text
+app/
+├── core/
+│   └── security.py       # JWT, password hashing
+│
+├── services/
+│   └── auth_service.py   # Login logic
+│
+├── dependencies/
+│   └── auth.py           # get_current_user
+│
+├── routers/
+│   └── auth.py           # /login, /refresh, /logout
+│
+├── schemas/
+│   └── auth.py
+│
+└── models/
+    └── user.py
+```
+
+Login flow:
+
+```text
+Route
+  ↓
+Auth Service
+  ↓
+Security utilities
+  ↓
+JWT
+```
+
+Protected request:
+
+```text
+Request
+  ↓
+get_current_user()
+  ↓
+Validate JWT
+  ↓
+Load User
+  ↓
+Authorization
+  ↓
+Endpoint
+```
+
+Remember: **Authentication determines who you are, authorization determines what you can do. In FastAPI, `Depends()` is a good fit for organizing both per endpoint.**
+
+# Security
+
+## 1. How do you handle security in a FastAPI application? ⭐
+
+> I use a defense-in-depth approach with HTTPS, JWT authentication, RBAC and resource-level authorization, CORS, rate limiting, input validation, secure secret management, and security headers.
+
+## 2. How does JWT authentication work in FastAPI?
+
+> After login, the server issues a JWT. The client sends it with each protected request, and a reusable `get_current_user()` dependency validates the token and identifies the user.
+
+## 3. How do you handle authorization in FastAPI?
+
+> After authentication, I check the user's role or permissions and, when necessary, verify resource ownership. For example, an admin can delete a resource, while a customer can only access their own resources.
+
+## 4. What is the difference between 401 and 403?
+
+> 401 means the request is not authenticated, such as a missing or invalid token. 403 means the user is authenticated but doesn't have permission to perform the action.
+
+## 5. How do you protect a production API from abuse and attacks?
+
+> I use rate limiting to prevent abuse, CORS for trusted browser origins, Pydantic for input validation, sanitization for user-generated HTML, HTTPS for encrypted communication, and secure secret management. I also add logging and monitoring to detect suspicious activity.
+
+# WebSockets
+
+## 1. How do you implement live data in FastAPI?
+
+> I would typically use WebSockets for realtime data. FastAPI provides native WebSocket support, allowing the server and client to maintain a persistent, bidirectional connection. The server can push updates to the client whenever new data is available.
+
+```text
+Client
+  ↕
+WebSocket
+  ↕
+FastAPI
+```
+
+## 2. How do you manage multiple WebSocket connections?
+
+> I would create a Connection Manager to keep track of active WebSocket connections. It would handle connecting, disconnecting, and broadcasting messages to multiple clients.
+
+```text
+Client A ─┐
+Client B ─┼→ Connection Manager → Broadcast
+Client C ─┘
+```
+
+## 3. How do you handle WebSocket disconnections?
+
+> I would catch `WebSocketDisconnect` and remove the disconnected client from the active connections. This prevents stale connections and helps keep the connection manager clean.
+
+```python
+try:
+    while True:
+        message = await websocket.receive_text()
+except WebSocketDisconnect:
+    manager.disconnect(websocket)
+```
+
+## 4. How would you scale WebSockets?
+
+> For a single FastAPI instance, an in-memory connection manager is usually enough. If I have multiple instances, I would use Redis Pub/Sub or another message broker to synchronize events between instances, because each instance has its own memory and WebSocket connections.
+
+```text
+             Redis Pub/Sub
+             ↙          ↘
+        FastAPI 1    FastAPI 2
+          ↕              ↕
+       Clients        Clients
+```
+
+Remember: **WebSocket → Connection Manager → Disconnect → Redis/Scaling**
+
+# Architecture
+
+## 1. How do you structure your FastAPI application as it grows?
+
+> I usually use a feature-based architecture for larger FastAPI applications. Instead of having global folders for all routers, services, and repositories, I organize the code by business feature, such as users, orders, and payments.
+>
+> Each feature contains its own router, schemas, service, repository, and models. Shared infrastructure such as configuration, authentication, and database setup stays in separate `core` and `db` modules.
+>
+> This makes the codebase easier to navigate and allows each feature to evolve independently.
+
+```text
+app/
+├── modules/
+│   ├── users/
+│   ├── orders/
+│   └── payments/
+├── core/
+├── db/
+└── main.py
+```
+
+## 2. How do you organize each feature?
+
+> I separate responsibilities inside each feature. The router handles HTTP concerns, schemas handle validation and serialization, the service contains business logic, and the repository handles database access.
+>
+> This keeps the router thin and prevents business logic or SQL queries from being placed directly inside the API endpoint.
+
+```text
+orders/
+├── router.py
+├── schema.py
+├── service.py
+├── repository.py
+└── model.py
+```
+
+The flow is:
+
+```text
+Request
+   ↓
+Router
+   ↓
+Schema
+   ↓
+Service
+   ↓
+Repository
+   ↓
+Database
+```
+
+## 3. How do different features communicate with each other?
+
+> I try to keep communication between features through their service or public interface rather than directly accessing another feature's repository or database model.
+>
+> For example, when creating an order, the order service might need to verify the user. It can call a user service rather than directly querying the user's repository.
+>
+> This keeps the features loosely coupled and makes them easier to change or test independently.
+
+```text
+OrderService
+     ↓
+UserService
+     ↓
+UserRepository
+```
+
+Rather than:
+
+```text
+OrderService
+     ↓
+UserRepository
+```
+
+The exact approach can depend on the size of the application. For a very large system, asynchronous events or messaging can also be used to reduce coupling.
+
+## 4. Feature-Based Architecture vs Layered Architecture — which would you choose and why?
+
+> I don't necessarily see them as mutually exclusive. Layered architecture organizes code by technical responsibility, while feature-based architecture organizes code by business capability.
+>
+> For a small application, a traditional layered structure can be simple and effective. As the application grows, I prefer combining both approaches: organize the top level by feature, then use layers inside each feature.
+>
+> This gives us clear business boundaries while still keeping responsibilities separated.
+
+```text
+modules/
+├── users/
+│   ├── router.py
+│   ├── schema.py
+│   ├── service.py
+│   └── repository.py
+│
+└── orders/
+    ├── router.py
+    ├── schema.py
+    ├── service.py
+    └── repository.py
+```
+
+Remember: **Feature-based architecture gives us boundaries around business features, while layering gives us boundaries around responsibilities.**
+
+# Logging & Monitoring
+
+## 1. How do you handle logging and monitoring after deploying a FastAPI application?
+
+> After deployment, I separate logging from monitoring. For logging, I use structured logs with information such as timestamp, log level, request ID, endpoint, and error details. For monitoring, I collect metrics like request rate, error rate, latency, CPU, and memory. I typically use Prometheus to collect metrics and Grafana to visualize them. This gives me both detailed information about what happened and an overview of how the system is performing.
+
+## 2. How do you monitor and alert on FastAPI performance?
+
+> I expose application metrics from FastAPI and use Prometheus to collect them. I monitor key metrics such as request rate, error rate, and latency. Then I use Grafana to build dashboards and define alert thresholds. For example, if the error rate is higher than 5% or latency exceeds 2 seconds, Prometheus triggers an alert and Alertmanager sends a notification to Slack or PagerDuty.
+
+```text
+FastAPI
+   ↓
+Metrics
+   ↓
+Prometheus
+   ↓
+Grafana
+   ↓
+Alertmanager
+   ↓
+Slack / PagerDuty
+```
+
+## 3. How do you troubleshoot a production issue in FastAPI?
+
+> First, I check the monitoring dashboard to understand when the problem started and which metrics changed. Then I check the application logs using the request ID to identify the affected endpoint and error. I also check dependencies such as the database, Redis, or external APIs. After identifying the root cause, I fix or roll back the deployment, verify the metrics, and then add monitoring or an alert if necessary to prevent the same issue from happening again.
+
+```text
+Metrics
+   ↓
+Identify the problem
+   ↓
+Logs
+   ↓
+Find the root cause
+   ↓
+Database / Redis / External API
+   ↓
+Fix / Rollback
+   ↓
+Verify
+   ↓
+Add Alert
+```
+
+Remember:
+
+```text
+Logging         → What happened?
+Monitoring      → How is the system performing?
+Troubleshooting → Why did it happen?
+```

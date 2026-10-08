@@ -1,0 +1,149 @@
+---
+title: "Authentication & Authorization with JWT in FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-12
+thumbnailText: FastAPI
+---
+
+Authentication and authorization are two different responsibilities:
+
+```text
+Authentication → Who are you?
+Authorization  → What can you do?
+```
+
+JWT is commonly used to handle authentication in FastAPI APIs.
+
+# Authentication
+
+Authentication verifies the user's identity.
+
+A typical login flow is:
+
+```text
+Client
+   ↓
+Email + Password
+   ↓
+POST /login
+   ↓
+Verify password
+   ↓
+Create JWT
+   ↓
+Return token
+```
+
+Passwords should never be stored as plain text. Instead, store a secure password hash and verify the password against that hash during login.
+
+# Protecting Endpoints
+
+After login, the client sends the token with requests:
+
+```http
+Authorization: Bearer <token>
+```
+
+Instead of validating the token in every endpoint, FastAPI's dependency injection can centralize this logic.
+
+```python
+async def get_current_user(
+    token: str = Depends(jwt_scheme)
+):
+    username = decode_access_token(token)
+
+    user = await get_user(username)
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials"
+        )
+
+    return user
+```
+
+Then a protected endpoint stays simple:
+
+```python
+@app.get("/users/me")
+async def profile(
+    user = Depends(get_current_user)
+):
+    return user
+```
+
+The dependency handles authentication before the endpoint runs.
+
+# Authorization
+
+Authorization can also be implemented with dependencies:
+
+```python
+def require_admin(
+    user = Depends(get_current_user)
+):
+    if user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin only"
+        )
+
+    return user
+```
+
+Then:
+
+```python
+@app.delete("/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    admin = Depends(require_admin)
+):
+    ...
+```
+
+This keeps authentication and authorization separate.
+
+# Access Token and Refresh Token
+
+A common production setup uses two tokens:
+
+```text
+Access Token
+→ Short-lived
+→ Used for API requests
+
+Refresh Token
+→ Long-lived
+→ Used to get a new access token
+```
+
+The flow is:
+
+```text
+Login
+  ↓
+Access Token + Refresh Token
+  ↓
+API Requests
+  ↓
+Access Token expires
+  ↓
+Refresh Token
+  ↓
+New Access Token
+```
+
+Short-lived access tokens reduce the time an attacker can use a stolen token.
+
+# 401 vs 403
+
+These two status codes are important:
+
+```text
+401 → Authentication failed
+403 → User is authenticated but not allowed
+```

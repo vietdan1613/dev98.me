@@ -1,0 +1,212 @@
+---
+title: "Layered Architecture in FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-17
+thumbnailText: FastAPI
+---
+
+As a FastAPI application grows, putting everything inside the route handlers quickly becomes difficult to maintain.
+
+A better approach is **Layered Architecture**, where each layer has a clear responsibility.
+
+The basic structure looks like this:
+
+```text
+app/
+├── routers/
+├── schemas/
+├── services/
+├── repositories/
+├── models/
+├── core/
+└── db/
+```
+
+The request flow is:
+
+```text
+Client
+  ↓
+Router
+  ↓
+Schema
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Database
+```
+
+# Router Layer
+
+The **Router** handles HTTP-related concerns.
+
+It receives the request, calls the appropriate service, and returns the response.
+
+```python
+@router.post("/orders")
+def create_order(
+    data: OrderCreate,
+    service: OrderService = Depends(get_order_service)
+):
+    return service.create_order(data)
+```
+
+The router should not contain complex business logic.
+
+# Schema Layer
+
+**Schemas** define the structure of incoming and outgoing data.
+
+FastAPI commonly uses Pydantic for validation:
+
+```python
+class OrderCreate(BaseModel):
+    product_id: int
+    quantity: int
+```
+
+If the client sends invalid data, FastAPI can automatically return a validation error.
+
+# Service Layer
+
+The **Service** contains business logic.
+
+For example:
+
+```python
+class OrderService:
+
+    def create_order(self, data):
+        if data.quantity <= 0:
+            raise InvalidQuantityError()
+
+        return self.repository.create(data)
+```
+
+This is where rules such as pricing, permissions, order validation, or payment logic usually belong.
+
+# Repository Layer
+
+The **Repository** is responsible for database operations.
+
+```python
+class OrderRepository:
+
+    def create(self, data):
+        order = Order(
+            product_id=data.product_id,
+            quantity=data.quantity
+        )
+
+        self.db.add(order)
+        self.db.commit()
+
+        return order
+```
+
+The service should focus on **what the application needs**, while the repository handles **how data is stored or retrieved**.
+
+# Model Layer
+
+Models represent database entities.
+
+For example:
+
+```python
+class Order(Base):
+    __tablename__ = "orders"
+
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer)
+    quantity = Column(Integer)
+```
+
+With SQLAlchemy, models map application objects to database tables.
+
+# Why Use Layered Architecture?
+
+The biggest benefit is **separation of responsibilities**.
+
+Without layers:
+
+```text
+Router
+ ├── validation
+ ├── business logic
+ ├── SQL queries
+ ├── authentication
+ └── response formatting
+```
+
+The route quickly becomes difficult to test and maintain.
+
+With layers:
+
+```text
+Router
+   ↓
+Service
+   ↓
+Repository
+   ↓
+Database
+```
+
+Each layer has a specific job.
+
+This also makes testing easier. For example, you can test the service layer without making real database queries by mocking the repository.
+
+# Layered vs Feature-Based Architecture
+
+These are not necessarily competing approaches.
+
+**Layered architecture** organizes code by responsibility:
+
+```text
+routers/
+services/
+repositories/
+models/
+schemas/
+```
+
+**Feature-based architecture** organizes code by business feature:
+
+```text
+modules/
+├── users/
+├── orders/
+├── products/
+└── payments/
+```
+
+For a large FastAPI application, they can be combined:
+
+```text
+modules/
+├── users/
+│   ├── router.py
+│   ├── schema.py
+│   ├── service.py
+│   └── repository.py
+│
+└── orders/
+    ├── router.py
+    ├── schema.py
+    ├── service.py
+    └── repository.py
+```
+
+This gives you both **clear layers** and **clear feature boundaries**.
+
+# Key Idea
+
+> **Layered Architecture separates responsibilities, making a FastAPI application easier to understand, test, and maintain.**
+
+A good interview answer is:
+
+> **“I use layered architecture to separate HTTP handling, validation, business logic, and data access. Routers handle HTTP concerns, services contain business rules, and repositories handle database operations. For larger systems, I usually combine this with feature-based organization.”**

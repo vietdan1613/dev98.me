@@ -1,0 +1,184 @@
+---
+title: "Exception Handling in FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-11
+thumbnailText: FastAPI
+---
+
+Exception handling is an important part of building a reliable FastAPI application.
+
+A simple and practical approach is to separate errors into four areas:
+
+```text
+1. HTTPException
+2. Custom Business Exceptions
+3. Exception Handlers
+4. Database / Unexpected Errors
+```
+
+# HTTPException
+
+Use `HTTPException` for simple errors that are directly related to the HTTP layer.
+
+```python
+from fastapi import HTTPException
+
+@router.get("/plants/{plant_id}")
+async def get_plant(plant_id: int):
+    plant = await find_plant(plant_id)
+
+    if not plant:
+        raise HTTPException(
+            status_code=404,
+            detail="Plant not found",
+        )
+
+    return plant
+```
+
+FastAPI automatically converts it into:
+
+```json
+{
+  "detail": "Plant not found"
+}
+```
+
+# Custom Business Exceptions
+
+When an error comes from business logic, use a custom Python exception.
+
+```python
+class PlantNotFoundError(Exception):
+    pass
+
+
+class InsufficientStockError(Exception):
+    pass
+```
+
+The service can raise these exceptions:
+
+```python
+async def create_order(plant_id: int, quantity: int):
+    plant = await repository.find(plant_id)
+
+    if not plant:
+        raise PlantNotFoundError("Plant not found")
+
+    if plant.stock < quantity:
+        raise InsufficientStockError("Not enough stock")
+
+    return await repository.create_order(...)
+```
+
+The service doesn't need to know about HTTP status codes.
+
+This keeps business logic independent from FastAPI:
+
+```text
+Service
+   ↓
+Business Exception
+```
+
+# Exception Handlers
+
+If the same business exception needs to be converted into an HTTP response across multiple routes, use an exception handler.
+
+```python
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(PlantNotFoundError)
+async def plant_not_found_handler(
+    request: Request,
+    exc: PlantNotFoundError,
+):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "PLANT_NOT_FOUND",
+            "message": str(exc),
+        },
+    )
+```
+
+Now the service only needs to raise:
+
+```python
+raise PlantNotFoundError("Plant not found")
+```
+
+The client receives:
+
+```json
+{
+  "error": "PLANT_NOT_FOUND",
+  "message": "Plant not found"
+}
+```
+
+## When should you use a route-level `try/except`?
+
+> **Handle locally when the route needs special behavior. Use an exception handler when the behavior should be consistent across the application.**
+
+```python
+@router.post("/orders")
+async def create_order():
+    try:
+        return await order_service.create_order()
+    except InsufficientStockError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc),
+        ) from exc
+```
+
+# 4. Database / Unexpected Errors
+
+## Database errors
+
+Database operations can fail and should usually rollback the transaction before re-raising the error.
+
+```python
+try:
+    await session.commit()
+except Exception:
+    await session.rollback()
+    raise
+```
+
+The important part is that the error is **not silently swallowed**. The caller can then decide how to handle it.
+
+## Unexpected errors
+
+Unexpected errors should be logged internally.
+
+```python
+@app.exception_handler(Exception)
+async def global_exception_handler(
+    request: Request,
+    exc: Exception,
+):
+    logger.exception("Unexpected application error")
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "INTERNAL_SERVER_ERROR",
+            "message": "Something went wrong",
+        },
+    )
+```
+
+Don't expose internal exception details to users:
+
+```python
+# Avoid
+"message": str(exc)
+```
+
+The real error should go to your logs, while the client receives a safe message.

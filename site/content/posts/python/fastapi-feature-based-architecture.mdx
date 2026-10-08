@@ -1,0 +1,138 @@
+---
+title: "FastAPI Feature-Based Architecture"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-16
+thumbnailText: FastAPI
+---
+
+When a FastAPI application is small, you can keep most of the code in a few files. As the system grows, this becomes harder to maintain.
+
+A production application should separate responsibilities such as:
+
+- HTTP and API handling
+- Validation
+- Business logic
+- Database access
+- Authentication and authorization
+- Dependencies
+- Real-time communication
+
+A practical approach is **feature-based architecture**.
+
+# Organize by Feature
+
+Instead of putting all routers, schemas, models, and services into separate global folders:
+
+```text
+app/
+├── routers/
+├── schemas/
+├── models/
+└── services/
+```
+
+Group code by business feature:
+
+```text
+app/
+├── modules/
+│   ├── users/
+│   │   ├── router.py
+│   │   ├── schema.py
+│   │   ├── model.py
+│   │   ├── service.py
+│   │   └── repository.py
+│   │
+│   └── orders/
+│       ├── router.py
+│       ├── schema.py
+│       ├── model.py
+│       ├── service.py
+│       └── repository.py
+│
+├── core/
+├── db/
+└── main.py
+```
+
+For example, everything related to users stays inside:
+
+```text
+modules/users/
+```
+
+while order-related code stays inside:
+
+```text
+modules/orders/
+```
+
+As the application grows, you can add more features:
+
+```text
+modules/
+├── users/
+├── orders/
+├── products/
+├── payments/
+├── reviews/
+└── notifications/
+```
+
+# Separate Responsibilities
+
+Inside each feature:
+
+```text
+Feature
+├── Router
+├── Schema
+├── Service
+├── Repository
+└── Model
+```
+
+A typical request flow is:
+
+```text
+Client
+  ↓
+Router
+  ↓
+Schema
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Database
+```
+
+Each layer has a clear responsibility:
+
+- **Router** → handles HTTP requests and responses
+- **Schema** → validates request and response data
+- **Service** → contains business logic
+- **Repository** → handles database operations
+- **Model** → represents database entities
+
+Shared infrastructure stays outside the features:
+
+```text
+core/
+  → config, security, shared dependencies
+
+db/
+  → database connection and session
+
+main.py
+  → application setup and router registration
+```
+
+The main idea is:
+
+> **Organize the application by business features, while keeping responsibilities separated inside each feature.**
+
+This makes a large FastAPI codebase easier to navigate, test, and maintain.

@@ -1,0 +1,224 @@
+---
+title: "Logging and Monitoring in Production FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-18
+thumbnailText: FastAPI
+---
+
+Once a FastAPI application is deployed and starts handling real traffic, we need to know whether the system is healthy.
+
+This is where **logging and monitoring** become important.
+
+# Logging
+
+Logging records what happens inside the application.
+
+For example:
+
+```text
+User logged in
+POST /orders
+Database connection failed
+GET /products → 500
+```
+
+Logs help answer:
+
+> **What happened?**
+
+In production, logs usually contain information such as:
+
+- Timestamp
+- Log level
+- Request ID
+- Endpoint
+- Error details
+- Service information
+
+For example:
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info("Order created")
+logger.error("Database connection failed")
+```
+
+Logging is especially useful when debugging production problems.
+
+# Monitoring
+
+Monitoring focuses on **metrics** that tell us how the system is performing.
+
+Common metrics include:
+
+```text
+Request rate
+Error rate
+Latency
+CPU usage
+Memory usage
+```
+
+Monitoring answers:
+
+> **How is the system performing?**
+
+For example, if latency suddenly increases from:
+
+```text
+150ms → 2.5s
+```
+
+we know that something may be wrong even before users report it.
+
+# Prometheus
+
+**Prometheus collects and stores metrics.**
+
+A FastAPI application can expose metrics through an endpoint such as:
+
+```text
+/metrics
+```
+
+For example, using `prometheus-fastapi-instrumentator`:
+
+```python
+from prometheus_fastapi_instrumentator import Instrumentator
+
+Instrumentator().instrument(app).expose(app)
+```
+
+The architecture looks like:
+
+```text
+FastAPI
+   ↓
+/metrics
+   ↓
+Prometheus
+```
+
+Prometheus periodically collects the metrics from the application.
+
+# Grafana
+
+Prometheus stores metrics, but we usually don't want to analyze raw numbers manually.
+
+That's where **Grafana** comes in.
+
+Grafana visualizes metrics from Prometheus:
+
+```text
+Requests    10,000
+Errors          120
+Latency        150ms
+CPU              70%
+Memory           65%
+```
+
+The easiest way to remember:
+
+> **Prometheus = Collect metrics**
+
+> **Grafana = Visualize metrics**
+
+# Alerting
+
+Monitoring becomes much more useful when we add alerts.
+
+For example:
+
+```text
+Error rate > 5%
+       ↓
+     Alert
+       ↓
+ Alertmanager
+       ↓
+Slack / Email / PagerDuty
+```
+
+Other examples:
+
+```text
+CPU > 80%
+Latency > 2 seconds
+Error rate > 5%
+```
+
+Prometheus evaluates the alerting rules. When a condition is triggered, **Alertmanager** handles the notification.
+
+This allows the team to react before the problem becomes a major incident.
+
+# Production Architecture
+
+A typical production FastAPI system may look like this:
+
+```text
+                         Internet
+                            ↓
+                     Load Balancer
+                            ↓
+                    Kubernetes Service
+                            ↓
+              ┌─────────────┼─────────────┐
+              ↓             ↓             ↓
+          FastAPI        FastAPI       FastAPI
+           Pod 1          Pod 2         Pod 3
+              │             │             │
+              └─────────────┼─────────────┘
+                            ↓
+                          Redis
+                            ↓
+                         Database
+
+
+        FastAPI ──→ Prometheus ──→ Grafana
+                       │
+                       ↓
+                  Alertmanager
+                       ↓
+                Slack / Email
+```
+
+This gives us:
+
+- **Load balancing** → distribute traffic
+- **Multiple pods** → handle more requests
+- **Redis** → improve performance with caching
+- **Prometheus** → collect metrics
+- **Grafana** → visualize metrics
+- **Alertmanager** → notify the team
+
+# The Big Picture
+
+A production FastAPI application can be remembered with this flow:
+
+```text
+SECURITY
+HTTPS → CORS → Rate Limiting → JWT → RBAC → Validation
+                              ↓
+                           FASTAPI
+                              ↓
+DEPLOYMENT
+Docker → ECR → EKS
+                              ↓
+SCALING
+Service → Load Balancing → Horizontal Scaling
+                              ↓
+PERFORMANCE
+Redis → Caching
+                              ↓
+OBSERVABILITY
+Logging → Prometheus → Grafana → Alertmanager
+```
+
+The key idea is:
+
+> **A production FastAPI application is not just an API. It also needs security, deployment, scalability, performance optimization, and observability.**

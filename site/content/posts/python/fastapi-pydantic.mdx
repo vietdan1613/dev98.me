@@ -1,0 +1,134 @@
+---
+title: "Pydantic in FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI']
+date: 2026-10-08
+thumbnailText: Pydantic
+---
+
+Pydantic is the **data validation layer** in FastAPI. It helps validate, transform, and serialize data before it reaches your business logic.
+
+![Pydantic — raw JSON validated into Python data](./imgs/fastapi-pydantic.jpg)
+
+`BaseModel` is the foundation of Pydantic models. It defines the shape and types of your data.
+
+```python
+from pydantic import BaseModel
+
+class Product(BaseModel):
+    name: str
+    price: float
+```
+
+Pydantic checks that the data matches this structure.
+
+# Field()
+
+`Field()` adds simple validation rules to fields.
+
+```python
+from pydantic import Field
+
+class Product(BaseModel):
+    name: str = Field(min_length=1)
+    price: float = Field(gt=0)
+```
+
+Here:
+
+- `name` must not be empty.
+- `price` must be greater than `0`.
+
+Use `Field()` for common validation rules such as length, range, and defaults.
+
+# field_validator
+
+Use `field_validator` when a field needs a custom rule.
+
+```python
+from pydantic import field_validator
+
+class Product(BaseModel):
+    sku: str
+
+    @field_validator("sku")
+    @classmethod
+    def validate_sku(cls, value):
+        if not value.startswith("MON-"):
+            raise ValueError("Invalid SKU")
+        return value
+```
+
+Think:
+
+```text
+Field()           → simple rules
+field_validator   → custom rule for one field
+```
+
+# model_validator
+
+Use `model_validator` when validation depends on multiple fields.
+
+For example, checking that an end date comes after a start date:
+
+```python
+from datetime import date
+
+from pydantic import BaseModel, model_validator
+
+class Promotion(BaseModel):
+    start_date: date
+    end_date: date
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.end_date < self.start_date:
+            raise ValueError("Invalid dates")
+        return self
+```
+
+With `mode="after"`, the validator runs after each field has been validated, so `self.start_date` and `self.end_date` are already `date` objects.
+
+Think:
+
+```text
+field_validator → one field
+model_validator → multiple fields
+```
+
+# model_validate() / model_dump()
+
+These are two important Pydantic v2 methods.
+
+## `model_validate()`
+
+Use it to validate external data:
+
+```python
+product = Product.model_validate(data)
+```
+
+It converts the input into a validated Pydantic object.
+
+To validate an object such as a SQLAlchemy row instead of a dict, add `model_config = ConfigDict(from_attributes=True)` to the model.
+
+## `model_dump()`
+
+Use it to convert a Pydantic model into a dictionary:
+
+```python
+data = product.model_dump()
+```
+
+Result:
+
+```python
+{
+    "name": "Monstera",
+    "price": 500000.0
+}
+```
+
+`price` is a `float`, so `500000` becomes `500000.0`.
