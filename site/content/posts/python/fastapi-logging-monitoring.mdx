@@ -7,218 +7,247 @@ date: 2026-10-18
 thumbnailText: FastAPI
 ---
 
-Once a FastAPI application is deployed and starts handling real traffic, we need to know whether the system is healthy.
+## The Big Picture
 
-This is where **logging and monitoring** become important.
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
 
-# Logging
+![FastAPI monitoring flow — Client calls FastAPI, FastAPI records metrics, Prometheus scrapes /metrics, then Grafana dashboards and Alertmanager Telegram alerts](./imgs/fastapi-logging-monitoring.jpg)
 
-Logging records what happens inside the application.
+</div>
 
-For example:
+To monitor our FastAPI application running on a single VPS, we use Prometheus, Grafana, Alertmanager, and several exporters.
+
+The monitoring workflow consists of five main steps:
+
+1. **Client calls FastAPI**
+
+   For example, the frontend sends `GET /api/v1/plants/monstera` to retrieve plant details.
+
+2. **FastAPI records metrics**
+
+   Middleware tracks HTTP requests, status codes, response times, and application exceptions.
+
+3. **Prometheus collects and stores metrics**
+
+   Prometheus periodically scrapes the `/metrics` endpoint exposed by FastAPI and other configured exporters. It stores the collected data as time series and evaluates alert rules.
+
+4. **Grafana visualizes metrics**
+
+   Grafana queries Prometheus using PromQL and displays metrics in dashboards, including request rates, error rates, latency, CPU, memory, and database statistics.
+
+5. **Alertmanager sends notifications**
+
+   When an alert rule is triggered, Prometheus sends the alert to Alertmanager. Alertmanager groups and routes alerts, then sends Telegram notifications according to its configuration.
+
+
+## Basic Setup
+
+In this section, we'll set up a basic monitoring stack for a FastAPI application running on a single VPS using Docker Compose.
+
+### 1. Project Structure
+
+We can keep monitoring-related configuration separate from the application code:
 
 ```text
-User logged in
-POST /orders
-Database connection failed
-GET /products → 500
+project/
+├── app/
+│   └── main.py
+├── monitoring/
+│   ├── prometheus/
+│   │   └── prometheus.yml
+│   └── alertmanager/
+│       └── alertmanager.yml
+├── docker-compose.yml
+└── docker-compose.monitoring.yml
 ```
 
-Logs help answer:
+This separation makes the monitoring stack easier to configure and maintain.
 
-> **What happened?**
+### 2. Instrument FastAPI
 
-In production, logs usually contain information such as:
+Install the Prometheus Python client:
 
-- Timestamp
-- Log level
-- Request ID
-- Endpoint
-- Error details
-- Service information
+```bash
+pip install prometheus-client
+```
 
-For example:
+Expose a `/metrics` endpoint so Prometheus can collect application metrics:
 
 ```python
-import logging
+from fastapi import FastAPI, Response
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    generate_latest,
+)
 
-logger = logging.getLogger(__name__)
+app = FastAPI()
 
-logger.info("Order created")
-logger.error("Database connection failed")
+
+@app.get("/metrics", include_in_schema=False)
+def metrics():
+    return Response(
+        content=generate_latest(),
+        media_type=CONTENT_TYPE_LATEST,
+    )
 ```
 
-Logging is especially useful when debugging production problems.
+In production, protect the `/metrics` endpoint and configure Prometheus to authenticate when scraping it.
 
-# Monitoring
+### 3. Configure Prometheus
 
-Monitoring focuses on **metrics** that tell us how the system is performing.
+Create `monitoring/prometheus/prometheus.yml`:
 
-Common metrics include:
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "fastapi"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["prometheus:9090"]
+```
+
+The `api:8000` target refers to the FastAPI service name and internal port on the shared Docker network.
+
+Prometheus scrapes the configured targets every 15 seconds and stores the collected metrics as time series.
+
+If `/metrics` requires a token, configure `bearer_token_file` and mount the corresponding secret into the Prometheus container.
+
+### 4. Run the Monitoring Stack
+
+Add Prometheus and Grafana to your Docker Compose configuration. A minimal example is:
+
+```yaml
+services:
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+
+volumes:
+  prometheus_data:
+  grafana_data:
+```
+
+Make sure the FastAPI service also joins the `monitoring` network. If you're using an existing application Compose file, merge the configuration rather than creating duplicate services or networks.
+
+Start the stack:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.monitoring.yml \
+  up -d
+```
+
+Check the running containers:
+
+```bash
+docker compose ps
+```
+
+### 5. Verify Prometheus
+
+Open the Prometheus Targets page:
 
 ```text
-Request rate
-Error rate
-Latency
-CPU usage
-Memory usage
+http://localhost:9090/targets
 ```
 
-Monitoring answers:
+If the target is `UP`, Prometheus can scrape its metrics endpoint successfully.
 
-> **How is the system performing?**
+You can also open the Prometheus query page and run:
 
-For example, if latency suddenly increases from:
+```promql
+up
+```
+
+A value of `1` indicates that the corresponding target was successfully scraped. A value of `0` indicates a scrape failure.
+
+### 6. Connect Grafana to Prometheus
+
+Open Grafana:
 
 ```text
-150ms → 2.5s
+http://localhost:3001
 ```
 
-we know that something may be wrong even before users report it.
-
-# Prometheus
-
-**Prometheus collects and stores metrics.**
-
-A FastAPI application can expose metrics through an endpoint such as:
+Add a Prometheus data source with the URL:
 
 ```text
-/metrics
+http://prometheus:9090
 ```
 
-For example, using `prometheus-fastapi-instrumentator`:
+Use the internal service name when Grafana and Prometheus share the same Docker network. The URL `http://localhost:9090` would refer to the Grafana container itself, not the Prometheus container.
 
-```python
-from prometheus_fastapi_instrumentator import Instrumentator
+After saving the data source, create a dashboard with panels for request rate, error rate, latency, and infrastructure resources. The corresponding metrics must be exported and scraped before those panels can display data.
 
-Instrumentator().instrument(app).expose(app)
+### 7. Configure Telegram Alerts
+
+Alerting requires two configurations: Prometheus alert rules and an Alertmanager receiver.
+
+For example, a basic Prometheus alert rule might be:
+
+```yaml
+groups:
+  - name: api-alerts
+    rules:
+      - alert: FastAPIDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FastAPI is unavailable"
 ```
 
-The architecture looks like:
+Configure Prometheus to load the rule file and send alerts to Alertmanager. Then configure Alertmanager with a Telegram receiver that uses a bot token and chat ID.
 
-```text
-FastAPI
-   ↓
-/metrics
-   ↓
-Prometheus
+Keep the bot token in a secret file or another secure secret-management mechanism. Do not commit it to Git.
+
+When the alert condition is met, Prometheus sends the alert to Alertmanager, which routes the notification to Telegram according to its configuration.
+
+### 8. Access Monitoring Securely
+
+For a single VPS, avoid exposing Prometheus and Alertmanager directly to the public Internet without appropriate authentication and access controls.
+
+One simple approach is to bind their ports to `127.0.0.1` and access them from your local machine through an SSH tunnel:
+
+```bash
+ssh -N \
+  -L 3001:127.0.0.1:3001 \
+  -L 9090:127.0.0.1:9090 \
+  -L 9093:127.0.0.1:9093 \
+  user@your-vps
 ```
 
-Prometheus periodically collects the metrics from the application.
+Replace `user@your-vps` with your actual SSH username and VPS address.
 
-# Grafana
+You can then open Grafana, Prometheus, and Alertmanager using their respective localhost URLs.
 
-Prometheus stores metrics, but we usually don't want to analyze raw numbers manually.
-
-That's where **Grafana** comes in.
-
-Grafana visualizes metrics from Prometheus:
-
-```text
-Requests    10,000
-Errors          120
-Latency        150ms
-CPU              70%
-Memory           65%
-```
-
-The easiest way to remember:
-
-> **Prometheus = Collect metrics**
-
-> **Grafana = Visualize metrics**
-
-# Alerting
-
-Monitoring becomes much more useful when we add alerts.
-
-For example:
-
-```text
-Error rate > 5%
-       ↓
-     Alert
-       ↓
- Alertmanager
-       ↓
-Slack / Email / PagerDuty
-```
-
-Other examples:
-
-```text
-CPU > 80%
-Latency > 2 seconds
-Error rate > 5%
-```
-
-Prometheus evaluates the alerting rules. When a condition is triggered, **Alertmanager** handles the notification.
-
-This allows the team to react before the problem becomes a major incident.
-
-# Production Architecture
-
-A typical production FastAPI system may look like this:
-
-```text
-                         Internet
-                            ↓
-                     Load Balancer
-                            ↓
-                    Kubernetes Service
-                            ↓
-              ┌─────────────┼─────────────┐
-              ↓             ↓             ↓
-          FastAPI        FastAPI       FastAPI
-           Pod 1          Pod 2         Pod 3
-              │             │             │
-              └─────────────┼─────────────┘
-                            ↓
-                          Redis
-                            ↓
-                         Database
-
-
-        FastAPI ──→ Prometheus ──→ Grafana
-                       │
-                       ↓
-                  Alertmanager
-                       ↓
-                Slack / Email
-```
-
-This gives us:
-
-- **Load balancing** → distribute traffic
-- **Multiple pods** → handle more requests
-- **Redis** → improve performance with caching
-- **Prometheus** → collect metrics
-- **Grafana** → visualize metrics
-- **Alertmanager** → notify the team
-
-# The Big Picture
-
-A production FastAPI application can be remembered with this flow:
-
-```text
-SECURITY
-HTTPS → CORS → Rate Limiting → JWT → RBAC → Validation
-                              ↓
-                           FASTAPI
-                              ↓
-DEPLOYMENT
-Docker → ECR → EKS
-                              ↓
-SCALING
-Service → Load Balancing → Horizontal Scaling
-                              ↓
-PERFORMANCE
-Redis → Caching
-                              ↓
-OBSERVABILITY
-Logging → Prometheus → Grafana → Alertmanager
-```
-
-The key idea is:
-
-> **A production FastAPI application is not just an API. It also needs security, deployment, scalability, performance optimization, and observability.**
+This approach keeps the monitoring interfaces private while allowing you to inspect application health and troubleshoot production issues.
