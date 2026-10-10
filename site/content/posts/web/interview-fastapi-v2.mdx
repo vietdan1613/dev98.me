@@ -77,6 +77,20 @@ Update   → Optional fields
 Response → Public/safe data
 ```
 
+# SQLAlchemy
+
+## 1. What is SQLAlchemy, and why do you use it with FastAPI?
+
+> SQLAlchemy is a Python SQL toolkit and ORM that allows me to interact with databases using Python objects instead of writing raw SQL for every operation.
+>
+> In FastAPI, I use SQLAlchemy to define database models, perform CRUD operations, manage transactions, and query related data. For asynchronous applications, I use `AsyncSession` with an async database driver such as asyncpg.
+
+## 2. What is the difference between an Engine, Session, and Session Factory in SQLAlchemy?
+
+> The Engine manages database connections and the connection pool. The Session Factory creates new database sessions, and a Session manages database operations and transactions.
+>
+> In FastAPI, I create the engine once per application process, use a session factory to create sessions, and provide a session to each request through `Depends(get_db)`. This helps manage database resources safely and consistently.
+
 # ASGI
 
 ## 1. What is ASGI?
@@ -551,6 +565,16 @@ Remember: **Authentication determines who you are, authorization determines what
 
 > I use rate limiting to prevent abuse, CORS for trusted browser origins, Pydantic for input validation, sanitization for user-generated HTML, HTTPS for encrypted communication, and secure secret management. I also add logging and monitoring to detect suspicious activity.
 
+# Streaming
+
+## 1. What is streaming, and why do you use it in FastAPI?
+
+> Streaming allows the server to send data in small chunks instead of waiting for the entire response. In FastAPI, I use `StreamingResponse` with an async generator to send data progressively. It's especially useful for AI chat applications because users can see the response as it's generated.
+
+## 2. What is the difference between SSE and WebSockets?
+
+> SSE supports one-way communication from the server to the client, while WebSockets support bidirectional communication. I use SSE for AI chat responses and live notifications, while WebSockets are more suitable when both the client and server need to exchange messages continuously.
+
 # WebSockets
 
 ## 1. How do you implement live data in FastAPI?
@@ -798,3 +822,29 @@ Redis
 ```
 
 Remember: **Start with FastAPI and PostgreSQL, then add Redis when you have a real need for it.**
+
+# Testing
+
+## 1. How do you test a FastAPI application?
+
+> I use pytest and HTTPX to test my FastAPI application. I usually write unit tests for business logic and integration tests for API endpoints, including database operations, request validation, and authentication.
+>
+> I use fixtures to share test setup, a separate test database to avoid affecting production data, and pytest-cov to measure code coverage.
+
+## 2. How do you test asynchronous endpoints in FastAPI?
+
+> I use pytest-asyncio and HTTPX's `AsyncClient` with `ASGITransport` to test asynchronous endpoints without starting a real server.
+>
+> Since the endpoints are asynchronous, I use `await` when sending requests and then verify the response status code and data.
+
+## 3. How do you test database operations without affecting production data?
+
+> I use a separate test database and override the `get_db` dependency using `app.dependency_overrides`.
+>
+> I use pytest fixtures to prepare test data and clean up after each test. I also apply Alembic migrations to ensure the test database schema matches the application.
+
+## 4. How do you mock external services when testing FastAPI?
+
+> I use dependency injection to replace external services with fake implementations or mocks.
+>
+> For example, when testing an AI chatbot, I use a fake AI service that returns predictable responses instead of calling the real API. This makes tests faster, more reliable, and avoids unnecessary costs.
