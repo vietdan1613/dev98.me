@@ -1,0 +1,82 @@
+---
+title: "Streaming Responses in FastAPI"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI', '#AI']
+date: 2026-10-10
+thumbnailText: FastAPI
+---
+
+When you ask ChatGPT a question, the answer appears word by word instead of all at once. This is called **streaming**.
+
+With FastAPI, you can build the same experience using `StreamingResponse` and Server-Sent Events (SSE).
+
+## Why Use Streaming?
+
+A normal API waits until the entire response is ready before sending it to the client.
+
+With streaming, the server sends data in small chunks as soon as they are available. Users can see the response earlier, making the application feel faster.
+
+## 1. StreamingResponse
+
+FastAPI provides `StreamingResponse` to send data progressively using a generator.
+
+```python
+from fastapi.responses import StreamingResponse
+
+async def generate():
+    for i in range(5):
+        yield f"Number {i}\n"
+
+@app.get("/stream")
+async def stream():
+    return StreamingResponse(generate(), media_type="text/plain")
+```
+
+**Key idea:** `yield` sends each piece of data instead of waiting for the entire response.
+
+## 2. Server-Sent Events (SSE)
+
+Plain text streaming is simple, but applications often need a structured format to identify messages and know when a stream finishes.
+
+SSE provides a standard format for sending events over HTTP.
+
+An SSE message looks like this:
+
+```text
+data: {"type": "chunk", "content": "Hello"}
+
+```
+
+A simple streaming API can use three event types:
+
+- `chunk`: Sends a piece of content.
+- `done`: Indicates that streaming has finished.
+- `error`: Reports an error during streaming.
+
+Set the response media type to `text/event-stream` and disable proxy buffering when necessary.
+
+## 3. Streaming AI Responses
+
+Streaming is especially useful for AI applications because generating a complete answer can take several seconds.
+
+Most OpenAI-compatible SDKs, including DeepSeek's API, support streaming responses.
+
+The basic workflow is:
+
+1. Send the user's message to the AI model with `stream=True`.
+2. Read the generated chunks as they arrive.
+3. Forward each chunk to the client.
+4. Send a `done` event when generation finishes.
+
+**Important:** Do not collect the entire AI response before sending it. Doing so defeats the purpose of streaming.
+
+## 4. Read the Stream in the Browser
+
+For a chat endpoint that uses `POST`, the browser's `fetch()` API can read the response progressively.
+
+Use `ReadableStream` with a reader to process incoming data.
+
+One important detail is buffering: a network read does not necessarily contain exactly one SSE message. It may contain part of a message or several messages together.
+
+Keep incomplete data in a buffer and parse only complete events.

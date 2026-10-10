@@ -1,0 +1,114 @@
+---
+title: "SQLAlchemy in FastAPI: A Simple Guide"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI', '#SQLAlchemy']
+date: 2026-10-10
+thumbnailText: FastAPI
+---
+
+FastAPI handles HTTP requests, while SQLAlchemy handles database operations. Together, they provide a clean way to build database-driven APIs using Python.
+
+This guide covers the essential concepts using a simple plant shop API.
+
+## 1. What Is SQLAlchemy?
+
+SQLAlchemy is a Python SQL toolkit and ORM (Object-Relational Mapper).
+
+It maps Python classes to database tables, attributes to columns, and objects to rows.
+
+Instead of writing raw SQL:
+
+```sql
+SELECT * FROM plants WHERE price < 100;
+```
+
+You can use SQLAlchemy:
+
+```python
+select(Plant).where(Plant.price < 100)
+```
+
+## 2. Connect to the Database
+
+For asynchronous PostgreSQL access, install the required packages:
+
+```bash
+pip install fastapi uvicorn "sqlalchemy[asyncio]" asyncpg
+```
+
+SQLAlchemy uses three important components:
+
+- **Engine:** Manages the database connection pool.
+- **Session:** Handles queries and database changes.
+- **Session factory:** Creates new sessions when needed.
+
+Create the engine once and use FastAPI's `Depends()` to provide a session for each request.
+
+## 3. Define Models and Schemas
+
+A SQLAlchemy model represents a database table.
+
+For example, a `Plant` model might contain:
+
+- `id`: Primary key.
+- `name`: Plant name.
+- `price`: Plant price.
+- `stock`: Available quantity.
+- `category_id`: Foreign key referencing a category.
+
+Pydantic schemas serve a different purpose: they validate incoming requests and define the data returned by the API.
+
+**Best practice:** Keep database models and API schemas separate to avoid accidentally exposing internal fields.
+
+## 4. Implement CRUD Operations
+
+CRUD stands for Create, Read, Update, and Delete.
+
+| Operation | SQLAlchemy |
+|---|---|
+| Create | `db.add(plant)` |
+| Read by ID | `await db.get(Plant, plant_id)` |
+| Query | `await db.execute(select(Plant))` |
+| Update | Modify attributes and commit |
+| Delete | `await db.delete(plant)` |
+
+For asynchronous sessions, remember to use `await` for database operations that perform I/O, such as queries, commits, and deletes.
+
+Call `await db.commit()` to persist changes.
+
+## 5. Handle Relationships
+
+Suppose each plant belongs to a category.
+
+You might want to access:
+
+```python
+plant.category.name
+```
+
+However, implicit lazy loading can cause `MissingGreenlet` errors with async SQLAlchemy.
+
+Use `selectinload()` to load related data explicitly:
+
+```python
+query = select(Plant).options(
+    selectinload(Plant.category)
+)
+```
+
+This can also prevent the **N+1 query problem**, where loading many plants triggers an additional query for each plant's category.
+
+## 6. Manage Database Migrations
+
+Use Alembic to track database schema changes.
+
+```bash
+alembic init -t async migrations
+alembic revision --autogenerate -m "create plants"
+alembic upgrade head
+```
+
+Review generated migrations before applying them. Autogenerate does not detect every schema change correctly, especially certain column renames.
+
+For production applications, use migrations instead of relying on `Base.metadata.create_all()` to manage schema updates.
