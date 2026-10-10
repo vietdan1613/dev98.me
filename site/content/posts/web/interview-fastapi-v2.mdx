@@ -757,3 +757,44 @@ Logging         → What happened?
 Monitoring      → How is the system performing?
 Troubleshooting → Why did it happen?
 ```
+
+# Redis
+
+## 1. What is Redis, and when should you use it with FastAPI?
+
+> Redis is an in-memory data store commonly used for caching, rate limiting, session storage, and background task queues.
+>
+> With FastAPI, Redis helps reduce database queries, improve response times, and share data across multiple application workers. However, it adds operational complexity, so use it when there is a real need.
+
+```text
+Caching         → Reduce database queries
+Rate limiting   → Count requests per IP
+Session storage → Share sessions across workers
+Task queues     → Background jobs
+```
+
+## 2. How do you implement caching with Redis in FastAPI?
+
+> Use the cache-aside pattern:
+>
+> 1. Check Redis for the requested data.
+> 2. If there is a cache hit, return the cached data.
+> 3. If there is a cache miss, query PostgreSQL.
+> 4. Store the result in Redis with a TTL.
+> 5. Invalidate or update the cache when the underlying data changes.
+>
+> This reduces repeated database queries and improves API performance.
+
+```text
+Request
+   ↓
+Redis
+   ├── Hit  → Return cached data
+   └── Miss → PostgreSQL
+                 ↓
+              Save to Redis (TTL)
+                 ↓
+              Return data
+```
+
+Remember: **Start with FastAPI and PostgreSQL, then add Redis when you have a real need for it.**

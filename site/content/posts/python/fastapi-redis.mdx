@@ -1,0 +1,125 @@
+---
+title: "Redis and FastAPI – When Should You Use It?"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#FastAPI', '#Redis']
+date: 2026-10-20
+thumbnailText: FastAPI
+---
+
+Redis is a powerful tool for improving application performance and handling data efficiently. However, not every FastAPI project needs Redis.
+
+In this article, we'll explore what Redis is, when to use it, and how to integrate it with FastAPI.
+
+## I. What Is Redis?
+
+Redis (Remote Dictionary Server) is an in-memory data store that keeps data primarily in RAM, allowing very fast read and write operations.
+
+Redis is commonly used for caching, session storage, and message queues.
+
+### Key Features
+
+- **In-memory storage:** Provides fast data access.
+- **Persistence:** Can save data to disk for recovery.
+- **Data structures:** Supports Strings, Lists, Sets, Hashes, and Sorted Sets.
+- **TTL (Time To Live):** Automatically expires data after a specified period.
+
+### When Should You Use Redis?
+
+| Use Case | Example |
+|---|---|
+| Caching | Store API results to reduce database queries |
+| Rate limiting | Limit requests per IP address |
+| Session storage | Store user session data |
+| Background jobs | Support task queues |
+| Counters | Count page views or requests |
+
+**When don't you need Redis?**
+
+- Your application is small and has low traffic.
+- PostgreSQL already meets your performance requirements.
+- You need complex relational queries and reliable transactions.
+- You don't have a specific problem that Redis solves.
+
+> Don't use Redis just because it's fast. Use it when you actually need it.
+
+## II. Integrating Redis with FastAPI
+
+### 1. Installation
+
+You can run Redis using Docker:
+
+```bash
+docker run -d \
+  --name redis \
+  -p 127.0.0.1:6379:6379 \
+  redis:7-alpine
+```
+
+Install the Python packages:
+
+```bash
+pip install fastapi uvicorn redis
+```
+
+### 2. Connecting to Redis
+
+Here's a simple example using Redis's asynchronous client with FastAPI:
+
+```python
+import redis.asyncio as redis
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/items/{item_id}")
+async def get_item(item_id: str):
+    async with redis.from_url(
+        "redis://localhost:6379",
+        decode_responses=True
+    ) as client:
+        value = await client.get(f"item:{item_id}")
+
+    return {"item_id": item_id, "value": value}
+```
+
+### 3. Common Use Cases
+
+**a. API Caching**
+
+Store database query results in Redis to avoid repeated queries.
+
+```python
+cached = await redis_client.get("products")
+
+if cached:
+    return json.loads(cached)
+
+products = await get_products_from_db()
+
+await redis_client.set(
+    "products",
+    json.dumps(products),
+    ex=300
+)
+
+return products
+```
+
+The `ex=300` parameter means the cache expires after 300 seconds (5 minutes).
+
+When the underlying data changes, remember to invalidate or update the cache.
+
+**b. Rate Limiting**
+
+Redis can count requests from each IP address using `INCR` and reject requests that exceed a defined limit.
+
+For example, allow a maximum of 10 requests per minute.
+
+In production, use an atomic operation to handle counting and expiration safely.
+
+**c. Session Storage**
+
+Redis can store session data with an expiration time. When the session expires, Redis automatically removes the corresponding data.
+
+This is useful when an application runs on multiple servers that need to share session state.
