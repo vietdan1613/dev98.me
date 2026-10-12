@@ -1,5 +1,5 @@
 ---
-title: "Error Handling in Next.js"
+title: "Error Handling"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -7,21 +7,15 @@ date: 2026-09-25
 thumbnailText: Next.js
 ---
 
-Error handling is an essential part of building reliable Next.js applications. A production application must handle more than unexpected crashes. It also needs to deal with invalid form input, failed API requests, missing resources, authentication failures, and errors triggered by user interactions.
-
 ![Recover, Not Found, or Try Again — pick the right error path](./imgs/error-handling.jpg)
 
-Next.js App Router provides several mechanisms for handling these situations, including `useActionState`, `notFound()`, `redirect()`, `error.tsx`, and `global-error.tsx`.
-
-The key is understanding **which mechanism to use for each type of error** rather than relying on a single global error handler.
+> Handle expected errors as application state. Use error boundaries to recover from unexpected rendering failures.
 
 ## Different Types of Errors
 
 ### Expected errors
 
-Expected errors are normal outcomes of application logic. They should be handled explicitly and communicated clearly to users.
-
-Examples include:
+Expected errors are normal outcomes of application logic. They should be handled explicitly and communicated clearly to users. Examples include:
 
 - A user submits an invalid phone number.
 - A product is out of stock.
@@ -29,19 +23,13 @@ Examples include:
 
 ### Unexpected errors
 
-Unexpected errors occur when the application cannot complete an operation as intended.
-
-Examples include:
+Unexpected errors occur when the application cannot complete an operation as intended. Examples include:
 
 - A database connection fails.
 - A Server Component throws an unhandled exception.
 - An unexpected response causes rendering to fail.
 
 These errors require logging, a safe fallback UI, and sometimes a retry mechanism.
-
-A useful rule is:
-
-**Handle expected errors as application state. Use error boundaries to recover from unexpected rendering failures.**
 
 ## Server Actions with `useActionState`
 
@@ -117,9 +105,7 @@ The error will propagate to the nearest applicable `error.tsx` boundary.
 
 ## Missing Resources with `notFound()`
 
-A missing resource is usually a normal application outcome, not an unexpected crash.
-
-For example, a customer may visit a URL for a plant that has been removed from the catalog.
+A missing resource is usually a normal application outcome, not an unexpected crash. For example, a customer may visit a URL for a plant that has been removed from the catalog.
 
 Next.js provides `notFound()` to render the nearest `not-found.tsx` UI.
 
@@ -151,8 +137,6 @@ export default function NotFound() {
 The `error.tsx` file provides a fallback UI when an uncaught error occurs within its route segment.
 
 It must be a Client Component because error boundaries need client-side React behavior.
-
-### Example implementation
 
 ```tsx
 // app/dashboard/error.tsx
@@ -210,13 +194,7 @@ app/
         └── error.tsx
 ```
 
-This allows different parts of the application to have different recovery UIs.
-
-**Important:** An `error.tsx` file does not catch errors thrown by the `layout.tsx` in the same segment because the boundary is inside that layout. To handle a layout error, place the boundary higher in the route hierarchy.
-
-In current Next.js 16.3+ APIs, `retry()` can retry the failed segment by re-fetching and re-rendering it. In versions where the boundary uses `reset()`, that function clears the error boundary state, but does not itself guarantee that the original data-fetching operation will succeed.
-
-## Protect the Root Layout with `global-error.tsx`
+## global-error.tsx
 
 What happens if the root layout itself crashes?
 

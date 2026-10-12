@@ -1,5 +1,5 @@
 ---
-title: "Validating Forms with Zod 4"
+title: "Zod Validation"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS', '#Zod']
@@ -9,13 +9,7 @@ thumbnailText: Next.js
 
 TypeScript checks types during development, but it cannot validate data at runtime. A customer might submit an invalid phone number, an empty name, or an incomplete address.
 
-Without a validation library, you often end up maintaining validation functions, cleanup logic, and TypeScript types separately.
-
-### What Is Zod?
-
-Zod is a TypeScript-first schema validation library. It validates runtime data, transforms values, and infers TypeScript types directly from schemas.
-
-It is useful for validating forms, API responses, environment variables, and other untrusted data. Install Zod 4:
+Zod is a TypeScript-first schema validation library. It validates runtime data, transforms values, and infers TypeScript types directly from schemas. It is useful for validating forms, API responses, environment variables, and other untrusted data.
 
 ### 1. Define the schema
 

@@ -1,5 +1,5 @@
 ---
-title: "Zustand in Next.js: A Practical Guide"
+title: "Zustand: A Practical Guide"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS', '#Zustand']
@@ -158,9 +158,3 @@ export function AddToCartButton() {
 ```
 
 When the customer adds a plant, the shared cart state updates and the header count changes automatically. The cart also survives page refreshes because of `persist()`.
-
-### Summary
-
-Zustand provides a straightforward way to manage shared state in Next.js. With `create()`, selectors, and `persist()`, you can build a shopping cart without the boilerplate of a more complex state management solution.
-
-Start with a small store, subscribe to only the data each component needs, and add persistence when your application requires it.

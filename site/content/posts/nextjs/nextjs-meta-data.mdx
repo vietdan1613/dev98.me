@@ -1,160 +1,169 @@
 ---
-title: "NextJS - Metadata and OG images"
+title: "Metadata and OG images"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
-date: 2023-10-07
+date: 2026-05-05
 thumbnailText: NextJS
 ---
 
-> Metadata controls how your page appears in: Search engines (SEO), Social media previews,...
+**Meta description:** Learn how to configure metadata in Next.js App Router using static metadata, dynamic metadata, Open Graph images, canonical URLs, and SEO best practices.
 
-# Static Metadata
+Metadata helps search engines understand your pages and controls how your website appears in search results and social media previews.
 
-If your metadata does **not depend on dynamic data**, you can define it using the `metadata` object.
+### 1. Configure Static Metadata
 
-Example:
+Use static metadata when a page's title and description do not depend on dynamic data.
 
-```ts
-import type { Metadata } from "next"
+```tsx
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "My Blog",
-  description: "A blog about software development",
-}
+  title: "Plant Care Blog",
+  description:
+    "Discover tips and guides for growing healthy plants.",
+};
 
-export default function Layout() {
-  return <div />
+export default function BlogPage() {
+  return <h1>Plant Care Blog</h1>;
 }
 ```
 
-This is the **simplest and fastest approach** because metadata is resolved at **build time**.
+Next.js generates HTML metadata similar to:
 
-Use static metadata for:
+```html
+<title>Plant Care Blog</title>
+<meta
+  name="description"
+  content="Discover tips and guides for growing healthy plants."
+/>
+```
 
-* Home pages
-* Static marketing pages
-* Documentation pages
+### 2. Set Default Metadata in the Root Layout
 
-# Dynamic Metadata
+You can define common metadata in `app/layout.tsx` so your pages inherit a consistent configuration.
 
-Sometimes metadata depends on data such as: blog posts, products,... In these cases, use the `generateMetadata` function.
+```tsx
+import type { Metadata } from "next";
 
-Example: generate metadata based on a blog slug.
+export const metadata: Metadata = {
+  metadataBase: new URL("https://greengarden.com"),
 
-```ts
-import { cache } from "react"
+  title: {
+    default: "Green Garden",
+    template: "%s | Green Garden",
+  },
 
-export const getPost = cache(async (slug: string) => {
-  const res = await fetch(`https://api.vercel.app/blog/${slug}`)
-  return res.json()
-})
+  description:
+    "Discover beautiful plants and learn how to care for them.",
+
+  openGraph: {
+    siteName: "Green Garden",
+    locale: "en_US",
+    type: "website",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+```
+
+Let's look at the important properties:
+
+- `metadataBase`: Defines the base URL for resolving relative metadata URLs.
+- `title.default`: Sets the default title when a more specific title isn't provided.
+- `title.template`: Adds a consistent suffix to child page titles.
+- `openGraph`: Defines default information for social media previews.
+- `robots`: Controls whether search engines should index pages and follow links.
+
+### 3. Generate Dynamic Metadata
+
+Static metadata isn't sufficient for pages whose content changes based on a URL, such as individual blog posts or product pages.
+
+Use `generateMetadata()` to generate metadata from dynamic data. Consider the following route:
+
+```text
+app/
+└── blog/
+    └── [slug]/
+        └── page.tsx
+```
+
+```tsx
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+async function getPost(slug: string) {
+  return posts[slug as PostSlug] ?? null;
+}
 
 export async function generateMetadata({
   params,
-}: {
-  params: { slug: string }
-}) {
-  const post = await getPost(params.slug)
+}: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
+
+  if (!post) {
+    return {
+      title: "Post Not Found",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
 
   return {
     title: post.title,
     description: post.description,
-  }
+  };
 }
 ```
 
-Now each blog post automatically gets **unique SEO metadata**.
+## 4. Add Open Graph Metadata
 
-React provides a `cache` function to memoize requests.
+Open Graph metadata controls how a page appears when someone shares it on supported social platforms.
 
-### File-based Metadata
+You can configure an image, title, description, and page type.
 
-Supported files include:
+```tsx
+import type { Metadata } from "next";
 
-```
-favicon.ico
-apple-icon.jpg
-icon.jpg
-opengraph-image.jpg
-twitter-image.jpg
-robots.txt
-sitemap.xml
-```
+export const metadata: Metadata = {
+  title: "Monstera Care Guide",
+  description: "Learn how to grow and care for Monstera plants.",
 
-![example](./imgs/meta-data-1.png)
+  openGraph: {
+    title: "Monstera Care Guide",
+    description:
+      "A practical guide to growing healthy Monstera plants.",
+    type: "article",
+    images: [
+      {
+        url: "/images/monstera-og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Monstera plant care guide",
+      },
+    ],
+  },
 
-# Static Open Graph Images
-
-Open Graph images control how links appear on social media.
-
-Example preview:
-
-```
-+--------------------------+
-|   Image preview          |
-|                          |
-|  Blog Post Title         |
-|                          |
-+--------------------------+
-```
-
-
-```
-// To add a global OG image:
-app/opengraph-image.jpg
-
-// To create a route-specific OG image:
-app/blog/opengraph-image.jpg
+  twitter: {
+    card: "summary_large_image",
+    title: "Monstera Care Guide",
+    description:
+      "A practical guide to growing healthy Monstera plants.",
+    images: ["/images/monstera-og.jpg"],
+  },
+};
 ```
 
-### Dynamic
+Because `metadataBase` is configured in the root layout, Next.js can resolve the relative image URL to an absolute URL.
 
-For dynamic pages like blog posts, you can generate OG images programmatically.
+For example:
 
-Next.js provides the `ImageResponse` API.
+`https://greengarden.com/images/monstera-og.jpg`
 
-Example:
-
-```
-app/blog/[slug]/opengraph-image.tsx
-```
-
-```ts
-import { ImageResponse } from "next/og"
-import { getPost } from "@/app/lib/data"
-
-export const size = {
-  width: 1200,
-  height: 630,
-}
-
-export const contentType = "image/png"
-
-export default async function Image({
-  params,
-}: {
-  params: { slug: string }
-}) {
-
-  const post = await getPost(params.slug)
-
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          fontSize: 128,
-          background: "white",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {post.title}
-      </div>
-    )
-  )
-}
-```
+For best results, use an appropriate, publicly accessible image and verify how the preview appears on your target platforms.

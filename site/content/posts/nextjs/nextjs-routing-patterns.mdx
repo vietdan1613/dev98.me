@@ -1,5 +1,5 @@
 ---
-title: "Next.js Routing: The 5 Patterns"
+title: "Routings"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -9,9 +9,7 @@ thumbnailText: Next.js
 
 Next.js App Router uses your folder structure to create routes. No separate router config needed.
 
-![Next.js routing patterns: folders become routes](./imgs/routing-patterns.jpg)
-
-## 1. Static Routes
+### 1. Static Routes
 
 The simplest one.
 
@@ -22,19 +20,15 @@ app/
 │   └── page.tsx
 └── contact/
     └── page.tsx
-```
 
 This gives you:
 
-```text
 /
 /about
 /contact
 ```
 
----
-
-## 2. Nested Routes
+### 2. Nested Routes
 
 Folders can be nested to create deeper URLs.
 
@@ -43,13 +37,12 @@ app/
 └── blog/
     └── tutorials/
         └── page.tsx
-```
 
 → `/blog/tutorials`
 
----
+```
 
-## 3. Dynamic Routes `[slug]`
+### 3. Dynamic Routes `[slug]`
 
 This is probably the one you’ll use the most.
 
@@ -72,9 +65,7 @@ export default async function Page({params,}: {params: Promise<{ slug: string }>
 
 For `/blog/nextjs`, `slug` is `"nextjs"`.
 
----
-
-## 4. Catch-all Routes `[...slug]`
+### 4. Catch-all Routes `[...slug]`
 
 Sometimes you need to match multiple URL segments.
 
@@ -94,9 +85,7 @@ Think of it as:
 
 Useful for documentation, CMS pages, or deep category structures.
 
----
-
-## 5. Route Groups `(group)`
+### 5. Route Groups `(group)`
 
 Route Groups are mainly for organizing your app.
 
@@ -112,16 +101,3 @@ app/
 The `(marketing)` and `(dashboard)` parts **don't appear in the URL**.
 
 They’re useful when you want different layouts or want to keep a large project organized.
-
----
-
-## And There Are More...
-
-Next.js also has some more advanced routing patterns:
-
-| Pattern             | Syntax        | Use case                                |
-| ------------------- | ------------- | --------------------------------------- |
-| Parallel Routes     | `@slot`       | Render multiple UI sections in parallel |
-| Intercepting Routes | `(.)`, `(..)` | Intercept a route, commonly for modals  |
-
-You probably don't need these on day one.

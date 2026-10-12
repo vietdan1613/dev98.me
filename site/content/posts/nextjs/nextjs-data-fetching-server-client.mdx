@@ -11,8 +11,6 @@ Data fetching in Next.js 16 mainly comes down to one question: **should this dat
 
 With the App Router, Server Components are the default. This means you can fetch data directly inside an async component without `useEffect` or an additional API layer.
 
-![Server vs Client — where should data be fetched?](./imgs/data-fetching-server-client.jpg)
-
 ## Server-side Data Fetching
 
 A Server Component can fetch data directly:
@@ -39,7 +37,7 @@ export default async function BlogPage() {
 }
 ```
 
-## Caching and Revalidation
+### Caching and Revalidation
 
 Next.js 16 also provides mechanisms for controlling how fetched data is cached and revalidated. For example, you can revalidate data every 60 seconds:
 
@@ -58,8 +56,6 @@ const res = await fetch("https://api.example.com/posts", {
   cache: "no-store",
 })
 ```
-
-The important idea is that with the App Router, you don't need to think in terms of `getStaticProps` or `getServerSideProps` for new applications. Data fetching is built directly into Server Components and the rendering model.
 
 ## Client-side Data Fetching
 
@@ -93,7 +89,7 @@ export default function Posts() {
 
 This approach works for things like search, filters, infinite scrolling, user-specific data, and other interactions that happen directly in the browser.
 
-## Using TanStack Query
+### Using TanStack Query
 
 For applications with more complex client-side data requirements, **TanStack Query (React Query)** provides a better way to manage server state. It handles caching, background refetching, loading and error states, query invalidation, mutations, and more.
 

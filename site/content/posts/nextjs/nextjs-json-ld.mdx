@@ -1,5 +1,5 @@
 ---
-title: "JSON-LD"
+title: "Schema JSON-LD"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -7,13 +7,9 @@ date: 2026-09-16
 thumbnailText: Next.js
 ---
 
-![From your page to JSON-LD to search engines to better results](./imgs/json-ld-final-picture.jpg)
+### 1. What is JSON-LD?
 
-## 1. What is JSON-LD?
-
-**JSON-LD** stands for **JSON for Linked Data**.
-
-It is a format for adding **structured data** to a webpage so search engines and other systems can better understand the content.
+**JSON-LD** stands for **JSON for Linked Data**. It is a format for adding **structured data** to a webpage so search engines and other systems can better understand the content.
 
 For example, a normal HTML page might contain:
 
@@ -22,9 +18,7 @@ For example, a normal HTML page might contain:
 <p>Beautiful variegated plant.</p>
 ```
 
-To a user, this is obviously a product.
-
-With JSON-LD, we can explicitly describe it as a `Product`:
+To a user, this is obviously a product. With JSON-LD, we can explicitly describe it as a `Product`:
 
 ```json
 {
@@ -35,16 +29,11 @@ With JSON-LD, we can explicitly describe it as a `Product`:
 }
 ```
 
-**When to use:**
-Use JSON-LD when you want to provide structured information about entities such as products, organizations, articles, events, recipes, and more.
+**When to use:** Use JSON-LD when you want to provide structured information about entities such as products, organizations, articles, events, recipes, and more.
 
----
+### 2. `@context`
 
-## 2. `@context`
-
-`@context` tells the parser which vocabulary you're using.
-
-Most websites use Schema.org:
+`@context` tells the parser which vocabulary you're using. Most websites use Schema.org:
 
 ```json
 {
@@ -60,9 +49,7 @@ Think of it as:
 "What vocabulary do these properties belong to?"
 ```
 
----
-
-## 3. `@type`
+### 3. `@type`
 
 `@type` tells search engines what the entity is.
 
@@ -101,9 +88,7 @@ For example:
 }
 ```
 
----
-
-## 4. Properties
+### 4. Properties
 
 After defining the type, we provide information about that entity.
 
@@ -127,3 +112,7 @@ image       → Product image
 ```
 
 Each Schema.org type has its own supported properties.
+
+### 5. Validate your JSON-LD
+
+After adding JSON-LD, check it with the [Schema Markup Validator](https://validator.schema.org/). Paste your page URL or the JSON-LD snippet, and it shows the detected types, their properties, and any errors or warnings.

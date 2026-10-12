@@ -9,13 +9,17 @@ thumbnailText: Next.js
 
 In Next.js 16, `middleware.ts` was renamed to `proxy.ts`. The idea is still the same: **run code before a request is completed**. I usually think of Proxy as a checkpoint between the request and your app:
 
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
+
 ![Request → proxy.ts → Next.js App](./imgs/proxy-checkpoint.jpg)
+
+</div>
 
 ```ts
 Request → proxy.ts → Next.js route
 ```
 
-## What can Proxy do?
+### 1. What can Proxy do?
 
 Proxy can inspect an incoming request and decide what happens next. For example, you can redirect, rewrite URLs, modify headers, or return a response directly. A simple redirect looks like this:
 
@@ -30,8 +34,6 @@ export function proxy(request: NextRequest) {
 }
 ```
 
-### Use `matcher` when needed
-
 You usually don't want Proxy to run for every route. Use `matcher` to limit it:
 
 ```ts
@@ -42,11 +44,7 @@ export const config = {
 
 Now Proxy runs for `/admin` and nested routes, which is useful for things like checking a cookie before accessing an admin area.
 
-## Real-world example
-
-Here are three things my own `proxy.ts` does.
-
-### 1. Skip technical routes
+### 2. Skip technical routes
 
 Sitemaps, `robots.txt`, API calls and Next.js build files don't need any proxy logic, so they go straight through:
 
@@ -62,7 +60,7 @@ if (
 }
 ```
 
-### 2. Gate admin pages behind login
+### 3. Gate admin pages behind login
 
 Visitors to `/admin/...` without auth cookies are redirected to `/admin/login?redirect=...`. Logged-in users who open the login page are sent to `/admin`.
 
@@ -89,7 +87,7 @@ function handleAdminAuth(request: NextRequest) {
 
 Note the comment: this check is only for user experience. It only looks for the cookies, it doesn't verify them. The FastAPI backend does the real security checks on every request.
 
-### 3. Add a missing language prefix
+### 4. Add a missing language prefix
 
 Paths without a language get a permanent redirect. `/plants/x` becomes `/vi/plants/x` with a **308** redirect, so Google moves the page's ranking to the `/vi` URL.
 
@@ -103,16 +101,4 @@ if (!hasLocale) {
   url.pathname = `/vi${pathname}`;
   return NextResponse.redirect(url, 308);
 }
-```
-
-## Don't put everything in Proxy
-
-Proxy is better for **lightweight request-level logic** such as redirects, rewrites, and quick checks. It shouldn't become your entire authentication or business-logic layer. Keep the heavy work in your server/API layer.
-
-```text
-proxy.ts
-→ quick request decision
-
-Server / API
-→ business logic
 ```

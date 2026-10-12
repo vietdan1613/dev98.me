@@ -1,5 +1,5 @@
 ---
-title: "Next.js Project Structure Explained"
+title: "Project Structure"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -30,7 +30,7 @@ plant-shop/
 └── tsconfig.json
 ```
 
-## The app folder &  `page.tsx`
+### The app folder 
 
 The `app` folder is where you build your pages and routes. The folder structure usually maps to the URL. For example, `app/page.tsx` creates the homepage `/`, while `app/plants/page.tsx` creates `/plants`.
 
@@ -42,9 +42,7 @@ export default function PlantsPage() {
 }
 ```
 
----
-
-## layout.tsx
+### layout.tsx
 
 A layout is used for UI that should be shared across multiple pages, such as a Header, Navigation, or Footer.
 
@@ -52,9 +50,7 @@ For example, your website might have a Header at the top, the current page in th
 
 Think of `layout.tsx` as the common frame around your pages.
 
----
-
-## loading.tsx
+### loading.tsx
 
 A `loading.tsx` file shows a loading UI while a page is preparing its content.
 
@@ -68,17 +64,13 @@ export default function Loading() {
 
 When users visit `/plants`, they see this loading UI first, then the real page when it's ready.
 
----
-
-## components & lib
+### components & lib
 
 The `components` folder is usually used for reusable UI.
 
 The `lib` folder is commonly used for reusable application logic. For example, `lib/plants.ts` could contain functions for fetching plants from an API or database.
 
----
-
-## route.ts
+### route.ts
 
 Next.js can also create API endpoints inside the `app` folder. For example:
 
@@ -88,9 +80,7 @@ app/api/plants/route.ts
 
 creates the `/api/plants` endpoint.
 
----
-
-## public
+### public
 
 The `public` folder is used for static files such as images, icons, and other assets.
 

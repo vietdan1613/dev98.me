@@ -1,5 +1,5 @@
 ---
-title: "GSAP in Next.js: A Practical Guide"
+title: "GSAP: A Practical Guide"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -11,9 +11,13 @@ GSAP works great with Next.js, but there is one important thing to understand: *
 
 The `@gsap/react` package provides `useGSAP()` to make this integration much easier.
 
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
+
 ![GSAP in Next.js — animate a better web](./imgs/gsap-nextjs.jpg)
 
-## 1. Install GSAP
+</div>
+
+### 1. Install GSAP
 
 Install both GSAP and its React integration:
 
@@ -33,7 +37,7 @@ import { useGSAP } from "@gsap/react"
 gsap.registerPlugin(useGSAP)
 ```
 
-## 2. Use a Client Component
+### 2. Use a Client Component
 
 When using the Next.js App Router, the component that runs GSAP should be a Client Component.
 
@@ -45,7 +49,7 @@ Add this at the top of the file:
 
 This is important because GSAP interacts with browser APIs and the DOM. `useGSAP()` is designed to work safely with SSR, but it needs to execute on the client.
 
-## 3. Animate with `useGSAP()`
+### 3. Animate with `useGSAP()`
 
 Instead of manually managing GSAP inside `useEffect()`, you can use `useGSAP()`:
 
@@ -74,7 +78,7 @@ return (
 
 `useGSAP()` automatically handles GSAP cleanup when the component is unmounted.
 
-## 4. Why use `scope`?
+### 4. Why use `scope`?
 
 `scope` limits selector-based animations to the current component.
 
@@ -99,7 +103,7 @@ container
 
 This becomes especially useful when you build reusable components that use the same class names.
 
-## 5. Animations triggered by events
+### 5. Animations triggered by events
 
 There's an important difference between animations created inside `useGSAP()` and animations created later.
 
@@ -125,7 +129,7 @@ const handleClick = () => {
 
 The click handler runs after `useGSAP()` has executed, so that animation isn't automatically recorded in the GSAP context.
 
-## 6. Use `contextSafe()`
+### 6. Use `contextSafe()`
 
 For event-driven animations, use `contextSafe()`:
 
@@ -153,7 +157,7 @@ This is useful for animations triggered by:
 * `setTimeout()`
 * custom event listeners
 
-## 7. A reusable Next.js pattern
+### 7. A reusable Next.js pattern
 
 For most Next.js components, this is a good starting point:
 
@@ -201,7 +205,7 @@ export default function Hero() {
 }
 ```
 
-## 8. The mental model
+### 8. The mental model
 
 When working with GSAP in Next.js, remember:
 

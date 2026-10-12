@@ -38,7 +38,7 @@ Flow
                             External APIs
 ```
 
-## 1. PostgreSQL Database
+### 1. PostgreSQL Database
 
 PostgreSQL is the main database used to store structured application data such as posts, users, products, orders, and categories.
 
@@ -66,7 +66,7 @@ The basic flow is:
 Next.js → Supabase Client → PostgreSQL → posts
 ```
 
-## 2. Storage
+### 2. Storage
 
 Supabase Storage is used to store files such as images, videos, PDFs, and documents. PostgreSQL normally stores the file path or metadata, while Storage stores the actual file.
 
@@ -98,7 +98,7 @@ Storage
 
 Use private buckets and signed URLs when files should not be publicly accessible.
 
-## 3. Authentication
+### 3. Authentication
 
 Supabase Auth handles user authentication and supports email/password, magic links, OTP, and OAuth providers.
 
@@ -134,7 +134,7 @@ The basic flow is:
 User → Supabase Auth → Authenticated User → Protected Data
 ```
 
-## 4. Row Level Security (RLS)
+### 4. Row Level Security (RLS)
 
 RLS controls which users can read, insert, update, or delete specific database rows.
 
@@ -164,7 +164,7 @@ User → Supabase → RLS Check → Database
 
 RLS is especially important when the client accesses Supabase directly.
 
-## 5. Auto-generated REST API
+### 5. Auto-generated REST API
 
 Supabase automatically provides an API for PostgreSQL tables, so you do not need to manually create basic CRUD endpoints.
 
@@ -205,7 +205,7 @@ Next.js → Supabase API → PostgreSQL
 
 For complex business logic, you may still need Next.js API routes, Server Actions, or Edge Functions.
 
-## 6. Realtime
+### 6. Realtime
 
 Supabase Realtime allows the frontend to receive database changes immediately without repeatedly polling the database.
 
@@ -234,7 +234,7 @@ Typical use cases include chat, notifications, live dashboards, and order status
 PostgreSQL → Realtime → Frontend
 ```
 
-## 7. Edge Functions
+### 7. Edge Functions
 
 Edge Functions are server-side functions that run on Supabase. They are useful for backend logic that should not run in the browser.
 
@@ -293,7 +293,7 @@ Typical flow:
 Next.js → Edge Function → External API → Response
 ```
 
-## 8. Database Webhooks
+### 8. Database Webhooks
 
 Database Webhooks automatically send an HTTP request when a database event occurs.
 
@@ -338,7 +338,7 @@ Realtime → Database → Frontend
 Webhook  → Database → HTTP endpoint
 ```
 
-## 9. Database Triggers
+### 9. Database Triggers
 
 A database trigger automatically executes PostgreSQL logic when a database event occurs.
 
@@ -376,7 +376,7 @@ INSERT auth.users → Trigger → PostgreSQL Function → INSERT profiles
 
 Use triggers for database-level automation such as timestamps, audit records, or creating related records.
 
-## 10. pgvector / Vector Search
+### 10. pgvector / Vector Search
 
 pgvector is a PostgreSQL extension that allows you to store and search embeddings. It can turn PostgreSQL into a vector database for AI applications.
 
@@ -430,7 +430,7 @@ limit 5;
 
 This is useful for RAG, AI chatbots, semantic search, and knowledge bases.
 
-## 11. Database Migrations
+### 11. Database Migrations
 
 Migrations store database schema changes as code. This makes database changes version-controlled and reproducible.
 
@@ -461,7 +461,7 @@ Migration → Git → Deployment → Production Database
 
 Migrations are especially useful when working with teams or multiple environments.
 
-## 12. TypeScript Generated Types
+### 12. TypeScript Generated Types
 
 Supabase can generate TypeScript types directly from your PostgreSQL schema.
 
@@ -516,7 +516,7 @@ Next.js + TypeScript
 
 This helps keep application code synchronized with the database schema.
 
-## 13. Supabase CLI
+### 13. Supabase CLI
 
 Supabase CLI is the command-line tool for developing and managing Supabase projects.
 
@@ -543,7 +543,7 @@ supabase functions deploy hello
 
 The CLI is especially useful when database changes and backend code need to be managed through Git.
 
-## 14. Logs / Monitoring
+### 14. Logs / Monitoring
 
 Supabase Logs help you understand what is happening inside your project and troubleshoot errors.
 

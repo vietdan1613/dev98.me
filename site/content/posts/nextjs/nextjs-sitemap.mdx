@@ -3,7 +3,7 @@ title: "Sitemap"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
-date: 2026-09-16
+date: 2026-05-01
 thumbnailText: Next.js
 ---
 
@@ -11,9 +11,7 @@ A **sitemap** helps search engine crawlers discover the important URLs on your w
 
 In Next.js App Router, you can generate a sitemap automatically using `sitemap.ts`.
 
-![From sitemap.ts to sitemap.xml to crawlers discovering your pages](./imgs/sitemap-final-picture.jpg)
-
-## 1. Create a Sitemap
+### 1. Create a Sitemap
 
 Create:
 
@@ -51,9 +49,7 @@ Next.js automatically generates:
 https://example.com/sitemap.xml
 ```
 
----
-
-## 2. Sitemap with Dynamic Data
+### 2. Sitemap with Dynamic Data
 
 For an ecommerce website, URLs usually come from a database.
 
@@ -72,9 +68,7 @@ Now when a new product is added, the sitemap can include it automatically.
 
 **Database → API → Sitemap → Search Engine**
 
----
-
-## 3. Useful Sitemap Properties
+### 3. Useful Sitemap Properties
 
 Each URL can contain additional information:
 
@@ -99,32 +93,7 @@ images
 videos
 ```
 
----
-
-## 4. Sitemap for i18n
-
-If your website supports multiple languages, you can define language alternatives:
-
-```ts
-{
-  url: 'https://example.com/vi/about',
-
-  alternates: {
-    languages: {
-      vi: 'https://example.com/vi/about',
-      en: 'https://example.com/en/about',
-    },
-  },
-}
-```
-
-Next.js generates the corresponding `hreflang` information in the sitemap.
-
-This is especially useful for websites using **Next.js + next-intl**.
-
----
-
-## 5. Check Your Sitemap
+### 4. Check Your Sitemap
 
 After deploying, open `https://example.com/sitemap.xml` to confirm it is generated.
 

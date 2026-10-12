@@ -1,5 +1,5 @@
 ---
-title: "next-intl simple i18n"
+title: "Multiple languages with next-intl"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -7,21 +7,13 @@ date: 2026-09-16
 thumbnailText: Next.js
 ---
 
-Supporting multiple languages in Next.js can become complicated when you manage routing, translations, and navigation yourself.
-
-`next-intl` helps simplify this process.
-
-![next-intl config, translation, routing, and navigation producing localized routes](./imgs/next-intl-big-picture.jpg)
-
-## 1. Install
+Supporting multiple languages in Next.js can become complicated when you manage routing and translations yourself. `next-intl` simplifies internationalization (i18n) by providing translation APIs, locale-aware navigation, and routing support.
 
 ```bash
 npm install next-intl
 ```
 
----
-
-## 2. Create Translation Files
+### 1. Create Translation Files
 
 Create one JSON file for each language:
 
@@ -31,7 +23,7 @@ messages/
 └── vi.json
 ```
 
-**en.json**
+**messages/en.json**
 
 ```json
 {
@@ -41,7 +33,7 @@ messages/
 }
 ```
 
-**vi.json**
+**messages/vi.json**
 
 ```json
 {
@@ -51,14 +43,12 @@ messages/
 }
 ```
 
----
+### 2. Configure Routing
 
-## 3. Config
-
-Define the supported locales and the default locale.
+This defines the supported languages and sets Vietnamese as the default locale. Create `src/i18n/routing.ts`:
 
 ```ts
-// src/i18n/routing.ts
+import { defineRouting } from "next-intl/routing";
 
 export const routing = defineRouting({
   locales: ["en", "vi"],
@@ -66,24 +56,25 @@ export const routing = defineRouting({
 });
 ```
 
-Now `next-intl` knows:
 
-```text
-Locales: en, vi
-Default: vi
-```
+### 3. Configure Request Settings
 
----
-
-## 4. Request Config
-
-Load the correct translation file based on the current locale.
+This loads the correct translation file based on the requested locale and falls back to Vietnamese if the locale is unsupported. Create `src/i18n/request.ts`:
 
 ```ts
-// src/i18n/request.ts
+import { getRequestConfig } from "next-intl/server";
+import { hasLocale } from "next-intl";
+import { routing } from "./routing";
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  const locale = await requestLocale;
+  const requestedLocale = await requestLocale;
+
+  const locale = hasLocale(
+    routing.locales,
+    requestedLocale
+  )
+    ? requestedLocale
+    : routing.defaultLocale;
 
   return {
     locale,
@@ -94,93 +85,105 @@ export default getRequestConfig(async ({ requestLocale }) => {
 });
 ```
 
-For example:
+### 4. Configure Next.js
 
-```text
-/vi
- ↓
-locale = vi
- ↓
-messages/vi.json
+Update `next.config.ts`:
+
+```ts
+import createNextIntlPlugin from "next-intl/plugin";
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {};
+
+export default createNextIntlPlugin()(nextConfig);
 ```
 
----
+### 5. Set Up Locale Routing
 
-## 5. Use Translations
+Create `src/proxy.ts` for Next.js 16:
 
-In a component:
+```ts
+import createMiddleware from "next-intl/middleware";
+import { routing } from "./i18n/routing";
+
+export default createMiddleware(routing);
+
+export const config = {
+  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+};
+```
+
+Organize your pages under the `[locale]` segment:
+
+```text
+src/app/
+└── [locale]/
+    ├── layout.tsx
+    ├── page.tsx
+    └── plants/
+        └── page.tsx
+```
+
+### 6. Create the Locale Layout
+
+Create `src/app/[locale]/layout.tsx`:
 
 ```tsx
-import { useTranslations } from "next-intl";
+import { hasLocale } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { notFound } from "next/navigation";
+import { routing } from "@/i18n/routing";
 
-export default function HomePage() {
-  const t = useTranslations("Home");
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  setRequestLocale(locale);
+  const messages = await getMessages();
+
+  return (
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### 7. Use Translations
+
+In a Server Component, use `getTranslations`:
+
+```tsx
+import { getTranslations } from "next-intl/server";
+
+export default async function HomePage() {
+  const t = await getTranslations("Home");
 
   return <h1>{t("title")}</h1>;
 }
 ```
 
-With `vi`:
+The output depends on the current locale:
 
-```text
-Chào mừng đến Green Garden
-```
+- `/vi` → `Chào mừng đến Green Garden`
+- `/en` → `Welcome to Green Garden`
 
-With `en`:
-
-```text
-Welcome to Green Garden
-```
-
----
-
-## 6. Locale Routing
-
-Use `[locale]` in the App Router:
-
-```text
-app/
-└── [locale]/
-    ├── page.tsx
-    ├── plants/
-    │   └── page.tsx
-    └── categories/
-        └── page.tsx
-```
-
-This gives you:
-
-```text
-/vi/plants
-/en/plants
-
-/vi/categories
-/en/categories
-```
-
----
-
-## 7. Navigation
-
-`next-intl` can provide locale-aware navigation.
-
-```tsx
-import { Link } from "@/i18n/navigation";
-
-<Link href="/plants">
-  Plants
-</Link>
-```
-
-The locale is handled automatically:
-
-```text
-/vi/plants
-/en/plants
-```
-
-You don't need to manually write:
-
-```tsx
-`/${locale}/plants`
-```
+For Client Components, use `useTranslations` with `"use client"`.
