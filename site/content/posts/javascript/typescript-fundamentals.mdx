@@ -1,0 +1,189 @@
+---
+title: "TypeScript Fundamentals"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#TypeScript']
+date: 2026-10-12
+thumbnailText: TypeScript
+---
+
+TypeScript adds a static type system to JavaScript. It catches errors early, documents your data, and makes large codebases easier to maintain.
+
+### 1. Basics
+
+Annotate parameters and return types; let TypeScript infer the rest.
+
+```typescript
+function greet(name: string): string {
+  return `Hello, ${name}`;
+}
+
+greet("Alice"); // OK
+greet(123);     // Type error
+
+const age = 25; // inferred as number
+```
+
+Types are erased at compile time, so they don't validate API responses at runtime. Use a validator such as Zod for that.
+
+### 2. `type` vs `interface`
+
+Both describe object shapes:
+
+```typescript
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  nickname?: string;          // optional
+  readonly createdAt: Date;   // can't be reassigned
+}
+```
+
+`type` can also express unions, intersections, and tuples:
+
+```typescript
+type Status = "idle" | "loading" | "success" | "error";
+type UserWithTimestamps = User & { updatedAt: Date };
+```
+
+Use `interface` when you need declaration merging (e.g. extending library types), and `type` for composing types. A union of string literals is often simpler than an `enum`.
+
+### 3. Union and Intersection Types
+
+A **union** (`A | B`) is one of several types. An **intersection** (`A & B`) combines them.
+
+Unions with a shared `status` field, called **discriminated unions**, are great for modeling state:
+
+```typescript
+type ApiResult =
+  | { status: "success"; data: User[] }
+  | { status: "error"; message: string };
+
+function handleResult(result: ApiResult) {
+  if (result.status === "success") {
+    console.log(result.data);      // data is available
+  } else {
+    console.error(result.message); // message is available
+  }
+}
+```
+
+### 4. Type Narrowing and Type Guards
+
+TypeScript narrows types using checks like `typeof`, `instanceof`, `in`, and equality:
+
+```typescript
+function formatValue(value: string | number): string {
+  if (typeof value === "string") {
+    return value.toUpperCase(); // string
+  }
+  return value.toFixed(2);      // number
+}
+```
+
+For custom checks, write a **type guard** with `value is Type`:
+
+```typescript
+function isUser(value: unknown): value is User {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "number"
+  );
+}
+```
+
+### 5. `keyof` and `typeof`
+
+Derive types from existing code instead of duplicating them:
+
+```typescript
+const config = { theme: "dark", pageSize: 20 };
+
+type Config = typeof config;        // { theme: string; pageSize: number }
+type ConfigKey = keyof typeof config; // "theme" | "pageSize"
+
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+
+getProperty(config, "theme");   // string
+getProperty(config, "missing"); // Type error
+```
+
+### 6. Utility Types
+
+Built-in helpers that transform existing types:
+
+```typescript
+type UserUpdate  = Partial<User>;          // all fields optional
+type UserPreview = Pick<User, "id" | "name">; // only selected fields
+type NewUser     = Omit<User, "id">;       // remove fields
+type UsersById   = Record<number, User>;   // key → value map
+```
+
+### 7. Generics
+
+Generics let functions work with many types while keeping type information, without falling back to `any`:
+
+```typescript
+function findById<T extends { id: number }>(items: T[], id: number): T | undefined {
+  return items.find((item) => item.id === id);
+}
+```
+
+The constraint `T extends { id: number }` requires an `id`, while the full item type is preserved. Generics shine in API clients, custom hooks, and shared components.
+
+### 8. `satisfies`
+
+`satisfies` checks a value against a type **without** widening its inferred type:
+
+```typescript
+type Theme = Record<string, string>;
+
+const colors = {
+  primary: "#2563eb",
+  danger: "#dc2626",
+} satisfies Theme;
+
+colors.primary; // OK
+colors.missing; // Type error (with `: Theme` this would be allowed)
+```
+
+Useful for configs, themes, and route maps.
+
+### 9. `any`, `unknown`, and `never`
+
+- **`any`** turns off type checking. Avoid it outside of migrations.
+- **`unknown`** accepts anything, but you must narrow it before use. Prefer it for untrusted data.
+- **`never`** is a value that can't happen. Use it for exhaustive checks:
+
+```typescript
+type Status = "idle" | "loading";
+
+function getLabel(status: Status): string {
+  switch (status) {
+    case "idle":
+      return "Idle";
+    case "loading":
+      return "Loading";
+    default: {
+      const unreachable: never = status; // errors if a case is missing
+      return unreachable;
+    }
+  }
+}
+```
+
+### 10. Typing Third-Party Libraries
+
+Most packages ship their own types; others have them on DefinitelyTyped (`npm i -D @types/node`). If none exist, declare them yourself:
+
+```typescript
+// types/legacy-lib.d.ts
+declare module "legacy-lib" {
+  export function formatDate(date: Date, pattern: string): string;
+}
+```

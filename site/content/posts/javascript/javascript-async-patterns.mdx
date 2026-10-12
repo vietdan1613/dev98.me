@@ -1,0 +1,122 @@
+---
+title: "Async Patterns"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#JavaScript']
+date: 2026-10-12
+thumbnailText: JavaScript
+---
+
+### 1. What Is Asynchronous JavaScript?
+
+Asynchronous programming allows JavaScript to start an operation and continue executing other code while waiting for the result.
+
+It is useful for tasks such as fetching API data, reading files, and handling timers.
+
+```javascript
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Async operation");
+}, 1000);
+
+console.log("End");
+
+// Start
+// End
+// Async operation
+```
+
+JavaScript does not wait for the timer to finish before executing the next statement.
+
+### 2. Callbacks
+
+A callback is a function passed to another function to be called later or when a particular operation completes.
+
+```javascript
+function fetchData(callback) {
+  setTimeout(() => {
+    callback("Data loaded");
+  }, 1000);
+}
+
+fetchData((data) => {
+  console.log(data);
+});
+```
+
+Callbacks are simple, but deeply nested callbacks can lead to **Callback Hell**, making code difficult to read and maintain.
+
+### 3. Promises
+
+A Promise represents the eventual success or failure of an asynchronous operation.
+
+A Promise has three states: `pending`, `fulfilled`, and `rejected`.
+
+```javascript
+fetch("/api/users")
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error("Failed to fetch users");
+    }
+
+    return response.json();
+  })
+  .then((users) => console.log(users))
+  .catch((error) => console.error(error));
+```
+
+Promises help avoid deeply nested callbacks and provide a consistent way to handle asynchronous results and errors.
+
+Useful methods include:
+
+- `Promise.all()` — waits for all promises to fulfill, or rejects when one rejects.
+- `Promise.any()` — fulfills with the first fulfilled promise, or rejects if all reject.
+
+### 4. Async/Await
+
+`async/await` provides a more readable way to work with Promises.
+
+An `async` function always returns a Promise, and `await` pauses that function until the awaited Promise settles. It does not block the JavaScript thread.
+
+```javascript
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch users");
+    }
+
+    const users = await response.json();
+
+    console.log(users);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+getUsers();
+```
+
+**Best practice:** Use `try/catch` when you need to handle errors from awaited operations.
+
+### 5. Generators
+
+Generators are functions that can pause and resume execution using `yield`.
+
+```javascript
+function* generateNumbers() {
+  yield 1;
+  yield 2;
+  yield 3;
+}
+
+const numbers = generateNumbers();
+
+console.log(numbers.next().value); // 1
+console.log(numbers.next().value); // 2
+console.log(numbers.next().value); // 3
+```
+
+Generators are useful for custom iterators and lazy sequences. They can also support asynchronous workflows, although `async/await` is usually simpler for everyday asynchronous code.

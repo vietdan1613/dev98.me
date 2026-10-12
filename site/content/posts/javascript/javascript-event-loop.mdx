@@ -1,0 +1,111 @@
+---
+title: "Event Loop"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#JavaScript']
+date: 2026-10-12
+thumbnailText: JavaScript
+---
+
+JavaScript runs on a **single thread**: it can only execute one piece of code at a time. Yet it handles timers, network requests, and user clicks without freezing. The **Event Loop** is what makes this possible. It decides **what runs next** once the current code finishes.
+
+### 1. Call Stack
+
+The call stack is where JavaScript executes code. Each function call is pushed onto the stack and popped off when it returns, following **LIFO (Last In, First Out)**.
+
+```javascript
+function greet() {
+  console.log("Hello");
+}
+
+function run() {
+  greet();
+}
+
+run();
+```
+
+```text
+push run()  →  push greet()  →  console.log("Hello")  →  pop greet()  →  pop run()
+```
+
+While the stack has something on it, **nothing else can run**. Callbacks from timers, Promises, or events must wait until the stack is empty.
+
+### 2. Queues
+
+When asynchronous work finishes, its callback is not executed immediately. It is placed in a **queue** to wait for its turn. There are two main queues:
+
+```text
++-------------------------------+     +-------------------------------+
+|    Macrotask Queue (Tasks)    |     |        Microtask Queue        |
+|-------------------------------|     |-------------------------------|
+| setTimeout / setInterval      |     | Promise .then / .catch        |
+| DOM events (click, input...)  |     | await (code after it)         |
+| Network / I/O callbacks       |     | queueMicrotask()              |
+| MessageChannel                |     | MutationObserver              |
++-------------------------------+     +-------------------------------+
+```
+
+Both queues are **FIFO (First In, First Out)**, but they have **different priorities**.
+
+### 3. Macrotasks
+
+A **macrotask** (called a *task* in the HTML spec) is a larger unit of work. The initial script itself is the first macrotask.
+
+```javascript
+setTimeout(() => console.log("Timeout"), 0);
+```
+
+Even with a `0` delay, the callback goes into the macrotask queue and must wait until:
+
+1. The current code finishes.
+2. **All** microtasks are processed.
+
+The delay is a **minimum**, not a guarantee.
+
+### 4. Microtasks
+
+A **microtask** is a small, high-priority job that runs **right after the current code finishes**, before the next macrotask.
+
+```javascript
+Promise.resolve().then(() => console.log("Promise"));
+queueMicrotask(() => console.log("Microtask"));
+```
+
+The important rule: the microtask queue is **drained completely**. If a microtask schedules another microtask, that one also runs before any macrotask.
+
+```javascript
+function loop() {
+  Promise.resolve().then(loop);
+}
+
+loop(); // Starves the page: timers, clicks, and rendering never get a turn
+```
+
+### 5. How the Event Loop Works
+
+The Event Loop repeats the same cycle forever:
+
+```text
+          +-----------------------------------+
+          | 1. Run one macrotask              |
+          |    (the script, a timer, a click) |
+          +-----------------+-----------------+
+                            |
+                            v
+          +-----------------------------------+
+          | 2. Run ALL microtasks             |
+          |    (until the queue is empty)     |
+          +-----------------+-----------------+
+                            |
+                            v
+          +-----------------------------------+
+          | 3. Render if needed               |
+          |    (style, layout, paint)         |
+          +-----------------+-----------------+
+                            |
+                            v
+                  back to step 1
+```
+
+In short: **one macrotask → all microtasks → render → repeat.**

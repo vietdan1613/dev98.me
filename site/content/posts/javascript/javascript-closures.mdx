@@ -1,0 +1,84 @@
+---
+title: "Closures"
+category: JavaScript
+author: Daniel Nguyen
+tags: ['#JavaScript']
+date: 2026-10-12
+thumbnailText: JavaScript
+---
+
+**Meta description:** Learn JavaScript closures with simple examples, including lexical scope, private state, and common mistakes with loops.
+
+### 1. What Is a Closure?
+
+A **closure** is a function that can access variables from its outer scope, even after the outer function has finished executing.
+
+```javascript
+function outer() {
+  const message = "Hello, JavaScript!";
+
+  return () => {
+    console.log(message);
+  };
+}
+
+const myFunc = outer();
+
+myFunc(); // Hello, JavaScript!
+```
+
+Even though `outer()` has finished executing, the returned function can still access `message`. This is a closure.
+
+### 2. How Does a Closure Remember Variables?
+
+Closures retain access to variables in their lexical environment, allowing them to preserve state between function calls.
+
+```javascript
+function createCounter() {
+  let count = 0;
+
+  return () => {
+    count++;
+    return count;
+  };
+}
+
+const counter = createCounter();
+
+console.log(counter()); // 1
+console.log(counter()); // 2
+console.log(counter()); // 3
+```
+
+The `count` variable persists between calls because the returned function maintains access to it.
+
+### 3. Practical Uses of Closures
+
+Closures are commonly used for:
+
+- **Private state:** Keep data accessible only through specific functions.
+- **Callbacks:** Access variables inside event handlers.
+- **Function factories:** Create functions based on input parameters.
+- **React:** Understand callbacks, state snapshots, and stale closures.
+
+Example of private state:
+
+```javascript
+function createUser() {
+  let name = "Viet";
+
+  return {
+    getName: () => name,
+    setName: (newName) => {
+      name = newName;
+    },
+  };
+}
+
+const user = createUser();
+
+user.setName("Alex");
+
+console.log(user.getName()); // Alex
+console.log(user.name);      // undefined
+```
