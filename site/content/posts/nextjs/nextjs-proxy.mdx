@@ -30,7 +30,7 @@ export function proxy(request: NextRequest) {
 }
 ```
 
-## Use `matcher` when needed
+### Use `matcher` when needed
 
 You usually don't want Proxy to run for every route. Use `matcher` to limit it:
 
@@ -41,6 +41,69 @@ export const config = {
 ```
 
 Now Proxy runs for `/admin` and nested routes, which is useful for things like checking a cookie before accessing an admin area.
+
+## Real-world example
+
+Here are three things my own `proxy.ts` does.
+
+### 1. Skip technical routes
+
+Sitemaps, `robots.txt`, API calls and Next.js build files don't need any proxy logic, so they go straight through:
+
+```ts
+if (
+  pathname === "/sitemap.xml" ||
+  pathname === "/robots.txt" ||
+  pathname === "/favicon.ico" ||
+  pathname.startsWith("/api/") ||
+  pathname.startsWith("/_next/")
+) {
+  return NextResponse.next();
+}
+```
+
+### 2. Gate admin pages behind login
+
+Visitors to `/admin/...` without auth cookies are redirected to `/admin/login?redirect=...`. Logged-in users who open the login page are sent to `/admin`.
+
+```ts
+function handleAdminAuth(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const isLoginPage = pathname === "/admin/login";
+  // UX-only gate: FastAPI remains the real security boundary.
+  const authenticated = hasAuthCookies(request.cookies);
+
+  if (!authenticated && !isLoginPage) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/admin/login";
+    loginUrl.search = "";
+    if (pathname !== "/admin") {
+      loginUrl.searchParams.set("redirect", pathname);
+    }
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // ...
+}
+```
+
+Note the comment: this check is only for user experience. It only looks for the cookies, it doesn't verify them. The FastAPI backend does the real security checks on every request.
+
+### 3. Add a missing language prefix
+
+Paths without a language get a permanent redirect. `/plants/x` becomes `/vi/plants/x` with a **308** redirect, so Google moves the page's ranking to the `/vi` URL.
+
+```ts
+const hasLocale = locales.some(
+  (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
+);
+
+if (!hasLocale) {
+  const url = request.nextUrl.clone();
+  url.pathname = `/vi${pathname}`;
+  return NextResponse.redirect(url, 308);
+}
+```
 
 ## Don't put everything in Proxy
 
