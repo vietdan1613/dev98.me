@@ -9,7 +9,14 @@ thumbnailText: Next.js
 
 TypeScript checks types during development, but it cannot validate data at runtime. A customer might submit an invalid phone number, an empty name, or an incomplete address.
 
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
+
+![Data → Validation → ZodError or Application](./imgs/zod-validation.jpg)
+
+</div>
+
 Zod is a TypeScript-first schema validation library. It validates runtime data, transforms values, and infers TypeScript types directly from schemas. It is useful for validating forms, API responses, environment variables, and other untrusted data.
+
 
 ### 1. Define the schema
 
