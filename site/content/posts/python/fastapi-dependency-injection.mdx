@@ -1,5 +1,5 @@
 ---
-title: "Dependency Injection in FastAPI"
+title: "FastAPI: Dependency Injection"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -9,9 +9,13 @@ thumbnailText: FastAPI
 
 **Dependency Injection** (DI) lets a function declare what it needs while another component provides it, reducing coupling and making the code easier to test and maintain.
 
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
+
 ![FastAPI Dependency Injection — get_db and get_current_admin injected into routes, services stay plain Python](./imgs/fastapi-dependency-injection.jpg)
 
-# The basic idea
+</div>
+
+### The basic idea
 
 Without DI, a route might create its own database session:
 
@@ -22,9 +26,7 @@ async def get_plants():
     await db.close()
 ```
 
-The route now has to know how to create and clean up the database session.
-
-With DI:
+The route now has to know how to create and clean up the database session. With DI:
 
 ```python
 async def get_plants(
@@ -33,15 +35,11 @@ async def get_plants(
     ...
 ```
 
-The route only says: **"I need a database session."** FastAPI takes care of getting it.
+The route only says: **"I need a database session."** FastAPI takes care of getting it. This separates **what the route needs** from **how that dependency is created**.
 
-This separates **what the route needs** from **how that dependency is created**.
+### Dependencies can depend on dependencies
 
-# Dependencies can depend on dependencies
-
-DI becomes more useful when dependencies are composed.
-
-We have `get_current_admin`:
+DI becomes more useful when dependencies are composed. We have `get_current_admin`:
 
 ```python
 async def get_current_admin(
@@ -53,7 +51,7 @@ async def get_current_admin(
 
 `get_current_admin` needs a database session, so it depends on `get_db`.
 
-# Why DI is useful
+### Why DI is useful
 
 The main benefit is **loose coupling**. Routes don't need to know how dependencies are created, authentication logic doesn't need to be repeated, and services don't need to depend on FastAPI.
 

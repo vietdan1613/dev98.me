@@ -1,5 +1,5 @@
 ---
-title: "Redis and FastAPI – When Should You Use It?"
+title: "FastAPI: Redis"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI', '#Redis']
@@ -7,47 +7,11 @@ date: 2026-10-20
 thumbnailText: FastAPI
 ---
 
-Redis is a powerful tool for improving application performance and handling data efficiently. However, not every FastAPI project needs Redis.
+Redis is an in-memory data store commonly used for caching, rate limiting, and session storage. In a FastAPI application, Redis can help reduce database queries and share data across multiple application workers.
 
-In this article, we'll explore what Redis is, when to use it, and how to integrate it with FastAPI.
+### 1. Run Redis with Docker
 
-## I. What Is Redis?
-
-Redis (Remote Dictionary Server) is an in-memory data store that keeps data primarily in RAM, allowing very fast read and write operations.
-
-Redis is commonly used for caching, session storage, and message queues.
-
-### Key Features
-
-- **In-memory storage:** Provides fast data access.
-- **Persistence:** Can save data to disk for recovery.
-- **Data structures:** Supports Strings, Lists, Sets, Hashes, and Sorted Sets.
-- **TTL (Time To Live):** Automatically expires data after a specified period.
-
-### When Should You Use Redis?
-
-| Use Case | Example |
-|---|---|
-| Caching | Store API results to reduce database queries |
-| Rate limiting | Limit requests per IP address |
-| Session storage | Store user session data |
-| Background jobs | Support task queues |
-| Counters | Count page views or requests |
-
-**When don't you need Redis?**
-
-- Your application is small and has low traffic.
-- PostgreSQL already meets your performance requirements.
-- You need complex relational queries and reliable transactions.
-- You don't have a specific problem that Redis solves.
-
-> Don't use Redis just because it's fast. Use it when you actually need it.
-
-## II. Integrating Redis with FastAPI
-
-### 1. Installation
-
-You can run Redis using Docker:
+The easiest way to run Redis locally is with Docker:
 
 ```bash
 docker run -d \
@@ -56,70 +20,162 @@ docker run -d \
   redis:7-alpine
 ```
 
-Install the Python packages:
+Verify that Redis is running:
+
+```bash
+docker exec -it redis redis-cli ping
+```
+
+Expected output:
+
+```text
+PONG
+```
+
+Redis is now available on `localhost:6379`.
+
+### 2. Install Dependencies
+
+Install FastAPI, Uvicorn, and the Redis Python client:
 
 ```bash
 pip install fastapi uvicorn redis
 ```
 
-### 2. Connecting to Redis
+The `redis` package provides an asynchronous client through `redis.asyncio`, which is suitable for FastAPI's async endpoints.
 
-Here's a simple example using Redis's asynchronous client with FastAPI:
+### 3. Configure the Redis Connection
+
+Create the following project structure:
+
+```text
+fastapi-app/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   └── redis.py
+└── requirements.txt
+```
+
+Define the Redis connection in `app/redis.py`:
 
 ```python
 import redis.asyncio as redis
-from fastapi import FastAPI
 
-app = FastAPI()
-
-@app.get("/items/{item_id}")
-async def get_item(item_id: str):
-    async with redis.from_url(
-        "redis://localhost:6379",
-        decode_responses=True
-    ) as client:
-        value = await client.get(f"item:{item_id}")
-
-    return {"item_id": item_id, "value": value}
+redis_client = redis.from_url(
+    "redis://localhost:6379/0",
+    decode_responses=True,
+)
 ```
 
-### 3. Common Use Cases
+The connection URL follows this format:
 
-**a. API Caching**
+```text
+redis://[username]:[password]@[host]:[port]/[database]
+```
 
-Store database query results in Redis to avoid repeated queries.
+- `localhost`: Redis host.
+- `6379`: Default Redis port.
+- `0`: Redis database index.
+- `decode_responses=True`: Returns strings instead of bytes for text responses.
+
+For local development without authentication, the username and password can be omitted.
+
+### 4. Manage the Connection Lifecycle
+
+Use FastAPI's lifespan handler to initialize and close the Redis client.
 
 ```python
-cached = await redis_client.get("products")
+# app/main.py
+from contextlib import asynccontextmanager
 
-if cached:
-    return json.loads(cached)
+from fastapi import FastAPI, Request
+from app.redis import redis_client
 
-products = await get_products_from_db()
 
-await redis_client.set(
-    "products",
-    json.dumps(products),
-    ex=300
-)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await redis_client.ping()
+    app.state.redis = redis_client
 
-return products
+    try:
+        yield
+    finally:
+        await redis_client.aclose()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.get("/health/redis")
+async def redis_health(request: Request):
+    await request.app.state.redis.ping()
+    return {"status": "Redis is connected"}
 ```
 
-The `ex=300` parameter means the cache expires after 300 seconds (5 minutes).
+The lifespan handler runs before the application starts accepting requests and cleans up the client during shutdown.
 
-When the underlying data changes, remember to invalidate or update the cache.
+The `ping()` call verifies connectivity. If Redis is unavailable, the application will fail to start rather than silently running without its required dependency.
 
-**b. Rate Limiting**
+### 5. Test Redis Operations
 
-Redis can count requests from each IP address using `INCR` and reject requests that exceed a defined limit.
+Add endpoints to store and retrieve values:
 
-For example, allow a maximum of 10 requests per minute.
+```python
+from fastapi import HTTPException
 
-In production, use an atomic operation to handle counting and expiration safely.
 
-**c. Session Storage**
+@app.put("/cache/{key}")
+async def set_cache(
+    key: str,
+    value: str,
+    request: Request,
+):
+    client = request.app.state.redis
 
-Redis can store session data with an expiration time. When the session expires, Redis automatically removes the corresponding data.
+    await client.set(key, value, ex=300)
 
-This is useful when an application runs on multiple servers that need to share session state.
+    return {"message": "Value stored successfully"}
+
+
+@app.get("/cache/{key}")
+async def get_cache(key: str, request: Request):
+    client = request.app.state.redis
+    value = await client.get(key)
+
+    if value is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Cache key not found",
+        )
+
+    return {"key": key, "value": value}
+```
+
+The `ex=300` option sets a TTL of five minutes. Redis automatically expires the key after that period.
+
+For a real application, validate keys and values, avoid exposing arbitrary cache access, and use an appropriate serialization format for structured data.
+
+### 6. Run the Application
+
+Start the FastAPI development server:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Open the interactive API documentation at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Try the following endpoints:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/health/redis` | Check the Redis connection |
+| PUT | `/cache/{key}?value=hello` | Store a value |
+| GET | `/cache/{key}` | Retrieve a value |
+
+For example, calling `PUT /cache/greeting?value=hello` stores the value `hello` under the key `greeting`. A subsequent GET request returns that value.

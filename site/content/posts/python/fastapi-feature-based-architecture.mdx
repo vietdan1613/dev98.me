@@ -1,5 +1,5 @@
 ---
-title: "FastAPI Feature-Based Architecture"
+title: "FastAPI: Feature-Based Architecture"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -7,11 +7,9 @@ date: 2026-10-16
 thumbnailText: FastAPI
 ---
 
-As a FastAPI application grows, organizing everything into global folders such as `routers`, `schemas`, `services`, and `models` can become difficult to maintain.
+As a FastAPI application grows, organizing everything into global folders such as `routers`, `schemas`, `services`, and `models` can become difficult to maintain. A feature-based structure groups code by **business domain** instead.
 
-A feature-based structure groups code by **business domain** instead.
-
-## The Overall Structure
+### The Overall Structure
 
 ```text
 app/
@@ -44,6 +42,12 @@ app/
     ├── admins/
     ├── categories/
     ├── plants/
+    │   ├── router.py
+    │   ├── public_router.py
+    │   ├── service.py
+    │   ├── schemas.py
+    │   ├── models.py
+    │   └── dependencies.py
     ├── customers/
     ├── orders/
     ├── payments/
@@ -54,7 +58,7 @@ app/
     └── chat/
 ```
 
-## Main Components
+### Main Components
 
 ### `main.py`
 
@@ -136,11 +140,3 @@ database
 ```
 
 `schemas` define the API data contract, while `dependencies` contain reusable dependencies for that feature.
-
-### `knowledge/`
-
-Handles the application's RAG and Weaviate functionality, such as indexing plants, FAQs, and blogs and retrieving relevant information.
-
-### `chat/`
-
-Handles the chatbot API and DeepSeek integration. It can use the `knowledge` feature to retrieve relevant information before generating a response.

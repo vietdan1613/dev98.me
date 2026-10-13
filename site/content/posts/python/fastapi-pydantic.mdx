@@ -1,5 +1,5 @@
 ---
-title: "Pydantic in FastAPI"
+title: "FastAPI: Pydantic"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -9,7 +9,11 @@ thumbnailText: Pydantic
 
 Pydantic is the **data validation layer** in FastAPI. It helps validate, transform, and serialize data before it reaches your business logic.
 
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
+
 ![Pydantic — raw JSON validated into Python data](./imgs/fastapi-pydantic.jpg)
+
+</div>
 
 `BaseModel` is the foundation of Pydantic models. It defines the shape and types of your data.
 
@@ -23,7 +27,7 @@ class Product(BaseModel):
 
 Pydantic checks that the data matches this structure.
 
-# Field()
+### Field()
 
 `Field()` adds simple validation rules to fields.
 
@@ -42,7 +46,7 @@ Here:
 
 Use `Field()` for common validation rules such as length, range, and defaults.
 
-# field_validator
+### field_validator
 
 Use `field_validator` when a field needs a custom rule.
 
@@ -67,7 +71,7 @@ Field()           → simple rules
 field_validator   → custom rule for one field
 ```
 
-# model_validator
+### model_validator
 
 Use `model_validator` when validation depends on multiple fields.
 
@@ -98,11 +102,11 @@ field_validator → one field
 model_validator → multiple fields
 ```
 
-# model_validate() / model_dump()
+### model_validate() / model_dump()
 
 These are two important Pydantic v2 methods.
 
-## `model_validate()`
+**model_validate()**
 
 Use it to validate external data:
 
@@ -114,7 +118,7 @@ It converts the input into a validated Pydantic object.
 
 To validate an object such as a SQLAlchemy row instead of a dict, add `model_config = ConfigDict(from_attributes=True)` to the model.
 
-## `model_dump()`
+**model_dump()**
 
 Use it to convert a Pydantic model into a dictionary:
 

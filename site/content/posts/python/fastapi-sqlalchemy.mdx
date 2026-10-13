@@ -1,5 +1,5 @@
 ---
-title: "SQLAlchemy in FastAPI: A Simple Guide"
+title: "FastAPI: Setting Up a Database"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI', '#SQLAlchemy']
@@ -7,101 +7,116 @@ date: 2026-10-10
 thumbnailText: FastAPI
 ---
 
-FastAPI handles HTTP requests, while SQLAlchemy handles database operations. Together, they provide a clean way to build database-driven APIs using Python.
+FastAPI handles HTTP requests, while SQLAlchemy manages database operations. Together, they provide a simple way to build database-driven APIs using Python.
 
-This guide covers the essential concepts using a simple plant shop API.
-
-## 1. What Is SQLAlchemy?
-
-SQLAlchemy is a Python SQL toolkit and ORM (Object-Relational Mapper).
-
-It maps Python classes to database tables, attributes to columns, and objects to rows.
-
-Instead of writing raw SQL:
-
-```sql
-SELECT * FROM plants WHERE price < 100;
-```
-
-You can use SQLAlchemy:
-
-```python
-select(Plant).where(Plant.price < 100)
-```
-
-## 2. Connect to the Database
-
-For asynchronous PostgreSQL access, install the required packages:
+### 1. Install Dependencies
 
 ```bash
-pip install fastapi uvicorn "sqlalchemy[asyncio]" asyncpg
+pip install fastapi uvicorn "sqlalchemy[asyncio]" asyncpg alembic
 ```
 
-SQLAlchemy uses three important components:
+- **SQLAlchemy:** ORM and database toolkit.
+- **asyncpg:** Async PostgreSQL driver.
+- **Alembic:** Database schema migrations.
 
-- **Engine:** Manages the database connection pool.
-- **Session:** Handles queries and database changes.
-- **Session factory:** Creates new sessions when needed.
+### 2. Configure the Database
 
-Create the engine once and use FastAPI's `Depends()` to provide a session for each request.
+Create `app/database.py` to configure the engine, session factory, and database dependency.
 
-## 3. Define Models and Schemas
+```python
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/plant_shop"
+
+engine = create_async_engine(DATABASE_URL)
+
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    expire_on_commit=False,
+)
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        yield session
+```
+
+- **Engine:** Manages database connections.
+- **Session factory:** Creates database sessions.
+- **`get_db()`:** Provides a session to each request and closes it afterward.
+
+Use environment variables to store database credentials in real applications.
+
+### 3. Define a Database Model
 
 A SQLAlchemy model represents a database table.
 
-For example, a `Plant` model might contain:
-
-- `id`: Primary key.
-- `name`: Plant name.
-- `price`: Plant price.
-- `stock`: Available quantity.
-- `category_id`: Foreign key referencing a category.
-
-Pydantic schemas serve a different purpose: they validate incoming requests and define the data returned by the API.
-
-**Best practice:** Keep database models and API schemas separate to avoid accidentally exposing internal fields.
-
-## 4. Implement CRUD Operations
-
-CRUD stands for Create, Read, Update, and Delete.
-
-| Operation | SQLAlchemy |
-|---|---|
-| Create | `db.add(plant)` |
-| Read by ID | `await db.get(Plant, plant_id)` |
-| Query | `await db.execute(select(Plant))` |
-| Update | Modify attributes and commit |
-| Delete | `await db.delete(plant)` |
-
-For asynchronous sessions, remember to use `await` for database operations that perform I/O, such as queries, commits, and deletes.
-
-Call `await db.commit()` to persist changes.
-
-## 5. Handle Relationships
-
-Suppose each plant belongs to a category.
-
-You might want to access:
-
 ```python
-plant.category.name
+from decimal import Decimal
+
+from sqlalchemy import Integer, Numeric, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Plant(Base):
+    __tablename__ = "plants"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    stock: Mapped[int] = mapped_column(Integer, default=0)
 ```
 
-However, implicit lazy loading can cause `MissingGreenlet` errors with async SQLAlchemy.
+Keep SQLAlchemy models separate from Pydantic schemas, which validate request data and define API responses.
 
-Use `selectinload()` to load related data explicitly:
+### 4. Use the Database in FastAPI
+
+Use `Depends()` to inject a database session into an endpoint.
 
 ```python
-query = select(Plant).options(
-    selectinload(Plant.category)
-)
+from fastapi import Depends, FastAPI
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.models import Plant
+
+app = FastAPI()
+
+
+@app.get("/plants")
+async def get_plants(
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Plant))
+    return result.scalars().all()
 ```
 
-This can also prevent the **N+1 query problem**, where loading many plants triggers an additional query for each plant's category.
+To insert a record:
 
-## 6. Manage Database Migrations
+```python
+plant = Plant(name="Monstera", price=250000, stock=10)
 
-Use Alembic to track database schema changes.
+db.add(plant)
+await db.commit()
+await db.refresh(plant)
+```
+
+Use `await` for asynchronous database operations such as queries and commits. Remember to validate input and define response schemas in production APIs.
+
+### 5. Manage Database Migrations
+
+Use Alembic to track schema changes instead of relying on `create_all()` in production.
 
 ```bash
 alembic init -t async migrations
@@ -109,6 +124,4 @@ alembic revision --autogenerate -m "create plants"
 alembic upgrade head
 ```
 
-Review generated migrations before applying them. Autogenerate does not detect every schema change correctly, especially certain column renames.
-
-For production applications, use migrations instead of relying on `Base.metadata.create_all()` to manage schema updates.
+Review generated migrations before applying them. Configure Alembic's `target_metadata` to use `Base.metadata`.

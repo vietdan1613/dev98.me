@@ -1,5 +1,5 @@
 ---
-title: "Rate Limiting in FastAPI with SlowAPI"
+title: "FastAPI: Rate Limiting with SlowAPI"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -7,30 +7,15 @@ date: 2026-10-19
 thumbnailText: FastAPI
 ---
 
-## 1. What Is Rate Limiting?
-
 Rate limiting controls **how many requests a client can make within a specific period of time**.
 
 For example, an IP address may be allowed to attempt login only five times per minute.
 
-Without rate limiting, an API can be abused to:
+### 1. What Is SlowAPI?
 
-- Guess passwords through brute-force attacks.
-- Spam order forms and reviews.
-- Increase AI API costs through excessive requests.
-- Consume server resources and slow down other users.
+[SlowAPI](https://github.com/laurentS/slowapi) is a rate-limiting library for FastAPI and Starlette, adapted from Flask-Limiter. It uses the [`limits`](https://limits.readthedocs.io/) library to manage counters and enforce request limits.
 
-When a client exceeds the configured limit, the API returns **HTTP 429 Too Many Requests**. A `Retry-After` header can tell the client how many seconds to wait before retrying.
-
-## 2. What Is SlowAPI?
-
-[SlowAPI](https://github.com/laurentS/slowapi) is a rate-limiting library for FastAPI and Starlette, adapted from Flask-Limiter.
-
-It uses the [`limits`](https://limits.readthedocs.io/) library to manage counters and enforce request limits.
-
-Instead of implementing the entire counting mechanism yourself, you can apply limits directly to FastAPI endpoints using decorators.
-
-## 3. How Does Rate Limiting Work?
+### 2. How Does Rate Limiting Work?
 
 <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
@@ -51,7 +36,7 @@ Counters are stored in a storage backend:
 - `memory://` stores counters inside the Python process.
 - `redis://` stores counters in Redis, allowing multiple workers or servers to share them.
 
-## 4. Install SlowAPI
+### 3. Install SlowAPI
 
 Install the required libraries:
 
@@ -61,7 +46,7 @@ pip install slowapi redis
 
 SlowAPI uses the `limits` library internally to manage rate limits.
 
-### 1. Initialize the Rate Limiter
+### a. Initialize the Rate Limiter
 
 Create a shared limiter for your FastAPI application:
 
@@ -97,7 +82,7 @@ Here's what each option does:
 
 In this example, `memory://` is a simple choice for local development and experimentation.
 
-### 2. Limit an Individual Endpoint
+### b. Limit an Individual Endpoint
 
 Use the `@limiter.limit()` decorator to restrict requests to a specific endpoint:
 
@@ -125,7 +110,7 @@ Common limit formats include:
 | `100/hour` | 100 requests per hour |
 | `10/minute;200/day` | Both limits apply simultaneously |
 
-### 3. Set a Global Rate Limit
+### c. Set a Global Rate Limit
 
 Besides individual endpoint limits, you can configure a default limit for the application.
 
@@ -151,39 +136,3 @@ You can exclude endpoints such as health checks:
 async def health():
     return {"status": "ok"}
 ```
-
-In production, verify the middleware and exception-handler configuration against the SlowAPI version you use.
-
-### 4. Why Does Production Often Need Redis?
-
-With `memory://`, each worker maintains its own counters.
-
-Suppose your application runs four workers, each enforcing a limit of five requests per minute. A client may exceed the intended limit because each worker only knows about its own requests.
-
-Redis solves this by storing counters in a shared backend:
-
-```python
-limiter = Limiter(
-    key_func=get_remote_address,
-    storage_uri="redis://redis:6379/0",
-    headers_enabled=True,
-)
-```
-
-With Docker Compose, Redis can run as a separate service:
-
-```yaml
-services:
-  redis:
-    image: redis:7-alpine
-    command:
-      - redis-server
-      - --save
-      - ""
-      - --appendonly
-      - "no"
-```
-
-This configuration disables RDB snapshots and AOF persistence because rate-limit counters can be recreated.
-
-Redis is particularly useful when running multiple workers or servers. If your application runs a single worker on a small VPS, `memory://` may be simpler, provided you accept that counters reset when the process restarts.

@@ -1,5 +1,5 @@
 ---
-title: "Testing FastAPI APIs: A Simple Guide"
+title: "FastAPI: Testing"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI', '#Testing']
@@ -9,19 +9,13 @@ thumbnailText: FastAPI
 
 How do you know your API still works after changing the code? Automated tests help catch bugs before they reach production.
 
-This guide shows how to test a FastAPI application using **pytest, HTTPX, and a separate test database**.
-
-## 1. Why Test APIs?
-
 API tests verify the complete request flow:
 
 ```text
 Request → Validation → Business Logic → Database → Response
 ```
 
-They help ensure your endpoints return the correct status codes and data, handle invalid input, and enforce authentication.
-
-## 2. Install the Dependencies
+### 1. Install the Dependencies
 
 ```bash
 pip install pytest pytest-asyncio httpx
@@ -31,7 +25,7 @@ pip install pytest pytest-asyncio httpx
 - **pytest-asyncio:** Supports asynchronous tests.
 - **HTTPX:** Sends HTTP requests directly to your FastAPI application without starting a real server.
 
-## 3. Write Your First Test
+### 2. Write Your First Test
 
 Suppose your application has a health endpoint:
 
@@ -51,41 +45,27 @@ async def test_health(client):
     assert response.json() == {"status": "ok"}
 ```
 
-Use `AsyncClient` with `ASGITransport` to call the application in memory.
-
 Run your tests:
 
 ```bash
 pytest -v
 ```
 
-Every test follows three steps:
-
-1. **Arrange:** Prepare the required data.
-2. **Act:** Send the request.
-3. **Assert:** Verify the response.
-
-## 4. Use Fixtures
+### 3. Use Fixtures
 
 A fixture provides reusable test setup, such as an HTTP client, database session, or test user.
 
-Put shared fixtures in `tests/conftest.py`. Pytest discovers them automatically.
+Put shared fixtures in `tests/conftest.py`. Pytest discovers them automatically. This avoids repeating setup code in every test and keeps your tests easier to maintain.
 
-This avoids repeating setup code in every test and keeps your tests easier to maintain.
+### 4. Use a Separate Test Database
 
-## 5. Use a Separate Test Database
-
-Never run tests against your production database.
-
-Use a dedicated test database and override FastAPI dependencies with `app.dependency_overrides`.
+Never run tests against your production database. Use a dedicated test database and override FastAPI dependencies with `app.dependency_overrides`.
 
 For example, replace `get_db` with a dependency that creates sessions against your test database.
 
-**Best practice:** Apply the same Alembic migrations used in production so your tests also verify that the database schema can be created correctly.
+### 5. Test Different Scenarios
 
-## 6. Test Different Scenarios
-
-For a plant shop API, you should test both successful requests and failure cases.
+You should test both successful requests and failure cases.
 
 | Scenario | Expected status |
 |---|---:|
@@ -97,13 +77,3 @@ For a plant shop API, you should test both successful requests and failure cases
 | Submit a duplicate resource | 409, if defined by your API |
 
 Also verify the response body and confirm that database changes were actually saved.
-
-## 7. Test Authentication and External Services
-
-For protected endpoints, test both authorized and unauthorized requests.
-
-For external services such as AI APIs, email providers, or payment gateways, use mocks or fake implementations instead of making real network calls.
-
-This keeps tests fast, predictable, and inexpensive.
-
-FastAPI dependency overrides make it easy to replace real services with test implementations.

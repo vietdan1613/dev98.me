@@ -1,5 +1,5 @@
 ---
-title: "Exception Handling in FastAPI"
+title: "FastAPI: Exception Handling"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -9,16 +9,9 @@ thumbnailText: FastAPI
 
 Building a production-ready API is not only about handling successful requests. A good API should also handle failures consistently, safely, and predictably.
 
-We want to:
+> Services should raise meaningful exceptions. Global handlers should decide how those exceptions become HTTP responses.
 
-- Return consistent error responses.
-- Keep business logic clean.
-- Log unexpected failures properly.
-- Handle different types of errors in one centralized place.
-
-> **Services should raise meaningful exceptions. Global handlers should decide how those exceptions become HTTP responses.**
-
-## Create a Custom `AppException` 🛠️
+## Create a Custom `AppException`
 
 First, create a base exception for errors that belong to your application.
 
@@ -64,9 +57,7 @@ The exception can contain a few important pieces of information:
 - `error_message` — a human-readable message.
 - `error` — optional additional information.
 
-This gives the application a standardized way to represent errors.
-
-## Create Global Exception Handlers 🌐
+## Create Global Exception Handlers 
 
 Instead of handling errors inside every route, define exception handlers centrally.
 
@@ -101,7 +92,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 ```
 
-## Register the Handlers in `main.py` 🚀
+## Register the Handlers in `main.py`
 
 Once the handlers are created, register them with FastAPI:
 
@@ -111,17 +102,13 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 ```
 
-From this point on, FastAPI knows which handler should process each type of exception.
-
-So when a service raises:
+From this point on, FastAPI knows which handler should process each type of exception. So when a service raises:
 
 ```python
 raise AppException(...)
 ```
 
-FastAPI automatically sends it to the corresponding handler.
-
-## Create Specific Exceptions for Different Modules 📦
+## Create Specific Exceptions for Different Modules
 
 As the application grows, you may want different exception types for different areas.
 
@@ -135,17 +122,11 @@ AppException
 └── ExternalAPIException
 ```
 
-A database operation can raise `DBException`, while authentication logic can raise `AuthException`.
+A database operation can raise `DBException`, while authentication logic can raise `AuthException`. This makes errors easier to identify and organize without changing the global handling mechanism.
 
-This makes errors easier to identify and organize without changing the global handling mechanism.
+## Use Exceptions in Your Services
 
-All of them can still inherit from `AppException`, so they can be handled centrally.
-
-## Use Exceptions in Your Services 💬
-
-The service layer should focus on business logic instead of creating HTTP responses.
-
-For example, if a database operation fails:
+The service layer should focus on business logic instead of creating HTTP responses. For example, if a database operation fails:
 
 ```python
 try:

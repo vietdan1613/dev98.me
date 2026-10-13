@@ -1,0 +1,1511 @@
+---
+title: "FastAPI Interview"
+category: Unknown
+author: Daniel Nguyen
+tags: ['#Interview']
+date: 2000-01-14
+thumbnailText: Daily
+---
+
+## FastAPI Basics
+
+### 1. What is FastAPI?
+
+FastAPI is a modern Python web framework for building APIs. It uses standard Python type hints to handle request validation, response serialization, and automatic documentation. It's built on Starlette for the web parts and Pydantic for the data parts.
+
+The short answer for an interview: FastAPI lets you build production-ready REST APIs with less code than Flask and better performance than Django.
+
+### 2. Why is FastAPI popular?
+
+Three reasons come up in every interview answer:
+
+- **Speed:** FastAPI is one of the fastest Python frameworks, comparable to Node.js and Go.
+- **Type hints:** You write regular Python type annotations and FastAPI turns them into validation, docs, and IDE autocomplete.
+- **Async support:** Async is built into the library.
+
+With FastAPI, you end up with less boilerplate and fewer bugs from mismatched request formats.
+
+### 3. What is the difference between FastAPI and Flask?
+
+Flask is minimal and unopinionated. You get routing and templating, and you add everything else yourself, including validation and serialization.
+
+FastAPI includes those things by default. You get automatic request validation from type hints, automatic OpenAPI docs, and native async support without extra libraries.
+
+The downside is that FastAPI is more opinionated. If you want full control over every layer, Flask gives you more room. But if you want to have something usable fast, FastAPI wins.
+
+### 4. What is the difference between FastAPI and Django?
+
+Django is a full-stack framework with an ORM, admin panel, templating, and authentication. It's designed for building web applications end to end.
+
+FastAPI is API-first. It doesn't include an ORM or admin panel, and it doesn't try to. You bring your own database layer (usually SQLAlchemy or SQLModel) and focus on building the API.
+
+For a monolithic web app with server-rendered HTML, Django is the better option. For microservices, ML model APIs, or backend services talking to a separate frontend, FastAPI is a better fit.
+
+### 5. What is automatic API documentation?
+
+FastAPI generates interactive API docs from your code. You get two endpoints:
+
+- `/docs` serves a Swagger UI interface
+- `/redoc` serves a ReDoc interface
+
+Both are generated from the OpenAPI schema FastAPI builds from your type hints, Pydantic models, and route decorators. You don't write the docs. You write the code, and the docs stay in sync.
+
+### 6. How does FastAPI generate OpenAPI schemas?
+
+FastAPI generates the OpenAPI schema from your code. It inspects your routes, path parameters, Pydantic models, response models, and dependency signatures, and produces a JSON document that describes the whole API.
+
+You get the schema at `/openapi.json`, plus the Swagger UI at `/docs` and ReDoc at `/redoc`. OpenAPI generation rewards clean type hints, so always use Pydantic models with clear field names.
+
+You can customize the schema by passing metadata to `FastAPI()` and to each route:
+
+```python
+app = FastAPI(title="Orders API", version="1.2.0")
+
+@app.get("/orders", summary="List orders", tags=["orders"])
+def read_orders():
+    ...
+```
+
+## Routing and API Design
+
+How requests reach your code, and how to shape URLs, status codes, and list endpoints so the API is easy to use.
+
+### 1. How do you define a route?
+
+You use a decorator on a function. The decorator specifies the HTTP method and the path:
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/items")
+def read_items():
+    return {"items": []}
+```
+
+The function name doesn't matter for routing. What matters is the decorator (`@app.get`, `@app.post`, `@app.put`, `@app.delete`) and the path string.
+
+### 2. What are path parameters?
+
+Path parameters are values embedded in the URL path itself. You declare them with curly braces in the route and as function arguments:
+
+```python
+@app.get("/items/{item_id}")
+def read_item(item_id: int):
+    return {"item_id": item_id}
+```
+
+The type hint `int` tells FastAPI to validate and convert the value. If someone hits `/items/abc`, FastAPI returns a 422 error.
+
+### 3. What are query parameters?
+
+Query parameters are the key-value pairs after the `?` in a URL. In FastAPI, any function argument that isn't a path parameter is treated as a query parameter:
+
+```python
+@app.get("/items")
+def read_items(skip: int = 0, limit: int = 10):
+    return {"skip": skip, "limit": limit}
+```
+
+A request to `/items?skip=20&limit=5` gets `skip=20` and `limit=5`. Default values make the parameters optional.
+
+### 4. What REST principles does FastAPI encourage?
+
+FastAPI doesn't enforce REST, but its design makes REST easy to follow.
+
+The principles that come up in interviews:
+
+- **Resource-based URLs:** `/users/{id}/orders` instead of `/getUserOrders?id=5`.
+- **HTTP methods for actions:** GET reads, POST creates, PUT and PATCH update, DELETE removes. FastAPI's decorators map one to one.
+- **Statelessness:** each request contains everything the server needs. FastAPI dependencies make it easy to attach auth and context per request without hidden state.
+- **Consistent status codes:** 2xx for success, 4xx for client errors, 5xx for server errors.
+
+FastAPI won't stop you from breaking these principles. It just makes the correct pattern the easy one.
+
+### 5. Which HTTP status codes should you use?
+
+The codes that come up most in FastAPI interviews:
+
+| Code | Meaning |
+| --- | --- |
+| 200 OK | Successful GET, PUT, PATCH |
+| 201 Created | Successful POST that creates a resource |
+| 204 No Content | Successful DELETE or PUT with no response body |
+| 400 Bad Request | Malformed request the client should fix |
+| 401 Unauthorized | Missing or invalid authentication |
+| 403 Forbidden | Authenticated but not allowed |
+| 404 Not Found | Resource doesn't exist |
+| 409 Conflict | Request conflicts with current state, like a duplicate email on signup |
+| 422 Unprocessable Entity | Validation failed. FastAPI returns this automatically for Pydantic errors |
+| 500 Internal Server Error | Something broke on your side |
+
+You set the code with the `status_code` parameter on the decorator:
+
+```python
+@app.post("/users", status_code=201)
+def create_user(user: UserCreate):
+    return db.create(user)
+```
+
+### 6. How do you handle pagination?
+
+The two patterns are offset-based and cursor-based.
+
+Offset-based pagination uses `skip` and `limit`:
+
+```python
+@app.get("/items")
+def read_items(skip: int = 0, limit: int = 20):
+    return db.query(Item).offset(skip).limit(limit).all()
+```
+
+It's simple, and clients can jump to arbitrary pages. The downside is that deep pages get slow, because the database still has to skip every earlier row. It also breaks when items are inserted or deleted during pagination.
+
+Cursor-based pagination uses an opaque cursor pointing to the last item seen:
+
+```python
+@app.get("/items")
+def read_items(cursor: str | None = None, limit: int = 20):
+    return db.query_after(cursor, limit)
+```
+
+It's fast at any depth and stable under inserts, because you're always paging forward from a known position. The downside is that clients can't jump to page 47.
+
+Use offset pagination for admin dashboards and small datasets. Use cursor pagination for infinite scroll and large datasets.
+
+### 7. How do you handle filtering?
+
+Filtering usually happens through query parameters. Simple cases use plain parameters:
+
+```python
+@app.get("/orders")
+def read_orders(
+    status: str | None = None,
+    min_total: float | None = None,
+    customer_id: int | None = None,
+):
+    return db.filter_orders(status=status, min_total=min_total, customer_id=customer_id)
+```
+
+For anything with more than four or five filters, move them into a Pydantic model as a dependency:
+
+```python
+class OrderFilters(BaseModel):
+    status: str | None = None
+    min_total: float | None = None
+    customer_id: int | None = None
+
+@app.get("/orders")
+def read_orders(filters: OrderFilters = Depends()):
+    return db.filter_orders(**filters.model_dump(exclude_none=True))
+```
+
+Here you're balancing flexibility and safety. You can build a generic filter system that accepts any field and operator, but you also open the door to slow queries and injection risks.
+
+### 8. How do you handle API versioning?
+
+There are three patterns you should know:
+
+- **URL versioning:** `/v1/users` and `/v2/users`. Easiest to route, easiest to explain, and works with every client.
+- **Header versioning:** clients send an `Accept-Version` header. Cleaner URLs but harder to debug and cache.
+- **Query parameter versioning:** `/users?version=2`. Works, but rarely used in practice.
+
+URL versioning is the best choice most of the time. You mount separate routers under different prefixes:
+
+```python
+from fastapi import APIRouter
+
+v1_router = APIRouter(prefix="/v1")
+v2_router = APIRouter(prefix="/v2")
+
+app.include_router(v1_router)
+app.include_router(v2_router)
+```
+
+The downside of URL versioning is that clients tend to hardcode the version into their code, so that's something to be aware of.
+
+## Pydantic and Validation
+
+Pydantic is at the core of every FastAPI service. These questions cover validating what comes in and controlling what goes out.
+
+### 1. What role does Pydantic play?
+
+Pydantic handles data validation and serialization. You define your request and response shapes as Pydantic models, and FastAPI uses them to validate incoming JSON and serialize outgoing responses.
+
+```python
+from pydantic import BaseModel
+
+class Item(BaseModel):
+    name: str
+    price: float
+    in_stock: bool = True
+
+@app.post("/items")
+def create_item(item: Item):
+    return item
+```
+
+If a client sends a request missing `name` or with `price` as a string, Pydantic rejects it before your function runs. Pydantic is the reason FastAPI gives strong validation with almost no code from you.
+
+### 2. How does request validation work in FastAPI?
+
+Request validation runs automatically based on your type hints and Pydantic models. When a request gets to your endpoint, FastAPI parses the body, headers, path, and query parameters and matches them against the types you declared.
+
+If anything fails, FastAPI returns a 422 response with a JSON body explaining what went wrong. You don't write the validation logic, and you don't write the error response.
+
+This matters because validation is the most common source of security bugs in APIs. Handing it off to Pydantic eliminates a whole category of mistakes and keeps your endpoint code focused on business logic.
+
+### 3. How should you handle request validation in an API design?
+
+Push validation as close to the edge as possible. If a request is invalid, you want to know before any business logic runs.
+
+Pydantic models handle the structural part. For anything more complex, use Pydantic validators:
+
+```python
+from pydantic import BaseModel, field_validator
+
+class UserCreate(BaseModel):
+    email: str
+    age: int
+
+    @field_validator("age")
+    @classmethod
+    def age_must_be_adult(cls, v):
+        if v < 18:
+            raise ValueError("Must be 18 or older")
+        return v
+```
+
+The design decision here is where validation lives. Pydantic covers the input shape, and business rules that depend on database state (like "email must be unique") belong in the endpoint, not the model.
+
+### 4. What are response models and why use them?
+
+A response model is a Pydantic model you pass to the route decorator to control what the endpoint returns:
+
+```python
+@app.get("/users/{user_id}", response_model=UserPublic)
+def get_user(user_id: int) -> UserInDB:
+    return db.get_user(user_id)
+```
+
+Even if your function returns a `UserInDB` object with a hashed password field, the response gets filtered through `UserPublic` and only the fields declared there make it into the JSON.
+
+Why use them:
+
+- **Security:** Fields you didn't declare in the response model can't leak by accident.
+- **Documentation:** The OpenAPI schema shows the exact shape clients receive.
+- **Contract stability:** Changing your database model doesn't automatically change your API contract.
+
+### 5. How should response validation shape your API?
+
+Every endpoint should have a response model. Response models do three things at once:
+
+- Filter fields, so you never leak internal data
+- Document the exact response shape in OpenAPI
+- Fail if your code returns something unexpected
+
+The last point is the one most candidates miss. If your function returns a dict with a typo in a key, the response model catches it before it reaches the client.
+
+The tradeoff is boilerplate. Small internal APIs sometimes skip response models to move faster. But for anything a client will use, don't skip response validation.
+
+## Dependency Injection
+
+Dependencies are how FastAPI shares database sessions, auth, and config across endpoints. Expect follow-up questions on how they work internally.
+
+### 1. How does dependency injection work in FastAPI?
+
+Dependency injection in FastAPI is built around the `Depends()` function. You declare a function as a dependency, and FastAPI runs it before your endpoint and passes the result in:
+
+```python
+from fastapi import Depends
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/items")
+def read_items(db: Session = Depends(get_db)):
+    return db.query(Item).all()
+```
+
+Dependencies can depend on other dependencies, so you can compose authentication and permission checks into small reusable pieces.
+
+This matters because you avoid the pattern of every endpoint opening a database session, checking auth, and cleaning up. The dependency system does it for you and keeps endpoints readable.
+
+### 2. How does dependency injection work internally?
+
+FastAPI resolves dependencies by inspecting function signatures. When a request comes in, FastAPI walks the dependency tree, calls each dependency in order, and caches results within the request scope.
+
+Focus on the caching behavior here. If two dependencies both depend on `get_db`, `get_db` runs once per request, not twice. You can turn caching off with `Depends(get_db, use_cache=False)` when you need a fresh result every time.
+
+Dependencies with `yield` are handled differently from regular ones. FastAPI runs the code before `yield`, injects the yielded value, and then runs the code after `yield` once the response is sent. That's how database sessions get closed even when an endpoint raises an exception.
+
+The downside is that the dependency system adds overhead per request. For endpoints with deep dependency trees, this shows up in benchmarks. Most of the time it's fine.
+
+## Middleware, Errors, and App Lifecycle
+
+Code that runs around your endpoints: on every request, when something fails, at startup and shutdown, or after the response is sent.
+
+### 1. What is middleware and when do you use it?
+
+Middleware is code that runs on every request before your endpoint and every response before it goes back to the client. You register it once and it applies globally:
+
+```python
+@app.middleware("http")
+async def add_process_time_header(request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    response.headers["X-Process-Time"] = str(time.time() - start)
+    return response
+```
+
+Common uses are:
+
+- Request logging
+- CORS handling
+- Adding response headers
+- Measuring latency
+
+Use middleware for cross-cutting concerns that apply to every route. For logic that only applies to specific endpoints, use dependencies instead. Middleware runs on every request and can slow things down if you include heavy logic.
+
+### 2. How do you write custom middleware?
+
+Custom middleware in FastAPI comes in two forms.
+
+The simple form uses the `@app.middleware("http")` decorator and works for most use cases:
+
+```python
+@app.middleware("http")
+async def log_requests(request, call_next):
+    response = await call_next(request)
+    logger.info(f"{request.method} {request.url.path} -> {response.status_code}")
+    return response
+```
+
+The advanced form uses Starlette's `BaseHTTPMiddleware` or the raw ASGI middleware interface. Raw ASGI middleware is faster because it skips the request/response abstraction, but you directly handle the ASGI protocol.
+
+The downside of middleware is that it runs on every request, including static files and health checks. If your logging middleware writes to a slow log store, every request will be slowed down. For anything that shouldn't apply globally, use a dependency instead.
+
+### 3. How do you handle exceptions?
+
+FastAPI has two mechanisms for exception handling.
+
+The first is `HTTPException`, which you raise inside your endpoint when something goes wrong:
+
+```python
+from fastapi import HTTPException
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int):
+    item = db.get(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return item
+```
+
+The second is custom exception handlers, which you register on the app to catch specific exception types globally:
+
+```python
+@app.exception_handler(DatabaseError)
+async def db_exception_handler(request, exc):
+    return JSONResponse(status_code=503, content={"detail": "Database unavailable"})
+```
+
+Use `HTTPException` for expected error conditions in a single endpoint. Use custom handlers when you want the same response format for a whole category of errors across the app.
+
+### 4. What are lifespan events and when do you use them?
+
+Lifespan events run code at application startup and shutdown. You use them for anything that needs to happen once per process, like connecting to a database or loading an ML model.
+
+The modern pattern uses an async context manager:
+
+```python
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.model = load_model()
+    yield
+    app.state.model = None
+
+app = FastAPI(lifespan=lifespan)
+```
+
+Code before `yield` runs on startup. Code after `yield` runs on shutdown. Both are async, so you can await connections and gracefully close resources.
+
+The tradeoff is that lifespan events run per worker process, not per app. If you run four Gunicorn workers, your ML model loads four times. For large models, that's a memory problem you solve with shared memory or a separate model server.
+
+### 5. What are background tasks?
+
+Background tasks let you run code after the response has already been sent to the client. You inject a `BackgroundTasks` object into your endpoint and add functions to it:
+
+```python
+from fastapi import BackgroundTasks
+
+@app.post("/signup")
+def signup(email: str, background_tasks: BackgroundTasks):
+    user = create_user(email)
+    background_tasks.add_task(send_welcome_email, email)
+    return {"status": "created"}
+```
+
+The client gets the response immediately. The email sends in the background.
+
+This works for short tasks that don't need retries or persistence. For anything that must not be lost, like payment processing or file conversion, use a real task queue like Celery or RQ. Background tasks run in the same process, so if the process crashes, the task won't complete.
+
+### 6. How do you handle file uploads?
+
+File uploads use the `File` and `UploadFile` types:
+
+```python
+from fastapi import File, UploadFile
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    return {"filename": file.filename, "size": len(contents)}
+```
+
+`UploadFile` is the recommended type because it spools the file to a temporary location on disk instead of keeping the whole thing in memory. For a 10 MB file, that's fine either way. For a 2 GB file, it's the only way not to crash your service.
+
+Read the file in chunks if it's large. `UploadFile` does the cleanup for you when the request ends.
+
+## Async Programming
+
+Async questions come up in every FastAPI interview. They're where most candidates lose points, because you have to explain what the event loop actually does.
+
+### 1. What's the difference between async and sync endpoints?
+
+A sync endpoint runs in a threadpool. FastAPI takes your regular `def` function and runs it in a worker thread so it doesn't block the event loop.
+
+An async endpoint runs directly on the event loop. FastAPI awaits the coroutine you defined with `async def`.
+
+```python
+@app.get("/sync")
+def sync_endpoint():
+    return {"type": "sync"}
+
+@app.get("/async")
+async def async_endpoint():
+    return {"type": "async"}
+```
+
+The rule most candidates get wrong is that async isn't automatically faster. If your endpoint does CPU work, async is slower because the event loop can't do anything else while you compute. If your endpoint does I/O, async is much faster because the event loop can handle other requests during the wait.
+
+### 2. What is asyncio?
+
+`asyncio` is Python's built-in library for writing concurrent code with coroutines. It provides the event loop, primitives like `Task` and `Future`, and utility functions like `asyncio.gather` and `asyncio.sleep`.
+
+FastAPI is built on top of asyncio through Starlette. When you write `async def`, the coroutine gets scheduled on the asyncio event loop that Uvicorn runs.
+
+For the interview, you should know:
+
+- `asyncio.gather(*coroutines)` runs multiple coroutines concurrently and waits for all of them.
+- `asyncio.create_task(coroutine)` schedules a coroutine to run in the background.
+- `asyncio.sleep(seconds)` is the async version of `time.sleep`, and it doesn't block the event loop.
+
+### 3. What does `await` actually do?
+
+`await` pauses the current coroutine until the awaited object is ready, and gives control back to the event loop.
+
+```python
+async def fetch_user(user_id: int):
+    user = await db.get(user_id)
+    return user
+```
+
+When the code gets to `await db.get(user_id)`, three things happen:
+
+1. The coroutine pauses.
+2. The event loop moves on to run other coroutines.
+3. When the database returns, the coroutine resumes from where it paused.
+
+`await` only helps if the thing you're awaiting is also async. Calling a function that internally runs `time.sleep(5)` blocks the event loop for five seconds, even inside an async endpoint. Nothing else runs during that time.
+
+If you take one thing from this section, take that.
+
+### 4. What is the event loop?
+
+The event loop is a single thread that runs coroutines one at a time. It picks up whichever coroutine is ready to run, executes it until the next `await`, and then moves on.
+
+You can think of it as a task scheduler with one worker. It's not doing things in parallel. It's doing things very fast, one at a time, and switching between them whenever one is waiting on I/O.
+
+This is why FastAPI can handle thousands of concurrent connections with a single process. Most requests spend their time waiting on a database or an external API. While one request waits, the event loop serves another.
+
+But if any coroutine doesn't yield control, the whole loop stops.
+
+### 5. What's the difference between concurrency and parallelism?
+
+Concurrency is dealing with many things at once. Parallelism is doing many things at once.
+
+An async FastAPI process is concurrent. It works on thousands of connections on one thread by switching between them whenever one is waiting.
+
+Parallelism needs multiple CPU cores running code at the same time. In Python, that usually means multiple processes, because the GIL prevents threads from running Python code in parallel.
+
+For a FastAPI app, concurrency handles I/O-bound tasks. Parallelism (multiple Uvicorn workers) handles CPU load and lets you use multiple cores.
+
+### 6. When does async improve performance?
+
+Async improves performance when your endpoint spends most of its time waiting.
+
+Good fits for async:
+
+- Database queries with an async driver like asyncpg or async SQLAlchemy
+- HTTP calls to external APIs with `httpx.AsyncClient`
+- File I/O with aiofiles
+- Message queue operations
+
+Situations where you shouldn't use async:
+
+- CPU-heavy work like image processing or ML inference
+- Any code path that calls a sync library with no async equivalent
+
+The pattern to look for is I/O wait time. If an endpoint takes 200 ms and 190 ms of that is waiting on a database, async lets that time overlap across requests. If it takes 200 ms because it's doing CPU work, async does nothing for you.
+
+### 7. What happens when you use blocking operations in async code?
+
+Blocking operations in an async endpoint freeze the event loop. Every other request waits until the blocking call finishes.
+
+```python
+@app.get("/bad")
+async def bad_endpoint():
+    time.sleep(5)  # blocks the event loop for 5 seconds
+    return {"status": "done"}
+```
+
+While this endpoint sleeps, no other async endpoint can run.
+
+Common sources of accidental blocking:
+
+- `time.sleep` instead of `asyncio.sleep`
+- `requests.get` instead of `httpx.AsyncClient`
+- Sync database drivers like psycopg2 without an async layer
+- CPU-heavy work embedded in an async endpoint
+
+The fixes are to switch to an async library, run the blocking call in a threadpool with `asyncio.to_thread`, or move the whole endpoint back to sync `def`. FastAPI will run sync endpoints in a threadpool for you, which is often the simplest fix.
+
+## Database
+
+Database questions in FastAPI interviews test whether you've actually run a service with a database. The answers matter less than knowing the mistakes that come with them.
+
+### 1. How do you use SQLAlchemy with FastAPI?
+
+SQLAlchemy is the default choice for FastAPI. You define models with the ORM, create a session factory, and inject sessions into endpoints as dependencies:
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+
+engine = create_engine("postgresql://user:pass@localhost/db")
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/users/{user_id}")
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    return db.query(User).filter(User.id == user_id).first()
+```
+
+There are two common points of confusion:
+
+1. Sync SQLAlchemy in an async endpoint blocks the event loop.
+2. The ORM's lazy loading turns one query into ten if you access related objects in a loop (the N+1 problem).
+
+### 2. What is SQLModel and when do you use it?
+
+SQLModel is a library from the FastAPI author that combines SQLAlchemy and Pydantic. You define one class that works as both a database model and a request/response schema:
+
+```python
+from sqlmodel import SQLModel, Field
+
+class Hero(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    age: int | None = None
+```
+
+The advantage is less duplication. Without SQLModel, you need to maintain a SQLAlchemy model and a Pydantic model that mirror each other.
+
+The downside is that SQLModel is younger than SQLAlchemy and doesn't cover every edge case. For simple CRUD services, it's a good fit, but for complex schemas with inheritance and custom types, SQLAlchemy is safer.
+
+### 3. How do you access the database asynchronously?
+
+Async database access needs three things: an async driver, an async engine, and async sessions.
+
+For PostgreSQL, the standard setup uses asyncpg with SQLAlchemy's async support:
+
+```python
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
+
+@app.get("/users/{user_id}")
+async def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    return result.scalar_one_or_none()
+```
+
+Every query needs `await`. Every session method that goes to the database is async. If you miss one, you either get a coroutine object where you expected data or you block the event loop.
+
+Async database code is more verbose than sync, and debugging is harder. Use it when you actually need concurrency, and don't bother for simple internal services with low traffic.
+
+### 4. How do you manage database sessions?
+
+Database sessions in FastAPI are managed with dependencies. The pattern uses `yield` to open a session, hand it to the endpoint, and close it after:
+
+```python
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/users")
+def read_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
+```
+
+Each request gets its own session. When the response is sent, the session closes.
+
+The tradeoffs show up under load. Sync SQLAlchemy sessions block the event loop, so if you're using async endpoints with a sync ORM, you're not getting async benefits. Fix this by switching to async SQLAlchemy or running sync code in a threadpool.
+
+Connection pool size matters too. If your pool is 10 and you're running 20 concurrent requests, 10 requests wait. Set the pool size based on peak concurrency.
+
+Rules that matter in an interview:
+
+- One session per request.
+- Sessions close in the `finally` block.
+- Don't share sessions with background tasks. Background tasks need their own session, because the request's session may already be closed when the task runs.
+- Don't hold sessions open across the whole request lifecycle if the endpoint only needs them briefly. Long-open sessions hold connections that other requests could use.
+
+### 5. How do you handle database transactions?
+
+SQLAlchemy sessions are transactional by default. Every session opens a transaction on first use and holds it until you commit or roll back:
+
+```python
+def create_order(db: Session, order_data: OrderCreate):
+    order = Order(**order_data.model_dump())
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    return order
+```
+
+For operations that modify multiple tables, wrap them in a single transaction and commit at the end. If anything raises before the commit, nothing is persisted, and closing the session in the dependency's `finally` block rolls back the open transaction.
+
+```python
+def transfer_funds(db: Session, from_id: int, to_id: int, amount: float):
+    from_account = db.get(Account, from_id)
+    to_account = db.get(Account, to_id)
+    from_account.balance -= amount
+    to_account.balance += amount
+    db.commit()
+```
+
+The mistake to avoid here is committing after every operation inside a multi-step function. That splits your transaction into pieces and leaves the database in a half-updated state if one step fails.
+
+### 6. How do you handle database migrations?
+
+Alembic is the standard tool. It's built by the SQLAlchemy team and works with any SQLAlchemy setup.
+
+The basic workflow:
+
+```bash
+alembic init alembic
+alembic revision --autogenerate -m "add users table"
+alembic upgrade head
+```
+
+`--autogenerate` diffs your models against the current database schema and generates a migration script. You review the script, edit it if needed, and apply it with `upgrade head`.
+
+Things to remember for the interview:
+
+- Never edit an applied migration. Create a new one to fix mistakes.
+- Autogenerate misses things like column renames and some complex type changes. Always review the generated script.
+- Run migrations before starting the app, not at startup. Migrations at startup break multi-worker deployments, because every worker tries to run them at once.
+
+For zero-downtime deployments, migrations get more complex. You split schema changes into forward-compatible steps so old and new app versions can run against the same database.
+
+### 7. How do you configure connection pooling?
+
+SQLAlchemy manages a connection pool by default. You configure the pool when you create the engine:
+
+```python
+engine = create_engine(
+    "postgresql://user:pass@localhost/db",
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30,
+    pool_pre_ping=True,
+)
+```
+
+What the parameters mean:
+
+- `pool_size`: the number of connections kept open. Default is 5, which is low for a production API.
+- `max_overflow`: extra connections allowed above `pool_size` under burst load. These close when idle.
+- `pool_timeout`: how long a request waits for a connection before giving up.
+- `pool_pre_ping`: checks whether a connection is alive before using it. This prevents errors like "server has gone away" after idle periods.
+
+Total connections across all workers must stay under the database's connection limit. If Postgres allows 100 connections and you run 4 workers with `pool_size=10` and `max_overflow=20`, peak usage is 120. You're over the limit.
+
+## Security
+
+Security questions test whether you can protect an API without getting in your own way. The right answer usually involves standard patterns applied correctly.
+
+### 1. What are the basics of authentication in FastAPI?
+
+FastAPI comes with security utilities in `fastapi.security` for the common patterns, including HTTP Basic, OAuth2 with password flow, API keys in headers or query strings, and Bearer tokens.
+
+The typical flow is a dependency that extracts credentials from the request and returns the current user:
+
+```python
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    user = decode_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return user
+
+@app.get("/me")
+def read_me(user: User = Depends(get_current_user)):
+    return user
+```
+
+Any endpoint that depends on `get_current_user` becomes protected. Unauthenticated requests get a 401, and the endpoint only runs if the token is valid.
+
+For anything beyond the basics, the standard combination is FastAPI's security utilities plus a JWT library like PyJWT or python-jose for token creation and verification.
+
+### 2. How does OAuth2 work in FastAPI?
+
+FastAPI supports OAuth2 through utilities in `fastapi.security`. The password flow is the most common in interviews:
+
+```python
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+@app.post("/token")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token(user)
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/me")
+def read_me(token: str = Depends(oauth2_scheme)):
+    return decode_token(token)
+```
+
+The `OAuth2PasswordBearer` dependency extracts the Bearer token from the `Authorization` header. If it's missing, FastAPI returns 401.
+
+Password flow works for first-party clients where you own both the app and the API. For third-party access, use the authorization code flow with a proper OAuth2 provider like Auth0 or Keycloak.
+
+### 3. How do you implement JWT authentication?
+
+JWT is the token format most FastAPI services use. You create tokens on login and verify them on protected endpoints:
+
+```python
+from datetime import datetime, timedelta, timezone
+import jwt
+
+SECRET_KEY = "your-secret-key"
+ALGORITHM = "HS256"
+
+def create_access_token(user_id: int) -> str:
+    expire = datetime.now(timezone.utc) + timedelta(minutes=30)
+    payload = {"sub": str(user_id), "exp": expire}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_access_token(token: str):
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+```
+
+Things to remember for your interview:
+
+- JWTs are signed, not encrypted. Don't put secrets in the payload.
+- Keep expiry short. Thirty minutes is a common default.
+- For revocation, keep a denylist of invalidated tokens in Redis, because you can't unsign a JWT.
+- Rotate the signing key periodically, and load it from the environment instead of hardcoding it.
+
+The common mistake is storing sensitive user data in the JWT and treating it as authoritative. Anyone with the token can read the payload.
+
+### 4. When do you use API keys?
+
+API keys are the simplest form of authentication. A client sends a fixed string in a header or query parameter, and you verify it against a stored value.
+
+```python
+from fastapi.security import APIKeyHeader
+
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+def verify_api_key(key: str = Depends(api_key_header)):
+    if key not in valid_keys:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return key
+
+@app.get("/data", dependencies=[Depends(verify_api_key)])
+def read_data():
+    return {"data": "secret"}
+```
+
+API keys work for server-to-server communication, internal services, and public APIs with rate limiting. They don't work well for end-user authentication, because you can't tie an API key to a user session without extra logic.
+
+Hash API keys before storing them and always send them over HTTPS. Query parameters end up in logs and browser history, so headers are safer.
+
+### 5. How do you configure CORS?
+
+CORS lets browsers from other origins call your API. FastAPI handles it with middleware:
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://example.com"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+```
+
+What the parameters mean:
+
+- `allow_origins`: exact origins allowed. Never use `["*"]` with `allow_credentials=True`, because browsers reject that combination.
+- `allow_credentials`: whether cookies and auth headers are sent with cross-origin requests.
+- `allow_methods`: HTTP methods clients can use.
+- `allow_headers`: headers the client is allowed to send.
+
+Developers often set `allow_origins=["*"]` in development and forget to change it in production. That's an open API that any site can call from any user's browser.
+
+### 6. How does dependency-based authorization work?
+
+Authorization in FastAPI usually happens through dependencies. You build small dependencies for each check and compose them:
+
+```python
+def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
+    return decode_and_load(token)
+
+def require_admin(user: User = Depends(get_current_user)) -> User:
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin required")
+    return user
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int, admin: User = Depends(require_admin)):
+    return db.delete_user(user_id)
+```
+
+Every dependency is testable in isolation, reusable across endpoints, and visible in the OpenAPI docs.
+
+But complex authorization rules can produce a lot of small dependencies. Group them into a permissions module and document what each one does. Otherwise, a couple of months later, nobody remembers which endpoint is protected by which rule.
+
+### 7. How do you protect sensitive endpoints?
+
+Protecting endpoints in FastAPI is a mix of authentication, authorization, rate limiting, and input validation.
+
+Checklist for a sensitive endpoint:
+
+- **Authenticated** via a dependency, so unauthenticated requests get 401.
+- **Authorized** via a role or ownership check, so wrong users get 403.
+- **Rate limited**, so brute force and abuse are slow. Use slowapi or a reverse proxy.
+- **Validated** with Pydantic, so malformed input never runs business logic.
+- **Logged** with the user ID, endpoint, and outcome, so you can audit access.
+- **HTTPS only**, enforced at the reverse proxy.
+
+For truly sensitive operations like password changes or payment actions, add step-up authentication. Ask for the password again, or send a code to a second device, even if the user is already logged in.
+
+## Performance and Scaling
+
+Senior interviews focus on tradeoffs: what makes a FastAPI service slow, and what you change when traffic grows.
+
+### 1. How do you optimize FastAPI performance?
+
+Performance optimization in FastAPI usually falls into four buckets:
+
+- **Use async for I/O-bound endpoints and sync for CPU-bound work.** Mixing them wrong is the top cause of slow FastAPI services.
+- **Reduce Pydantic validation overhead** by keeping response models lean. Extra fields cost serialization time.
+- **Cache expensive computations at the right layer.** In-memory for hot data, Redis for shared data.
+- **Profile before optimizing.** Use py-spy or austin to find the actual bottleneck.
+
+The biggest single win is usually switching from sync to async for endpoints that connect to the database or external APIs.
+
+### 2. What caching strategies work with FastAPI?
+
+Caching in FastAPI happens at three layers:
+
+- **In-process caching:** functions and computed values cached with `functools.lru_cache` or `cachetools`. Fast, but per-worker, so cache hits vary across workers.
+- **Distributed caching:** Redis or Memcached. Slower than in-process but shared across all workers and machines. This is what you use for session data, rate limits, and any state that must be consistent.
+- **HTTP caching:** setting `Cache-Control` headers so clients and CDNs cache responses. It adds zero cost to your service, so it's usually the best option.
+
+The tradeoff is cache invalidation. Every layer of caching makes stale data more likely. Cache read-heavy data that doesn't change often. Don't cache user-specific data unless the cache key includes the user ID.
+
+### 3. How do you scale with multiple workers?
+
+Scaling FastAPI is mostly about processes and workers.
+
+A single Uvicorn process runs one event loop. That handles thousands of concurrent connections for I/O-bound work, but only uses one CPU core. For real-world traffic, you run multiple worker processes behind a process manager.
+
+The standard setup is Gunicorn with Uvicorn workers:
+
+```bash
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
+```
+
+`-w 4` runs four worker processes. Each worker has its own event loop and can use one CPU core. A common starting point is `2 * cpu_cores + 1` workers.
+
+Beyond process scaling, you scale horizontally by running the same container on multiple machines behind a load balancer. Shared state (sessions, caches, rate limits) moves out of the process into Redis or a database.
+
+The tradeoff is memory. More workers means more memory, especially if you load large objects at startup.
+
+### 4. How do you scale vertically and horizontally?
+
+You can scale FastAPI vertically and horizontally.
+
+**Vertical scaling** means bigger machines with more CPU and RAM per instance. You handle it by increasing the worker count until you saturate the CPU or reach memory limits.
+
+**Horizontal scaling** means more instances behind the load balancer. You handle it by moving all state out of the process:
+
+- Sessions and rate limits move to Redis
+- Uploads go to object storage, not local disk
+- Background jobs go to a shared queue like Celery or RQ
+- Database connections respect the total pool size across all instances
+
+Autoscaling is triggered by CPU, memory, or request rate. In Kubernetes, the Horizontal Pod Autoscaler does it for you.
+
+The trap in this question: autoscaling on CPU works for compute-heavy services. For I/O-bound APIs, request queue depth or response latency is a better signal, because CPU stays low even when the service is slow.
+
+## Deployment
+
+Deployment questions separate candidates who've shipped from the ones who've only read about it. Interviewers ask them because the mistakes here take down services in production.
+
+### 1. What is Uvicorn and how do you use it?
+
+Uvicorn is an ASGI server. It runs your FastAPI application and handles the HTTP protocol, WebSocket connections, and the event loop.
+
+In development, you run it directly:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+The `--reload` flag restarts the server when files change. Don't use it in production.
+
+For production, run Uvicorn without reload, bind to all interfaces, and pick a worker count that matches your CPU:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+Uvicorn alone works, but many teams run it behind Gunicorn for more process management features.
+
+### 2. What does Gunicorn add on top of Uvicorn?
+
+Gunicorn is a process manager. It handles starting workers, restarting crashed workers, graceful shutdowns, and signal handling. It also gives you more control over how workers run.
+
+The standard command:
+
+```bash
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+`-k uvicorn.workers.UvicornWorker` tells Gunicorn to use Uvicorn for each worker. You get Uvicorn's async handling with Gunicorn's process management:
+
+- Graceful reloads with zero dropped connections
+- Automatic restart of crashed workers
+- Cleaner logging and signal handling
+
+For a single-worker setup, or a container orchestrator that already restarts processes, Uvicorn alone is fine.
+
+### 3. How do you Dockerize a FastAPI application?
+
+A basic FastAPI Dockerfile:
+
+```dockerfile
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+```
+
+Rules that come up in interviews:
+
+- Use a specific Python version, not `python:latest`.
+- Use `-slim` variants for smaller images. Alpine can break some Python packages, so slim is safer.
+- Use multi-stage builds when you have build dependencies you don't need at runtime.
+- Don't bake secrets into the image. Pass them at runtime through environment variables or a secrets manager.
+- Copy `requirements.txt` before the rest of the code, so Docker caches the `pip install` layer.
+
+For serious deployments, let your orchestrator (like Kubernetes) handle scaling and restarts.
+
+### 4. How do you use a reverse proxy with FastAPI?
+
+The typical production stack puts a reverse proxy in front of the app server. Nginx and Traefik are the common options, and cloud load balancers like AWS ALB or Google Cloud Load Balancing fill the same role.
+
+What you get with a reverse proxy:
+
+- TLS termination, so the app only speaks HTTP internally
+- Static file serving
+- Request buffering, so slow clients don't hold up your workers
+- Rate limiting at the edge
+- Header manipulation, like adding `X-Forwarded-For`
+
+A minimal Nginx config for FastAPI:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name api.example.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Run Uvicorn with `--proxy-headers` (and `--forwarded-allow-ips` set to the proxy's address) so the app trusts the forwarded headers and reports the real client IP and scheme.
+
+### 5. What does a production FastAPI deployment look like?
+
+A typical stack you should be able to explain:
+
+1. DNS pointing to a load balancer
+2. Load balancer or reverse proxy handling TLS
+3. Container orchestrator (Kubernetes, ECS) running FastAPI containers
+4. Each container running Uvicorn workers (optionally under Gunicorn)
+5. FastAPI talking to a managed database, cache, and any external services
+6. Logs and metrics sent to a central place
+
+Other things that show up in interviews:
+
+- Health check endpoints (`/health` and `/ready`) that the orchestrator polls
+- Graceful shutdown handling, so in-flight requests finish during a deploy
+- Configuration through environment variables, not hardcoded values
+- Secrets from a secrets manager
+
+If you skip any of these, the interviewer usually follows up with "what happens when...".
+
+### 6. How do you monitor a FastAPI application in production?
+
+There are three types of monitoring you should know:
+
+- **Logs:** structured JSON logs with request ID, user ID, endpoint, status code, and latency, sent to a central log store.
+- **Metrics:** request rate, error rate, latency percentiles (p50, p95, p99), and worker health. Prometheus is the common choice.
+- **Traces:** distributed tracing across services with OpenTelemetry. Essential when a request touches multiple services.
+
+The three metrics that matter most for FastAPI:
+
+- Requests per second, so you know the load
+- p95 latency, so you know the slow tail of requests
+- Error rate, split by 4xx and 5xx
+
+Log the request ID on every line, propagate it through async code, and include it in error responses. When a customer reports a bug, you'll find the exact request in seconds.
+
+## Testing
+
+Testing questions check whether you write tests that make sense, or the kind that just make coverage look good.
+
+### 1. How do you use TestClient?
+
+`TestClient` is FastAPI's built-in test client. It wraps your app in a fake HTTP transport, so you can hit endpoints without running a server:
+
+```python
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_read_user():
+    response = client.get("/users/1")
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+```
+
+`TestClient` sends real HTTP-shaped requests through your ASGI app, so middleware, dependencies, and error handlers all run. Tests catch the same bugs your production stack would.
+
+Under the hood, `TestClient` uses httpx and runs synchronously. For async tests (for example, when your test itself needs to `await` async code), use httpx's `AsyncClient` with `ASGITransport`.
+
+### 2. How do you structure tests with pytest?
+
+pytest is the standard test runner for FastAPI. A basic directory structure:
+
+```text
+app/
+    main.py
+    dependencies.py
+tests/
+    conftest.py
+    test_users.py
+    test_orders.py
+```
+
+`conftest.py` holds shared fixtures like the test client and a test database session:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+
+@pytest.fixture
+def auth_headers():
+    return {"Authorization": "Bearer test-token"}
+
+def test_protected_route(client, auth_headers):
+    response = client.get("/me", headers=auth_headers)
+    assert response.status_code == 200
+```
+
+Fixtures replace repeated setup code. They also make it easier to swap in test doubles, like an in-memory database instead of Postgres.
+
+Aim for one test per behavior, not one assertion per test. If a test checks that a user gets created and the response contains the right fields, both assertions belong together.
+
+### 3. How do you mock dependencies in FastAPI?
+
+FastAPI's `dependency_overrides` is pretty much all you need:
+
+```python
+def override_get_db():
+    return TestSession()
+
+def override_get_current_user():
+    return User(id=1, email="test@example.com")
+
+app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[get_current_user] = override_get_current_user
+
+def test_read_me(client):
+    response = client.get("/me")
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+```
+
+You override the dependency once, and every endpoint that uses it gets the test version. Clear the overrides after each test, or set them up in a fixture with `yield` so cleanup happens for you.
+
+### 4. How do you write integration tests?
+
+Integration tests hit real dependencies (usually a test database) and check that everything works together correctly.
+
+A general way to set it up:
+
+```python
+@pytest.fixture(scope="function")
+def db():
+    engine = create_engine("postgresql://user:pass@localhost/test_db")
+    SQLModel.metadata.create_all(engine)
+    session = Session(engine)
+    yield session
+    session.close()
+    SQLModel.metadata.drop_all(engine)
+
+def test_create_and_read_user(client, db):
+    app.dependency_overrides[get_db] = lambda: db
+    response = client.post("/users", json={"email": "a@b.com"})
+    assert response.status_code == 201
+    user_id = response.json()["id"]
+    response = client.get(f"/users/{user_id}")
+    assert response.json()["email"] == "a@b.com"
+```
+
+Integration tests are slower and more fragile than unit tests, because they depend on the database being available and in a clean state.
+
+For teams with a lot of integration tests, tools like pytest-postgresql and testcontainers spin up ephemeral databases per test run. That's slower but gives you complete isolation.
+
+### 5. How do you approach API testing overall?
+
+Good FastAPI test suites usually have three layers:
+
+- **Unit tests:** pure functions, business logic, and Pydantic validators. Fast, no I/O, run in milliseconds.
+- **Endpoint tests:** `TestClient` with mocked dependencies. Covers routing, validation, serialization, and dependency wiring.
+- **Integration tests:** `TestClient` with a real database and real dependencies. Covers the full request path.
+
+General patterns to follow:
+
+- Test the contract, not the implementation. Call `/users/1` and check the response; don't check that a specific function got called.
+- Cover the error paths as thoroughly as the happy paths. 401, 403, 404, 422, and 500 should all be covered.
+- Keep tests independent. Each test should set up its own data and clean up after itself.
+- Run tests in parallel where possible, but only if your integration tests can handle it.
+
+Testing is about confidence. High coverage with weak assertions doesn't catch anything. Prefer a smaller test suite that covers the real business logic.
+
+## Scenario-Based Questions
+
+Scenario questions are the hardest part of a senior interview because there's no textbook answer. The interviewer wants to see how you think through a problem and what tradeoffs you'd weigh before making a change.
+
+### 1. Your API becomes slow under load. How do you debug it?
+
+Start by figuring out what "slow" means. Slow can mean several different things, and the fix depends on which one.
+
+A standard debugging path:
+
+1. **Check metrics first.** Look at request rate, latency percentiles, error rate, CPU, memory, and event loop lag.
+2. **If CPU is maxed out**, you're compute-bound. Add workers or find the responsible function with py-spy.
+3. **If CPU is low but latency is high**, you're I/O-bound. Check database query times, external API calls, and connection pool wait times.
+4. **If the event loop is stuck**, something is blocking async code. Look for sync calls inside async endpoints.
+
+The usual suspects are N+1 queries from lazy-loaded ORM relationships, missing database indexes on filtered columns, and sync libraries called from async endpoints. All three cause slowness that only shows up under load.
+
+Don't guess and change things. Measure first, form a hypothesis, then test.
+
+### 2. Your Pydantic validation isn't catching invalid input. What's happening?
+
+Three things could be going on:
+
+1. **Is the endpoint actually using the model?** A parameter typed as `dict` or `Any` bypasses validation, so check the function signature.
+2. **Is the field optional when it shouldn't be?** A field typed as `str | None = None` accepts null and missing values. Make it required by removing the default value.
+3. **Is a custom validator swallowing errors?** For example, a `try/except` inside a validator that returns instead of raising will hide problems.
+
+Beyond that, open the OpenAPI schema at `/openapi.json` and look at what FastAPI thinks the endpoint expects. If the schema shows a field as optional and you thought it was required, the model is wrong.
+
+### 3. Authentication fails intermittently for some users. How do you diagnose it?
+
+Intermittent auth failures usually mean one of four things:
+
+- **Token expiry:** users near the boundary get random 401s as their token expires mid-session.
+- **Clock skew between servers:** if one server's clock is off, JWT `exp` and `iat` checks fail on that server.
+- **Per-worker in-memory state:** if you cache decoded tokens per worker, users hitting different workers get different results.
+- **Load balancer routing:** if one server's Redis connection is broken, requests routed to that server fail auth.
+
+Steps to debug:
+
+1. Log the token expiry, the current server time, and the outcome on every auth check.
+2. Correlate failures with specific servers or workers. If they cluster, the issue is one server.
+3. Test with a fresh token to rule out expiry as the cause.
+4. Check that your JWT verification uses the current signing key.
+
+Once you find the pattern, the fix is usually short. Finding the pattern is the hard part, which is why your reasoning matters more than the code change.
+
+### 4. Your database connections are exhausted. What went wrong?
+
+Connection exhaustion means requests are holding connections longer than expected, or you have more concurrent requests than your pool can serve.
+
+A debugging process that usually works:
+
+1. **Check pool size and max overflow.** If total capacity across all workers exceeds the database's limit, the database rejects new connections.
+2. **Look for sessions that don't close.** A missing `finally` block or an exception path without cleanup leaks connections.
+3. **Check for long-running queries.** A slow query holds a connection for its full duration.
+4. **Look for connections held across `await` points.** If a request opens a connection, calls an external API for two seconds, then uses the connection, that's two seconds of held capacity per request.
+
+The common root cause is that someone opened a session outside the dependency system and forgot to close it.
+
+The fix is to always use the dependency-with-`yield` pattern. It closes the session in the `finally` block, so exceptions don't leak connections. Then set pool size based on peak concurrency across all workers.
+
+### 5. An async endpoint blocks unexpectedly. How do you find the cause?
+
+Something inside the endpoint is sync and holding the event loop.
+
+The suspects, in order of likelihood:
+
+1. Sync database calls with a sync driver. `db.query(User).all()` blocks even in an async endpoint.
+2. Sync HTTP calls with `requests` instead of `httpx.AsyncClient`.
+3. CPU-bound work like image processing or ML inference.
+4. `time.sleep` instead of `asyncio.sleep`.
+5. Sync file I/O without aiofiles.
+
+Add timing around each block of the endpoint and look for the section that takes most of the latency. Then check whether that section actually yields to the loop. asyncio's debug mode (`PYTHONASYNCIODEBUG=1`) logs callbacks that take too long, and tools like aiomonitor help inspect a running loop.
+
+The fix depends on what's blocking. For CPU work, run it in a thread or process pool or move it to a background worker. For sync I/O, switch to an async library or use `asyncio.to_thread`. If none of those work, change the endpoint to sync `def`. FastAPI runs it in a threadpool and the event loop stays free.
+
+### 6. Large file uploads slow down your service. What do you do?
+
+Large uploads slow things down for a few different reasons, and the fix depends on which one applies.
+
+The first check is whether you're loading the whole file into memory. `await file.read()` on a 2 GB upload reads all 2 GB into RAM.
+
+The fix is chunked reads:
+
+```python
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    with open(f"/tmp/{file.filename}", "wb") as f:
+        while chunk := await file.read(1024 * 1024):
+            f.write(chunk)
+    return {"filename": file.filename}
+```
+
+In real code, never trust `file.filename` for the path. Generate your own name to avoid path traversal.
+
+The second cause is holding a worker for the full upload duration. A 500 MB upload over a slow connection ties up a worker for minutes.
+
+Fixes you can mention in an interview:
+
+- Put a reverse proxy in front that buffers the upload before it hits your app.
+- Use a presigned URL pattern: your API returns a signed upload URL, and the client uploads directly to object storage (S3, GCS).
+- Restrict the max upload size at the proxy level and reject oversized requests before they use resources.
+
+For anything above a few hundred megabytes, direct-to-storage uploads are the right answer. The service that handles metadata and the service that handles bytes shouldn't be the same service.
+
+## Common FastAPI Interview Mistakes
+
+These mistakes show up in almost every FastAPI interview. None of them are hard to fix once you know they exist, but most candidates don't know until an interviewer points it out.
+
+### Confusing async and sync
+
+The most common mistake is treating `async def` as a performance switch. Candidates make endpoints async because it sounds faster, then call sync libraries inside them and wonder why the service is slow.
+
+Async only helps when you're waiting on I/O with an async library. Sync database drivers and CPU-bound work block the event loop. If you can't await it, don't put it in an async endpoint.
+
+If you declare a function as async, use async all the way down. Otherwise, use sync `def` and let FastAPI run it in a threadpool.
+
+### Misunderstanding dependency injection
+
+Many candidates treat `Depends()` as a fancy way to call a function. They inject dependencies but bypass them in tests, or reimplement the same logic in multiple endpoints.
+
+Dependencies are the boundary. Auth, database sessions, permission checks, and configuration all belong there. Endpoints should receive them as parameters and not care where they came from.
+
+Red flags for the interviewer:
+
+- Opening a session inside the endpoint instead of using a dependency
+- Calling `get_current_user()` directly instead of injecting it
+- Writing the same three-line auth check at the top of every endpoint
+
+If you find yourself repeating code across endpoints, that code probably belongs in a dependency.
+
+### Ignoring validation
+
+Candidates who skip response models, use `dict` as a request type, or reach for manual `request.json()` parsing are unlikely to get a senior role. FastAPI does validation for you, and not using it means writing more code that does less.
+
+Interviewers look for a few things: every endpoint has a request model or typed parameters, every endpoint has a response model, and validators live inside Pydantic classes.
+
+This matters because validation catches bad input before it reaches the business logic, which is where most security bugs and many crashes come from.
+
+### Weak REST API design
+
+Bad API design is easy to spot in an interview: `/getUser?id=5` instead of `/users/5`, POST used for everything including reads, status codes that don't match the outcome, and endpoint names that describe implementation instead of resources.
+
+General rules that apply everywhere, not just in FastAPI:
+
+- URLs describe resources, not actions.
+- HTTP methods describe the action: GET reads, POST creates, PUT and PATCH update, DELETE removes.
+- Status codes match the outcome: 201 for created, 204 for no content, 404 for missing, 409 for conflict.
+- Naming is consistent: plural nouns for collections, singular resources under them.
+
+Candidates who ignore these in design questions usually ignore them in code, too.
+
+### Forgetting production considerations
+
+Production is where FastAPI gets interesting, and interviewers ask about it because that's where things break.
+
+Your answers on this topic should account for:
+
+- Multiple worker processes, not a single Uvicorn process
+- A reverse proxy in front, handling TLS and buffering
+- Health check endpoints for the orchestrator
+- Structured logging with request IDs
+- Environment-based config
+- Secrets from a secrets manager
+- Migrations run separately from app startup
+- Metrics on request rate, latency, and error rate
+
+## How to Prepare for a FastAPI Interview
+
+The best FastAPI prep is building something and breaking it. Reading docs works for the beginner questions, but beyond that you need code you've actually written, deployed, debugged, and thought about.
+
+### Build a real REST API
+
+Pick a project idea and build it end to end. Not a to-do list: something with at least three related resources, real relationships between them, and a few endpoints per resource.
+
+A rough idea that covers most interview topics:
+
+- Users with signup, login, and profile endpoints
+- A second resource users can create, read, update, and delete
+- A third resource that belongs to the second one, so you get nested routes
+- Filtering, pagination, and sorting on the list endpoints
+
+Build it with Pydantic models, a database, and proper response models. When you're done, you'll have working code to reference in every answer.
+
+### Deploy a FastAPI application
+
+Deploy the API somewhere, like a cheap VPS. The point is going through the full path from code to running service.
+
+This teaches you more than you'd expect:
+
+- Writing a Dockerfile that works
+- Running Uvicorn workers, optionally under Gunicorn
+- Putting Nginx or a cloud load balancer in front
+- Getting HTTPS working with a real certificate
+- Handling environment variables and secrets
+- Setting up basic monitoring, or at least log aggregation
+
+### Practice async programming
+
+Async is where most candidates lose points.
+
+A useful exercise: build a small script that fetches data from three APIs concurrently with `httpx.AsyncClient` and `asyncio.gather`. Then rewrite the same script with sync `requests` and compare the times. Then break the async version by putting a `time.sleep` in the middle.
+
+Do the same with async SQLAlchemy. Feel where async helps and where it doesn't.
+
+### Learn Pydantic properly
+
+Pydantic isn't just types. It's validators, model config, computed fields, discriminated unions, and serialization control. Interviewers ask about it because it's at the core of every FastAPI service.
+
+Areas you should know:
+
+- Field types, defaults, and constraints (`Field(gt=0, max_length=100)`)
+- Custom validators with `@field_validator` and `@model_validator`
+- Model config for controlling serialization and validation behavior
+- The difference between `model_dump()` and `model_dump_json()`
+- How Pydantic handles optional fields, unions, and enums
+
+Build a few complex models with nested structures, custom validators, and computed fields. That covers most of the intermediate interview questions.
+
+### Understand dependency injection
+
+Read FastAPI's dependency injection docs, then use dependencies for everything: auth, database sessions, config, permission checks, request context.
+
+A good exercise is refactoring your practice API to move every reusable piece of logic into dependencies. When you're done, endpoints should be five to ten lines each and read like business logic without infrastructure noise.
+
+### Review authentication workflows
+
+Auth questions come up in every interview, and most candidates give surface-level answers. Go deeper than "we use JWT."
+
+Build both patterns in your practice API:
+
+- OAuth2 password flow with JWT access tokens
+- API key authentication for a service-to-service endpoint
+
+Then add authorization on top: role-based checks with dependencies, ownership checks that verify the user owns the resource, and a rate limiter for login attempts. Write tests that call both the allowed and denied paths.
+
+Auth is one of those topics where hands-on experience shows immediately. You either know how tokens flow through a system or you don't, and interviewers can tell within two follow-up questions.
+
+## Conclusion
+
+FastAPI interviews aren't about syntax. They're about API design, deployment, async programming, and production engineering, and the interviewer can tell within two questions which of those you've actually done.
+
+The fastest path there is building a real application with moderate complexity, like a REST API with users, resources, auth, and a database. Deploy it. Load-test it. When something breaks, fix it. That puts you in a much stronger position than candidates who've only read about it.

@@ -1,5 +1,5 @@
 ---
-title: "FastAPI Security"
+title: "FastAPI: Security"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -7,45 +7,35 @@ date: 2026-10-13
 thumbnailText: FastAPI
 ---
 
-Security in a production API is not a single feature.
+Security is an essential part of building a production-ready API. A secure application must protect user accounts, validate incoming data, control access, and prevent abuse.
 
-JWT alone is not enough. CORS alone is not enough. Rate limiting alone is not enough.
-
-A secure API uses **multiple layers**, where each layer protects against a different type of threat.
-
-The goal is **defense in depth**: if one layer fails, other layers still provide protection.
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
 
 ![API security layers — Authentication, Authorization and API Protection, then Input Security, Transport & Secrets, and Domain-specific Security for AI and WebSockets](./imgs/fastapi-security.jpg)
 
-# Auth
+</div>
 
-## Authentication: Who Are You?
+## 1. Authentication and Authorization
 
-Authentication answers:
+**Authentication answers: Who are you?**
 
-> **Who is making this request?**
-
-A common approach is JWT authentication.
-
-After login, the server issues a token:
+For example, a user logs in with their email and password. The server validates the credentials and issues a JWT (JSON Web Token).
 
 ```text
 POST /login
-      ↓
-   Validate credentials
-      ↓
-   Generate JWT
-      ↓
-   Return token
+     ↓
+Validate credentials
+     ↓
+Generate JWT
+     ↓
+Return token
 ```
 
-## Authorization: What Are You Allowed to Do?
+The client then sends the token with subsequent requests. FastAPI can verify the token and identify the current user.
 
-Authentication tells us **who the user is**.
+**Authorization answers: What are you allowed to do?**
 
-Authorization tells us:
-
-> **What is this user allowed to do?**
+After identifying a user, the application must determine whether they have permission to perform a specific action.
 
 For example:
 
@@ -60,21 +50,26 @@ Customer
  └── Create order
 ```
 
-## CORS
+FastAPI dependencies can help implement these checks by retrieving the current user and verifying their permissions.
 
-CORS controls which browser origins are allowed to access the API.
+## 2. Cross-Origin Resource Sharing (CORS)
 
-For example:
+CORS controls which browser origins are allowed to make cross-origin requests to an API.
+
+For example, if your frontend runs at `https://myapp.com`, you can configure FastAPI to allow requests from that origin:
 
 ```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://myapp.com"
-    ],
+    allow_origins=["https://myapp.com"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 ```
 
@@ -84,56 +79,46 @@ Avoid blindly using:
 allow_origins=["*"]
 ```
 
-# Rate limiting
+## 3. Rate Limiting
 
-Rate limiting controls how frequently a client can call an endpoint.
+Rate limiting restricts how frequently a client can call an endpoint within a given period.
 
 For example:
 
 ```text
-100 requests / minute / IP
-```
-
-When the limit is exceeded:
-
-```text
+100 requests per minute
+         ↓
+Limit exceeded
+         ↓
 429 Too Many Requests
 ```
 
-A library such as SlowAPI can provide route-level limits:
+A library such as SlowAPI can provide route-level rate limits:
 
 ```python
+from fastapi import Request
+
+@app.get("/products")
 @limiter.limit("100/minute")
-async def products(request: Request):
-    ...
+async def get_products(request: Request):
+    return {"products": []}
 ```
 
 Rate limiting helps reduce:
 
-- Spam
-- Brute-force attempts
-- API abuse
+- Spam and automated abuse
+- Brute-force login attempts
 - Excessive resource consumption
 
-For sensitive endpoints such as login, password reset, or expensive AI endpoints, stricter limits are often appropriate.
+## 4. Security Headers
 
-# Security headers
+Security headers instruct browsers how to handle application responses. They provide an additional layer of protection against certain browser-based attacks.
 
-Middleware is useful for security concerns that apply across many or all requests.
-
-Typical examples include:
-
-```text
-CORS
-Rate Limiting
-Security Headers
-Logging
-Request IDs
-```
-
-For example:
+For example, middleware can add common security headers to responses:
 
 ```python
+from fastapi import Request
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -147,25 +132,27 @@ async def security_headers(request: Request, call_next):
     return response
 ```
 
-The advantage is that individual routes do not need to repeat this logic.
+These headers serve different purposes:
 
-# Input Validation and XSS Protection
+- `X-Content-Type-Options: nosniff` prevents browsers from guessing content types.
+- `X-Frame-Options: DENY` prevents the page from being embedded in a frame.
+- `Referrer-Policy` controls how much referrer information browsers send.
 
-Security also starts with the input.
+## 5. Input Validation and XSS Protection
 
-## Pydantic
+Input validation ensures that incoming data matches the application's expected structure and constraints.
 
-FastAPI uses Pydantic to validate request data.
-
-For example:
+FastAPI integrates with Pydantic to validate request bodies automatically. For example:
 
 ```python
+from pydantic import BaseModel, Field
+
 class UserCreate(BaseModel):
-    name: str
-    age: int
+    name: str = Field(min_length=1, max_length=100)
+    age: int = Field(ge=0, le=120)
 ```
 
-An invalid value such as:
+If a client submits invalid data:
 
 ```json
 {
@@ -174,79 +161,60 @@ An invalid value such as:
 }
 ```
 
-will be rejected before reaching the business logic.
+FastAPI returns a validation error instead of passing the invalid value to the endpoint's business logic.
 
-Validation helps ensure that application code receives data with the expected structure and types.
-
-## HTML sanitization
-
-Validation does not automatically make HTML content safe.
-
-If users are allowed to submit HTML, an attacker could attempt:
+**Cross-Site Scripting (XSS)** occurs when malicious scripts are executed in a browser through untrusted content. For example, an attacker might submit:
 
 ```html
-<script>
-    stealSensitiveData()
-</script>
+<script>alert("XSS")</script>
 ```
 
-A sanitizer such as `nh3` can remove unsafe HTML:
+If your application intentionally accepts HTML, sanitize it with a library such as `nh3`:
 
 ```python
+import nh3
+
 clean_content = nh3.clean(user_content)
 ```
 
-# HTTPS and Sensitive Data
+Sanitization should be configured according to the HTML features your application needs. For ordinary text, avoid rendering user input as HTML in the first place.
 
-Security also depends on protecting data outside the application logic.
+## 6. HTTPS and Sensitive Data
 
-## HTTPS
+HTTPS encrypts data while it travels between the client and server, helping protect passwords, tokens, personal information, and other sensitive data from interception.
 
-HTTPS encrypts data while it travels between the client and server.
+Production APIs should use HTTPS. When TLS terminates at a reverse proxy, configure the deployment to handle forwarded headers securely and only trust known proxies.
 
-This protects sensitive information such as:
+Applications must also avoid exposing sensitive information in API responses or logs.
 
-```text
-Passwords
-JWTs
-Personal information
-Payment data
-```
+Never return values such as:
 
-Production APIs should therefore be served over HTTPS.
+- Passwords or password hashes
+- JWT signing secrets
+- API keys
+- Database credentials
 
-## Never expose secrets
+Passwords should be stored using a dedicated password-hashing algorithm, such as Argon2id, rather than as plaintext or with reversible encryption.
 
-Sensitive values should never appear in API responses:
+For JWTs, use an established library, explicitly restrict accepted signing algorithms, and validate relevant claims such as expiration and issuer when applicable.
 
-```text
-❌ Passwords
-❌ JWT secrets
-❌ API keys
-❌ Database credentials
-```
+## 7. Environment Variables and Secrets Management
 
-Passwords should be stored as secure hashes rather than plaintext.
+Never hard-code secrets in application source code.
 
-# Environment Variables and Secrets Management
-
-Secrets should not be hard-coded:
+Avoid:
 
 ```python
 JWT_SECRET = "my-super-secret-key"
 ```
 
-Instead:
+Instead, load the value from the environment:
 
 ```python
 import os
 
-JWT_SECRET = os.getenv("JWT_SECRET")
-DATABASE_URL = os.getenv("DATABASE_URL")
+JWT_SECRET = os.environ["JWT_SECRET"]
+DATABASE_URL = os.environ["DATABASE_URL"]
 ```
 
-This keeps secrets out of source code and Git repositories.
-
-In containerized environments such as Kubernetes, secrets can be injected separately from application code.
-
-However, Kubernetes Secrets are **base64-encoded by default, not encrypted by default**. Production environments should consider encryption at rest and dedicated secret-management systems such as cloud secret managers.
+For local development, environment variables can be loaded from a `.env` file that is excluded from Git. In production, use your deployment platform's secret-management mechanism.

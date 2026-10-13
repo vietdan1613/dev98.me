@@ -1,5 +1,5 @@
 ---
-title: "Middleware in FastAPI"
+title: "FastAPI: Middleware"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -9,9 +9,13 @@ thumbnailText: FastAPI
 
 Middleware is a layer that sits between the client and your FastAPI application. It can process a request before it reaches the endpoint and process the response before it is sent back to the client.
 
+<div style={{ maxWidth: 700, margin: '0 auto' }}>
+
 ![FastAPI middleware — Request ID, Logging, CORS, Security Headers, Rate Limiting and GZip wrap the Router, Dependencies, Service and Database](./imgs/fastapi-middleware.jpg)
 
-# How Middleware Works
+</div>
+
+## How Middleware Works
 
 A simple custom middleware looks like this:
 
@@ -40,9 +44,7 @@ async def timing_middleware(request: Request, call_next):
 - `call_next()` passes the request to the next layer.
 - Code **after `call_next()`** runs when the response comes back.
 
-# Common Uses of Middleware
-
-## Logging
+### Logging
 
 Log information such as:, HTTP method, URL, Status code, Processing time, Request ID
 
@@ -53,7 +55,7 @@ GET /api/plants → 200 → 42ms
 POST /api/orders → 201 → 85ms
 ```
 
-## Request ID
+### Request ID
 
 Assign a unique ID to each request so it can be traced through logs and services.
 
@@ -67,17 +69,7 @@ Service
 Database
 ```
 
-## Request Timing
-
-Measure how long a request takes:
-
-```http
-X-Process-Time: 0.0421
-```
-
-This is useful for monitoring and performance debugging.
-
-## Security Headers
+### Security Headers
 
 Add headers such as:
 
@@ -87,19 +79,7 @@ X-Frame-Options
 Strict-Transport-Security
 ```
 
-## CORS
-
-Control which browser origins are allowed to call your API.
-
-## GZip
-
-Compress larger responses to reduce network payload size.
-
-## Rate Limiting
-
-Limit how frequently clients can call your API and help protect public endpoints from abuse.
-
-# request.state
+## request.state
 
 Middleware can attach request-scoped data to `request.state`.
 
@@ -130,9 +110,9 @@ request.state.request_id
 
 `request.state` is useful for data that belongs to the current request. It should not be treated as global application state.
 
-# Two Ways to Write Custom Middleware
+## Two Ways to Write Custom Middleware
 
-## HTTP Middleware
+### HTTP Middleware
 
 The simplest approach is:
 
@@ -145,7 +125,7 @@ async def logging_middleware(request: Request, call_next):
 
 This is usually enough for normal request/response processing.
 
-## ASGI Middleware
+### ASGI Middleware
 
 ASGI middleware works at a lower level. It is a class that wraps the application and implements `__call__`:
 
