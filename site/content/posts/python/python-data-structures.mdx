@@ -1,0 +1,186 @@
+---
+title: "Python: Data Structures"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-10-14
+thumbnailText: Python
+---
+
+Data structures are essential for organizing, storing, and manipulating data in Python. Built-in collections such as lists, tuples, dictionaries, and sets provide different ways to manage data efficiently.
+
+### 1. Lists and List Methods
+
+A list is an ordered, mutable collection that allows duplicate values and elements of different types.
+
+```python
+fruits = ["apple", "banana", "orange"]
+
+fruits.append("mango")
+fruits.insert(1, "grape")
+fruits.remove("banana")
+
+print(fruits)       # ['apple', 'grape', 'orange', 'mango']
+print(fruits[0])    # apple
+print(len(fruits))  # 4
+```
+
+Common list methods include:
+
+- `append(x)`: adds an element to the end.
+- `extend(iterable)`: adds multiple elements.
+- `insert(i, x)`: inserts an element at an index.
+- `remove(x)`: removes the first matching value.
+- `pop(i)`: removes and returns an element.
+- `sort()`: sorts the list in place.
+- `reverse()`: reverses the list in place.
+- `index(x)`: returns the index of the first matching value.
+
+Use `in` to check membership and `len()` to get the number of elements.
+
+```python
+numbers = [3, 1, 2]
+
+numbers.sort()
+print(numbers)  # [1, 2, 3]
+
+print(2 in numbers)  # True
+```
+
+### 2. Tuples and Immutability
+
+A tuple is an ordered collection that cannot be modified after creation. It supports duplicate values and mixed data types.
+
+```python
+coordinates = (10, 20)
+user = ("Alice", 25, True)
+
+print(coordinates[0])  # 10
+print(len(user))       # 3
+```
+
+A single-element tuple requires a trailing comma.
+
+```python
+single = (42,)
+not_a_tuple = (42)
+
+print(type(single))      # <class 'tuple'>
+print(type(not_a_tuple)) # <class 'int'>
+```
+
+Tuples support indexing, slicing, iteration, and unpacking, but do not provide methods such as `append()` or `remove()`.
+
+Although a tuple is immutable, it can contain mutable objects:
+
+```python
+data = ([1, 2], 3)
+data[0].append(4)
+
+print(data)  # ([1, 2, 4], 3)
+```
+
+The tuple's references remain unchanged, but the nested list can still be modified.
+
+### 3. Dictionaries and Dictionary Methods
+
+A dictionary stores key-value pairs. Keys must be hashable, while values can be any Python objects.
+
+```python
+user = {
+    "name": "Alice",
+    "age": 25,
+    "active": True,
+}
+
+print(user["name"])       # Alice
+print(user.get("email"))  # None
+```
+
+Common dictionary methods include:
+
+- `get(key, default)`: retrieves a value without raising `KeyError` for a missing key.
+- `keys()`: returns a view of the keys.
+- `values()`: returns a view of the values.
+- `items()`: returns a view of key-value pairs.
+- `update(mapping)`: adds or updates entries.
+- `pop(key)`: removes and returns a value.
+- `setdefault(key, default)`: returns the existing value or inserts a default.
+
+```python
+user.update({"age": 26, "city": "Hanoi"})
+
+for key, value in user.items():
+    print(key, value)
+```
+
+Dictionaries preserve insertion order in modern Python. Assigning a value to an existing key updates its value without creating a duplicate key.
+
+### 4. Sets and Set Operations
+
+A set is an unordered collection of unique, hashable elements. It automatically removes duplicates.
+
+```python
+numbers = {1, 2, 2, 3}
+
+print(numbers)  # {1, 2, 3}
+
+numbers.add(4)
+numbers.discard(2)
+```
+
+Create an empty set using `set()`, because `{}` creates an empty dictionary.
+
+Sets support mathematical operations:
+
+```python
+a = {1, 2, 3}
+b = {3, 4, 5}
+
+print(a | b)  # Union: {1, 2, 3, 4, 5}
+print(a & b)  # Intersection: {3}
+print(a - b)  # Difference: {1, 2}
+print(a ^ b)  # Symmetric difference: {1, 2, 4, 5}
+```
+
+You can also use `issubset()`, `issuperset()`, and `isdisjoint()` to compare sets.
+
+### 5. Shallow Copy vs Deep Copy
+
+Copying determines whether a new collection shares references to nested objects with the original.
+
+A **shallow copy** creates a new outer collection but keeps references to the same nested objects.
+
+```python
+import copy
+
+original = [[1, 2], [3, 4]]
+shallow = copy.copy(original)
+
+shallow[0].append(99)
+
+print(original)  # [[1, 2, 99], [3, 4]]
+print(shallow)   # [[1, 2, 99], [3, 4]]
+```
+
+A **deep copy** recursively copies nested objects where supported, making the copied structure independent of the original in typical nested collection scenarios.
+
+```python
+original = [[1, 2], [3, 4]]
+deep = copy.deepcopy(original)
+
+deep[0].append(99)
+
+print(original)  # [[1, 2], [3, 4]]
+print(deep)     # [[1, 2, 99], [3, 4]]
+```
+
+For a simple list, `list.copy()` and `[:]` both create shallow copies.
+
+Choose the appropriate approach based on your data:
+
+- Use assignment when you intentionally want another reference to the same object.
+- Use a shallow copy when only the outer collection needs to be independent.
+- Use a deep copy when nested objects also need to be copied.
+
+Deep copying can be expensive and may not be appropriate for every object, so use it only when necessary.

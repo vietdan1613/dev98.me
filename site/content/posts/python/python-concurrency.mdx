@@ -1,0 +1,363 @@
+---
+title: "Python: Asynchronous Programming and Concurrency"
+slug: python-concurrency-async-await-threading-and-multiprocessing
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-10-14
+thumbnailText: Python
+---
+
+Concurrency allows a Python application to manage multiple tasks during overlapping periods of time. It is especially useful for applications that handle network requests, database queries, file operations, and CPU-intensive workloads.
+
+Python provides several approaches to concurrency, including `asyncio`, threading, and multiprocessing. Understanding when to use each approach helps you build responsive and efficient applications.
+
+### 1. Synchronous vs Asynchronous Programming
+
+In synchronous programming, operations generally execute one after another. When an operation blocks, the current thread waits for it to finish before continuing.
+
+```python
+import time
+
+def fetch_data():
+    time.sleep(2)
+    return "Data received"
+
+def main():
+    first = fetch_data()
+    second = fetch_data()
+
+    print(first, second)
+
+main()
+```
+
+The two calls take approximately four seconds because each call waits for two seconds.
+
+Asynchronous programming allows a task to pause while waiting for an operation, enabling other tasks to make progress.
+
+```python
+import asyncio
+
+async def fetch_data():
+    await asyncio.sleep(2)
+    return "Data received"
+
+async def main():
+    first, second = await asyncio.gather(
+        fetch_data(),
+        fetch_data(),
+    )
+
+    print(first, second)
+
+asyncio.run(main())
+```
+
+The two simulated operations complete in approximately two seconds because their waiting periods overlap.
+
+**Key takeaway:** Synchronous code is straightforward and sequential. Asynchronous code is useful when tasks spend significant time waiting for I/O and can yield control during that wait.
+
+### 2. Coroutines and the Event Loop
+
+A coroutine is a computation that can suspend and resume execution. In Python, an `async def` function defines a coroutine function, and calling it creates a coroutine object.
+
+The event loop schedules and runs asynchronous tasks, switching between tasks when they suspend and other work can proceed.
+
+```python
+import asyncio
+
+async def task(name, delay):
+    print(f"{name} started")
+    await asyncio.sleep(delay)
+    print(f"{name} finished")
+
+async def main():
+    await asyncio.gather(
+        task("Task A", 2),
+        task("Task B", 1),
+    )
+
+asyncio.run(main())
+```
+
+Conceptually, the execution proceeds as follows:
+
+1. `asyncio.run()` creates and manages an event loop for the program.
+2. `main()` starts both coroutines through `asyncio.gather()`.
+3. Each task reaches `await asyncio.sleep(...)` and suspends.
+4. The event loop runs other tasks while the timers are pending.
+5. Each task resumes when its awaited operation completes.
+
+An important distinction is that calling an async function does not automatically execute its body to completion. It returns a coroutine object that must be awaited or scheduled.
+
+**Key takeaway:** Coroutines define suspendable work, while the event loop coordinates when asynchronous tasks run.
+
+### 3. `asyncio.create_task()` and `gather()`
+
+Python's `asyncio` module provides several ways to run multiple coroutines concurrently.
+
+#### `asyncio.create_task()`
+
+`create_task()` schedules a coroutine to run as an `asyncio.Task`, allowing it to make progress while the current coroutine continues or awaits other work.
+
+```python
+import asyncio
+
+async def fetch_data():
+    await asyncio.sleep(2)
+    return "Data received"
+
+async def main():
+    task = asyncio.create_task(fetch_data())
+
+    print("Task scheduled")
+
+    result = await task
+    print(result)
+
+asyncio.run(main())
+```
+
+The task is scheduled when `create_task()` is called. Its execution can progress when the event loop gets a chance to run it.
+
+#### `asyncio.gather()`
+
+`gather()` runs multiple awaitables concurrently and returns their results in the order they were supplied.
+
+```python
+import asyncio
+
+async def fetch_item(item_id):
+    await asyncio.sleep(1)
+    return {"id": item_id}
+
+async def main():
+    results = await asyncio.gather(
+        fetch_item(1),
+        fetch_item(2),
+        fetch_item(3),
+    )
+
+    print(results)
+
+asyncio.run(main())
+```
+
+Output:
+
+```text
+[{'id': 1}, {'id': 2}, {'id': 3}]
+```
+
+Use `create_task()` when you want to schedule a particular task and retain a reference to it. Use `gather()` when you want to await several operations and collect their results together.
+
+For related tasks that should share a clear lifetime, `asyncio.TaskGroup` (Python 3.11+) is another useful option. It provides structured concurrency and cancels remaining tasks when an unhandled task failure occurs.
+
+**Key takeaway:** Schedule independent I/O operations concurrently, but retain task references and handle errors and cancellation deliberately.
+
+### 4. Async Context Managers
+
+A context manager controls resource setup and cleanup. An asynchronous context manager supports setup and cleanup operations that may themselves need to await asynchronous work.
+
+Use `async with` for resources such as asynchronous database sessions, HTTP clients, and streaming connections.
+
+```python
+async def main():
+    async with create_async_session() as session:
+        result = await session.execute(query)
+```
+
+Here, `create_async_session()` and `query` represent an asynchronous session factory and a valid query in the application's database library.
+
+The asynchronous context manager protocol consists of:
+
+- `__aenter__()`: asynchronously prepares the resource.
+- `__aexit__()`: asynchronously performs cleanup.
+
+Python waits for these methods as part of entering and leaving the context.
+
+A custom asynchronous context manager can also be implemented with `contextlib.asynccontextmanager`:
+
+```python
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def managed_resource():
+    print("Acquire resource")
+    try:
+        yield "resource"
+    finally:
+        print("Release resource")
+
+async def main():
+    async with managed_resource() as resource:
+        print(resource)
+```
+
+The `finally` block ensures cleanup is attempted when execution exits the context.
+
+**Key takeaway:** Use `async with` when a resource has an asynchronous lifecycle, and use it to make resource ownership and cleanup explicit.
+
+### 5. Async Generators
+
+An asynchronous generator produces values incrementally using `async def` and `yield`. Unlike a regular generator, it can also await asynchronous operations while producing values.
+
+```python
+import asyncio
+
+async def stream_numbers():
+    for number in range(3):
+        await asyncio.sleep(1)
+        yield number
+
+async def main():
+    async for number in stream_numbers():
+        print(number)
+
+asyncio.run(main())
+```
+
+Each iteration requests the next value from the asynchronous generator. The generator waits for one second, yields a number, and resumes when the consumer requests another value.
+
+Asynchronous generators are useful for:
+
+- Streaming API responses.
+- Processing asynchronous database results.
+- Reading data from asynchronous streams.
+- Producing events incrementally.
+
+Unlike a regular generator, an asynchronous generator is consumed using `async for`, and its asynchronous iteration protocol uses `__aiter__()` and `__anext__()`.
+
+**Key takeaway:** Use async generators when you need to produce a stream of values while awaiting I/O between values.
+
+### 6. Threading vs Multiprocessing
+
+Threading and multiprocessing are useful for different workloads.
+
+**Threading** runs multiple threads within one process. Threads share the process's memory, making communication convenient, but shared state requires careful synchronization.
+
+**Multiprocessing** uses separate processes with separate memory spaces. It can run CPU-intensive work in parallel across multiple CPU cores, subject to system resources and process-management overhead.
+
+#### Threading example
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+def fetch_data(item):
+    time.sleep(1)
+    return f"Fetched {item}"
+
+with ThreadPoolExecutor(max_workers=3) as executor:
+    results = list(executor.map(fetch_data, [1, 2, 3]))
+
+print(results)
+```
+
+This is suitable for tasks that spend time waiting, such as simulated network requests.
+
+#### Multiprocessing example
+
+```python
+from concurrent.futures import ProcessPoolExecutor
+
+def square(number):
+    return number * number
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(square, range(5)))
+
+    print(results)
+```
+
+The `if __name__ == "__main__"` guard is important for portable multiprocessing code, particularly on platforms that start worker processes by importing the main module.
+
+For CPU-bound work, multiprocessing can use multiple CPU cores. For I/O-bound work, threads can often improve throughput with less overhead than creating separate processes.
+
+Python's Global Interpreter Lock (GIL) in conventional CPython builds limits simultaneous execution of Python bytecode across threads, although threads can still overlap I/O and native extensions may release the GIL. CPython also offers free-threaded builds, so the precise behavior depends on the runtime.
+
+**Key takeaway:** Use threads for many blocking I/O tasks and processes for CPU-bound workloads that benefit from parallel execution.
+
+### 7. Concurrency vs Parallelism
+
+Concurrency and parallelism are related but different concepts.
+
+- **Concurrency:** Multiple tasks make progress during overlapping periods of time.
+- **Parallelism:** Multiple tasks execute at the same instant.
+
+An asynchronous application can handle many network operations concurrently on a single thread without running Python code for multiple tasks simultaneously.
+
+Multiprocessing can execute independent CPU-bound tasks in parallel on separate cores.
+
+For example, an API server may concurrently wait for many database queries, while a separate worker pool processes images in parallel.
+
+**Key takeaway:** Concurrency helps organize overlapping work; parallelism enables simultaneous execution. A system can use both.
+
+### 8. Async I/O vs Blocking I/O
+
+Blocking I/O prevents the current thread from continuing until the operation completes. Examples include many synchronous HTTP requests, database calls, and file operations.
+
+Asynchronous I/O allows the current coroutine to suspend while the operation is pending, provided the underlying library supports non-blocking operations.
+
+#### Blocking example
+
+```python
+import time
+
+def blocking_task():
+    time.sleep(2)
+```
+
+Calling `time.sleep(2)` inside an asynchronous event loop blocks its thread for two seconds, preventing other tasks on that loop from progressing.
+
+#### Non-blocking asynchronous example
+
+```python
+import asyncio
+
+async def non_blocking_task():
+    await asyncio.sleep(2)
+```
+
+`asyncio.sleep()` suspends the current task without blocking the event-loop thread.
+
+For actual network and database operations, use libraries that support asynchronous I/O. Simply placing a synchronous function inside `async def` does not make it non-blocking.
+
+If a blocking operation cannot be replaced, it can sometimes be moved to a worker thread:
+
+```python
+import asyncio
+import time
+
+def blocking_operation():
+    time.sleep(2)
+    return "Completed"
+
+async def main():
+    result = await asyncio.to_thread(blocking_operation)
+    print(result)
+
+asyncio.run(main())
+```
+
+`asyncio.to_thread()` is available in Python 3.9 and later. It is useful for blocking I/O, but it generally does not speed up pure Python CPU-bound work under the conventional CPython GIL.
+
+**Key takeaway:** Async I/O works best when the entire I/O path uses compatible asynchronous operations. A single blocking call can stall the event loop.
+
+### Key Takeaways
+
+Python concurrency provides several complementary tools for building responsive and efficient applications:
+
+- **Async/await:** Write asynchronous code using coroutines.
+- **Event loop:** Coordinates the execution of asynchronous tasks.
+- **`create_task()` and `gather()`:** Schedule and coordinate concurrent operations.
+- **Async context managers:** Manage resources with asynchronous setup and cleanup.
+- **Async generators:** Produce values incrementally while supporting asynchronous operations.
+- **Threading:** Overlap blocking I/O tasks within a process.
+- **Multiprocessing:** Run CPU-intensive work in separate processes.
+- **Concurrency vs parallelism:** Understand overlapping progress versus simultaneous execution.
+- **Async vs blocking I/O:** Avoid blocking the event loop with synchronous operations.
+
+For most I/O-heavy Python APIs, `asyncio` is a strong choice when the libraries involved support asynchronous operations. For CPU-intensive tasks, consider multiprocessing or specialized libraries designed for parallel computation.
