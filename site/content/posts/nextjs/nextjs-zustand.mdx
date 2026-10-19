@@ -1,5 +1,5 @@
 ---
-title: "Zustand: A Practical Guide"
+title: "Next.js: Zustand"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS', '#Zustand']
@@ -15,13 +15,23 @@ Zustand is a lightweight state management library for React. It lets components 
 
 </div>
 
-Key features include:
+### Why Zustand?
+
+Zustand is useful when multiple components need to share client-side state, such as:
+
+- Shopping carts
+- Authentication state
+- UI preferences
+- Filters and selected items
+- Form or wizard state
+
+Key features:
 
 - **Simple API:** Create a store with minimal boilerplate.
-- **Selectors:** Subscribe to specific state values.
+- **Selectors:** Subscribe only to the state a component needs.
 - **TypeScript support:** Define state and actions with types.
-- **Middleware:** Add persistence, DevTools, or other capabilities.
-- **Outside React:** Access state through methods such as `getState()`.
+- **Middleware:** Add persistence, DevTools, and other capabilities.
+- **Outside React:** Access the store with `getState()` when needed.
 
 Install Zustand:
 
@@ -29,7 +39,7 @@ Install Zustand:
 npm install zustand
 ```
 
-### 1. Create the store
+### 1. Create a Store
 
 Create `store/cart.store.ts`:
 
@@ -66,7 +76,10 @@ export const useCartStore = create<CartStore>()(
             items: existing
               ? state.items.map((i) =>
                   i.id === item.id
-                    ? { ...i, quantity: i.quantity + item.quantity }
+                    ? {
+                        ...i,
+                        quantity: i.quantity + item.quantity,
+                      }
                     : i
                 )
               : [...state.items, item],
@@ -90,18 +103,18 @@ export const useCartStore = create<CartStore>()(
 );
 ```
 
-The store combines state and actions in one place.
+The store contains both **state** and **actions**.
 
-- `create()` creates the store hook.
-- `set()` updates state, merging the returned properties with the existing state.
-- `persist()` saves selected state to `localStorage`.
-- `partialize()` determines which fields are persisted.
+- `create()` creates the Zustand store.
+- `set()` updates the state.
+- `persist()` stores state in `localStorage`.
+- `partialize()` controls which state is persisted.
 
-In this example, adding an existing item increases its quantity instead of creating a duplicate cart entry.
+Here, if the product already exists in the cart, `addItem()` increases its quantity instead of creating a duplicate item.
 
-### 2. Use the store in a component
+### 2. Read State with Selectors
 
-Create `components/cart-button.tsx`:
+A component can subscribe to the state it needs:
 
 ```tsx
 "use client";
@@ -120,23 +133,27 @@ export function CartButton() {
 }
 ```
 
-The `"use client"` directive is required because this component uses a client-side state hook and renders an interactive UI.
+The `"use client"` directive is required because the component uses a client-side Zustand hook.
 
-**Why use selectors?**
+### Why use selectors?
 
-```tsx
-// Subscribe to the entire store
+Instead of subscribing to the entire store:
+
+```ts
 const cart = useCartStore();
+```
 
-// Subscribe only to items
+subscribe only to the value you need:
+
+```ts
 const items = useCartStore((state) => state.items);
 ```
 
-Selectors let components subscribe to the specific state they need, reducing unnecessary re-renders when unrelated state changes.
+Selectors help components avoid re-rendering when unrelated parts of the store change.
 
-### 3. Update the cart
+### 3. Update State
 
-Any client component can use the same store:
+Any client component can access the same store:
 
 ```tsx
 "use client";
@@ -163,4 +180,22 @@ export function AddToCartButton() {
 }
 ```
 
-When the customer adds a plant, the shared cart state updates and the header count changes automatically. The cart also survives page refreshes because of `persist()`.
+Because the store is shared, components such as the header, cart drawer, and checkout page can access the same cart state.
+
+The `persist` middleware also keeps the cart in `localStorage`, so the cart can survive a page refresh.
+
+### 4. Access the Store Outside React
+
+Zustand can also be accessed outside React components:
+
+```ts
+const items = useCartStore.getState().items;
+```
+
+You can also call an action directly:
+
+```ts
+useCartStore.getState().clearCart();
+```
+
+This can be useful in utility functions or application code that is not a React component.

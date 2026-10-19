@@ -445,6 +445,47 @@ I also use features like `keepPreviousData` to prevent the UI from flickering du
 
 Overall, TanStack Query helps me manage server state efficiently, reduce unnecessary API calls, and keep the UI synchronized with the backend.
 
+### 8. Why would you choose Zustand over Redux for client-side state management?
+
+I would choose Zustand when I need lightweight shared client-side state with minimal boilerplate. Zustand doesn't require actions, reducers, dispatchers, or a Provider. I can define state and actions directly in a store and use selectors to subscribe to only the data a component needs.
+
+For example, I might use Zustand for a shopping cart, UI preferences, or authentication-related client state. However, I wouldn't use it for server state by default. For API data such as products or orders, I would typically use React Query because it provides caching, synchronization, refetching, and mutation management out of the box.
+
+So my decision is usually: Zustand for shared client state, React Query for server state, and `useState` for local component state.
+
+### 9. How do you handle global state in a Next.js application using Zustand?
+
+I usually handle global client-side state in a Next.js application with Zustand.
+
+I create a centralized store that contains the state and actions, then use selectors in Client Components to access only the data they need.
+
+For example, for an e-commerce application, I might use Zustand to manage the shopping cart:
+
+```ts
+const useCartStore = create<CartStore>((set) => ({
+  items: [],
+
+  addItem: (item) =>
+    set((state) => ({
+      items: [...state.items, item],
+    })),
+
+  clearCart: () => set({ items: [] }),
+}));
+```
+
+Then a Client Component can subscribe to the store:
+
+```tsx
+"use client";
+
+const items = useCartStore((state) => state.items);
+```
+
+I also use Zustand middleware such as `persist` when the state needs to survive page refreshes.
+
+In Next.js, I keep the responsibility clear: Zustand for shared client state, while server data is usually handled by Server Components or React Query. This keeps the application state predictable and avoids putting everything into one global store.
+
 ## Performance and Deployment
 
 ### 1. How do you reduce client JavaScript?
