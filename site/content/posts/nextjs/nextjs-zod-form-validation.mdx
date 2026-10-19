@@ -7,96 +7,110 @@ date: 2026-10-18
 thumbnailText: Next.js
 ---
 
-TypeScript checks types during development, but it cannot validate data at runtime. A customer might submit an invalid phone number, an empty name, or an incomplete address.
+TypeScript checks types during development, but it cannot validate data at runtime. For example, an API might return unexpected data, or a customer might submit an invalid phone number.
 
-<div style={{ maxWidth: 700, margin: '0 auto' }}>
+**Zod** is a TypeScript-first validation library that checks whether data matches a schema at runtime. It can also transform data and infer TypeScript types directly from schemas.
 
-![Data → Validation → ZodError or Application](./imgs/zod-validation.jpg)
+### 1. Define a Schema
 
-</div>
+A schema describes the structure and validation rules of your data.
 
-Zod is a TypeScript-first schema validation library. It validates runtime data, transforms values, and infers TypeScript types directly from schemas. It is useful for validating forms, API responses, environment variables, and other untrusted data.
-
-
-### 1. Define the schema
-
-Create `lib/schemas/checkout.ts`:
-
-```ts
+```
 import { z } from "zod";
 
-const VN_PHONE_PATTERN =
-  /^(?:\+?84|0)(?:3|5|7|8|9)\d{8}$/;
-
-const normalizePhone = (value: string) =>
-  value.replace(/[\s.()\-]/g, "");
-
-export const checkoutSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "nameRequired")
-    .pipe(z.string().min(2, "nameTooShort")),
-
-  phone: z
-    .string()
-    .trim()
-    .min(1, "phoneRequired")
-    .transform(normalizePhone)
-    .pipe(
-      z.string().regex(
-        VN_PHONE_PATTERN,
-        "phoneInvalid"
-      )
-    ),
+const checkoutSchema = z.object({
+  name: z.string().trim().min(2, "Name is too short"),
+  phone: z.string().regex(
+    /^0\d{9}$/,
+    "Invalid phone number"
+  ),
+  age: z.number().min(18),
 });
 
-export type CheckoutForm = z.output<
-  typeof checkoutSchema
->;
+type CheckoutForm = z.infer<typeof checkoutSchema>;
 ```
 
-Key methods:
+Here, `z.object()` defines an object schema, while `z.string()` and `z.number()` define the expected data types.
 
-- `.trim()` removes leading and trailing whitespace.
-- `.min()` checks minimum string length.
-- `.regex()` validates a pattern.
-- `.transform()` cleans or converts data.
-- `.pipe()` validates the output of a previous schema.
-- `z.object()` validates an object's structure.
+Common validation methods include:
 
-For example, `"038 656 9374"` becomes `"0386569374"` before the phone number is validated.
+- `.min()` and `.max()` — Set minimum and maximum values or lengths.
+- `.regex()` — Validate a string against a regular expression.
+- `.optional()` — Allow a value to be `undefined`.
+- `.nullable()` — Allow a value to be `null`.
 
-### 2. Validate the form
+`z.infer<typeof checkoutSchema>` automatically derives the TypeScript type from the schema, avoiding duplicate type definitions.
 
-Use `safeParse()` when the customer submits the form:
+### 2. Validate Data with `parse()` and `safeParse()`
 
-```ts
+Zod provides two main methods for validating data.
+
+**`parse()`**
+
+Use `parse()` when invalid data should throw a `ZodError`.
+
+```
+const data = checkoutSchema.parse(formValues);
+```
+
+If the data is invalid, execution throws an error. Otherwise, `data` contains the validated output.
+
+**`safeParse()`**
+
+Use `safeParse()` when you want to handle validation errors explicitly.
+
+```
 const result = checkoutSchema.safeParse(formValues);
 
 if (!result.success) {
-  const fieldErrors =
-    z.flattenError(result.error).fieldErrors;
-
-  setErrors({
-    name: fieldErrors.name?.[0],
-    phone: fieldErrors.phone?.[0],
-    address: fieldErrors.address?.[0],
-  });
-
+  console.log(result.error.issues);
   return;
 }
 
 await createOrder(result.data);
 ```
 
-`safeParse()` returns a success or failure result instead of throwing an exception for invalid input.
+`safeParse()` returns a result object with either `success: true` and validated data, or `success: false` and a `ZodError`.
 
-| Input | Result |
-|---|---|
-| `" Viet "` | `"Viet"` |
-| `"038 656 9374"` | `"0386569374"` |
-| `"123"` as a phone | Validation error |
-| `"Hi"` as an address | Validation error |
+For form validation, `safeParse()` is often convenient because invalid input can be handled without throwing an exception.
 
-On success, `result.data` contains validated, cleaned, and typed data.
+### 3. Transform and Normalize Data
+
+Validation is not always just about checking data. Sometimes, input needs to be cleaned before it is used.
+
+**`.trim()**
+
+Removes whitespace from the beginning and end of a string.
+
+```
+z.string().trim().parse(" Viet ");
+// "Viet"
+```
+
+**`.transform()`**
+
+Converts validated input into a different output.
+
+```
+const phoneSchema = z.string()
+  .transform((value) => value.replace(/\s/g, ""))
+  .pipe(z.string().regex(/^0\d{9}$/));
+
+phoneSchema.parse("038 656 9374");
+// "0386569374"
+```
+
+### 4. Add Custom Validation with `refine()`
+
+Use `.refine()` when built-in validators are not enough.
+
+```
+const passwordSchema = z.string().refine(
+  (value) => value.length >= 8,
+  { error: "Password must be at least 8 characters" }
+);
+```
+
+For more complex validation, `.superRefine()` can report multiple issues and associate them with specific fields.
+
+For example, it can validate that a password and its confirmation match.

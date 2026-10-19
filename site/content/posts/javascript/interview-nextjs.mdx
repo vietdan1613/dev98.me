@@ -340,13 +340,11 @@ Secrets should stay on the server: Server Components, Server Functions, Route Ha
 
 Server Functions run on the server and can be called from application code for mutations or server-side work. In interviews, explain why the server boundary matters: validation, authorization, secret access, and trusted writes belong on the server.
 
-### 4. How do you use Zod for runtime validation in a TypeScript application, and why is it important?
+### 4. How do you use Zod to validate form data at runtime, and what is the difference between `parse()` and `safeParse()`?
 
-I use Zod to validate untrusted data at runtime because TypeScript only provides static type checking and cannot guarantee that external data matches the expected type.
+I use Zod to validate data at runtime because TypeScript only checks types during development and cannot guarantee that data from forms or APIs is valid.
 
-I define schemas to validate form inputs, API responses, and payloads. Zod also supports data transformation and TypeScript type inference, which helps reduce duplicated type definitions.
-
-For example, in a Next.js e-commerce application, I use Zod to validate checkout forms and API responses before passing the data to business logic.
+First, I define a schema with validation rules, such as required fields, minimum lengths, and format checks. Then, I use `safeParse()` to validate the input. If validation fails, I display errors to the user. If it succeeds, I use the validated data to submit the request.
 
 ```ts
 import { z } from "zod";
@@ -367,9 +365,9 @@ if (!result.success) {
 }
 ```
 
-I prefer `safeParse()` when I need to handle validation failures explicitly without throwing an exception.
+The main difference is that `parse()` throws a `ZodError` when validation fails, while `safeParse()` returns a result object that lets me handle success and failure explicitly without using `try/catch`.
 
-In production, I validate data on both the frontend and backend. Frontend validation improves user experience, while backend validation ensures that invalid data cannot bypass the application's business rules. A good form answer also includes pending state, duplicate-submit prevention, error display, and accessible field messages.
+I also use `z.infer` to derive TypeScript types from schemas, avoiding duplicated type definitions. In production, I validate on both the frontend and backend: frontend validation improves UX, while backend validation ensures invalid data cannot bypass business rules.
 
 ### 5. How do you handle authentication?
 
