@@ -1,0 +1,119 @@
+---
+title: "Next.js: Font and Image Optimization"
+slug: font-and-image-optimization-in-nextjs
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS']
+date: 2026-10-17
+thumbnailText: Next.js
+---
+
+Performance is an important part of building a modern web application. Fonts and images can significantly affect loading speed, visual stability, and Core Web Vitals.
+
+Next.js provides built-in tools to optimize these resources: `next/font` for fonts and `next/image` for images.
+
+### 1. Font Optimization with `next/font`
+
+Loading fonts from external providers can introduce network requests and affect how text is rendered. Next.js solves this problem with the `next/font` module, which automatically self-hosts fonts and optimizes font loading.
+
+**Using Google Fonts**
+
+You can import a Google Font and apply it to your entire application through the root layout.
+
+```tsx
+// app/layout.tsx
+import { Geist } from 'next/font/google'
+
+const geist = Geist({
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en" className={geist.className}>
+      <body>{children}</body>
+    </html>
+  )
+}
+```
+
+Next.js downloads the font during the build process and serves it from your application's domain. The browser does not need to request the font directly from Google.
+
+### 2. Image Optimization with `next/image`
+
+Images often account for a large portion of a web page's total size. The Next.js `Image` component extends the standard HTML `img` element with built-in image optimization features.
+
+**Using Local Images**
+
+Place static images in the `public` directory and reference them using a path relative to the site's root.
+
+```tsx
+import Image from 'next/image'
+
+export default function ProductImage() {
+  return (
+    <Image
+      src="/images/monstera.jpg"
+      alt="Monstera plant"
+      width={600}
+      height={600}
+      sizes="(max-width: 768px) 100vw, 600px"
+    />
+  )
+}
+```
+
+The `width` and `height` properties help Next.js determine the image's aspect ratio and prevent unexpected layout shifts. The `sizes` property helps the browser select an appropriate image size for the viewport.
+
+**Using Remote Images**
+
+For images hosted on external servers, configure the allowed sources in `next.config.ts`.
+
+```tsx
+// next.config.ts
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.example.com',
+        pathname: '/products/**',
+      },
+    ],
+  },
+}
+
+export default nextConfig
+```
+
+Then use the remote URL with the `Image` component.
+
+```tsx
+<Image
+  src="https://images.example.com/products/monstera.jpg"
+  alt="Monstera plant"
+  width={800}
+  height={600}
+/>
+```
+
+For remote images, you must provide `width` and `height`, or use `fill` with a properly sized parent container.
+
+**How `next/image` Improves Performance**
+
+The `Image` component provides several useful features:
+
+- **Responsive images:** Serves appropriately sized images based on the configured image sizes and device requirements.
+- **Modern formats:** Supports formats such as WebP and AVIF when configured and supported by the image optimization pipeline.
+- **Lazy loading:** Defers loading off-screen images by default.
+- **Layout stability:** Uses image dimensions or a sized container to reduce Cumulative Layout Shift (CLS).
+- **On-demand optimization:** Can resize and optimize supported remote images when requested.
+
+For important above-the-fold images, such as a hero image or the main product image, consider using `preload` when appropriate or the relevant loading priority options supported by your Next.js version. Avoid prioritizing every image, as this can compete with more important resources.

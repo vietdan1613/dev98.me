@@ -1,5 +1,5 @@
 ---
-title: "Fetching, Mutating, Caching & Revalidating Data"
+title: "Next.js: Fetching, Mutating, Caching & Revalidating Data"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -7,92 +7,176 @@ date: 2026-09-24
 thumbnailText: Next.js
 ---
 
-When learning the Next.js App Router, four concepts can easily get mixed up: **Fetching Data, Mutating Data, Caching, and Revalidating**. They are different operations, but they work together in a real application:
-
-How Everything Works Together
+When learning the Next.js App Router, four concepts can easily get mixed up: **Fetching Data, Mutating Data, Caching, and Revalidating**. They are different operations, but they work together in a real application. Let's use a plant shop as an example to understand how they fit together.
 
 ```text
 1. FETCH
-   getPlants() reads plants from the database
-             |
-             v
+   getPlants() retrieves plants from the API or database
+          |
+          v
 2. CACHE
-   Next.js caches the result
-             |
-             v
+   Next.js stores the result for reuse
+          |
+          v
 3. MUTATE
-   An admin creates a new plant
-             |
-             v
+   An admin creates, updates, or deletes a plant
+          |
+          v
 4. REVALIDATE
    updateTag("plants")
    or revalidateTag("plants", "max")
    or revalidatePath("/plants")
-             |
-             v
+          |
+          v
 5. FRESH DATA
-   Next.js refreshes the relevant cached data
-   according to the chosen revalidation strategy
+   Next.js fetches fresh data when required,
+   according to the selected revalidation strategy
 ```
+
+The key idea is that **mutating the database does not automatically update every cached result**. You need a caching and revalidation strategy that matches your application's requirements.
 
 ### 1. Fetching Data — Reading Data
 
-Fetching data means retrieving information from a database or API. For example, our `/plants` page needs to display all available plants. We can fetch the data directly inside a Server Component.
+Fetching data means retrieving information from a database or API. For example, our `/plants` page needs to display the available plants. In the App Router, a Server Component can fetch data directly:
 
 ```tsx
+// app/plants/page.tsx
+
+import { PlantList } from "./_components/plant-list";
+
 export default async function PlantsPage() {
   const res = await fetch(
     "https://api.example.com/plants"
-  )
+  );
 
   if (!res.ok) {
-    throw new Error("Failed to fetch plants")
+    throw new Error("Failed to fetch plants");
   }
 
-  const plants = await res.json()
+  const plants = await res.json();
 
-  return <PlantList plants={plants} />
+  return <PlantList plants={plants} />;
 }
 ```
 
 ### 2. Caching — Reusing Data
 
-Suppose our plant catalog doesn't change frequently. We don't want to repeat the same database query unnecessarily. With **Cache Components** in Next.js 16, we can cache a function using the `"use cache"` directive.
+Suppose our plant catalog doesn't change frequently. We don't want to query the database or call the API unnecessarily on every request.
 
-First, enable Cache Components in `next.config.ts`:
+Next.js 16 supports two common approaches to caching data.
+
+**Option A: Cache API requests with `fetch()`**
+
+If your application retrieves data from an external API, you can configure caching directly on the request:
 
 ```tsx
-import type { NextConfig } from "next"
+// lib/api/plants.ts
+
+export async function getPlants() {
+  const res = await fetch(
+    "https://api.example.com/plants",
+    {
+      next: {
+        revalidate: 6 * 60 * 60,
+        tags: ["plants"],
+      },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch plants");
+  }
+
+  return res.json();
+}
+```
+
+Here:
+
+- `revalidate: 6 * 60 * 60` sets a six-hour revalidation interval.
+- `tags: ["plants"]` associates the cached request with the `plants` tag.
+
+**Option B: Cache functions with Cache Components**
+
+If you want to cache the result of a database query or a function that combines multiple data sources, you can use Cache Components. First, enable Cache Components in `next.config.ts`:
+
+```tsx
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-}
+};
 
-export default nextConfig
+export default nextConfig;
 ```
 
-Then cache the function that retrieves plants:
+Then define a cached function:
 
 ```tsx
-import { cacheLife, cacheTag } from "next/cache"
+// lib/data/plants.ts
+
+import { cacheLife, cacheTag } from "next/cache";
+import { db } from "@/lib/db";
 
 export async function getPlants() {
-  "use cache"
+  "use cache";
 
-  cacheLife("hours")
-  cacheTag("plants")
+  cacheLife("hours");
+  cacheTag("plants");
 
-  return db.plant.findMany()
+  return db.plant.findMany({
+    orderBy: { createdAt: "desc" },
+  });
 }
 ```
 
-### 3. Mutating Data — Changing Data
+Here:
 
-We can then connect the action to a form:
+- `"use cache"` enables caching for the function's result.
+- `cacheLife("hours")` applies the built-in `hours` cache profile.
+- `cacheTag("plants")` associates the cached result with the `plants` tag.
+
+The `hours` profile is not simply a six-hour TTL. It defines separate stale, revalidation, and expiration durations. Use a custom `cacheLife` configuration if you need precise timing.
+
+**Which approach should you choose?**
+
+Use `fetch()` with `next.tags` when caching API requests. Use `"use cache"` with `cacheTag()` when caching the result of a function or component. You don't need both tagging mechanisms for the same cached result.
+
+**3. Mutating Data — Changing Data**
+
+Mutations change the underlying data. Examples include creating a plant, updating its price, changing its availability, or deleting it.
+
+In the App Router, Server Actions are a convenient way to handle form submissions.
+
+```tsx
+// app/plants/actions.ts
+
+"use server";
+
+import { db } from "@/lib/db";
+import { updateTag } from "next/cache";
+
+export async function createPlant(formData: FormData) {
+  const name = formData.get("name");
+
+  if (typeof name !== "string" || !name.trim()) {
+    throw new Error("Plant name is required");
+  }
+
+  await db.plant.create({
+    data: { name: name.trim() },
+  });
+
+  updateTag("plants");
+}
+```
+
+Connect the action to a form:
 
 ```tsx
 // app/plants/new/page.tsx
-import { createPlant } from "../actions"
+
+import { createPlant } from "../actions";
 
 export default function NewPlantPage() {
   return (
@@ -100,85 +184,97 @@ export default function NewPlantPage() {
       <input name="name" required />
       <button type="submit">Create Plant</button>
     </form>
-  )
+  );
 }
 ```
-
-When the form is submitted, Next.js invokes the Server Action, which inserts the new plant into the database.
 
 ### 4. Revalidating Data — Updating the Cache
 
-Now let's look at the problem. Our database initially contains:
+Imagine the database initially contains:
 
-```text
-Monstera
-Philodendron
-Snake Plant
+- Monstera
+- Philodendron
+- Snake Plant
 
--> We fetch the plants and cache the result. An admin then adds a new plant:
+Next.js fetches these plants and caches the result. An admin then creates a new plant:
 
-Ficus
-```
+- Ficus
 
-The database now contains four plants, but the cached result may still contain only three. We need to tell Next.js that the cached data should be refreshed.
+The database now contains four plants, but a cached result may still contain only three.
+
+We need to tell Next.js that the cached data associated with this change should be refreshed.
+
+There are three commonly used revalidation APIs, each with a different purpose.
 
 ### Option 1: `revalidateTag()`
 
-Use `revalidateTag()` when you want to invalidate or revalidate cached data associated with a specific tag.
-
-Update our Server Action:
+Use `revalidateTag()` when cached content can remain visible while Next.js refreshes it in the background.
 
 ```tsx
-"use server"
+"use server";
 
-import { revalidateTag } from "next/cache"
-import { db } from "@/lib/db"
+import { revalidateTag } from "next/cache";
 
 export async function createPlant(formData: FormData) {
-  ...
+  // Validate input and create the plant.
+  // ...
 
-  revalidateTag("plants", "max")
+  revalidateTag("plants", "max");
 }
 ```
 
-Because `getPlants()` uses `cacheTag("plants")`, Next.js can identify the cached data associated with that tag.
+The `"max"` profile uses stale-while-revalidate behavior:
 
-The `"max"` profile uses stale-while-revalidate behavior: the next request may receive stale data while Next.js refreshes the cache in the background.
+- Cached data may be served to the next visitor.
+- Next.js marks the tagged cache as stale.
+- Fresh data is fetched when the tagged resource is requested again.
+
+This approach works well for public content such as plant catalogs, blog posts, and documentation, where a short delay is acceptable.
+
+In Next.js 16, use the two-argument form. The previous single-argument form is deprecated.
 
 ### Option 2: `updateTag()`
 
-If an admin creates a plant and immediately needs to see the updated list, `updateTag()` is useful.
+Use `updateTag()` when a user changes data and needs to see the updated result immediately.
 
 ```tsx
-"use server"
+"use server";
 
-import { updateTag } from "next/cache"
-import { db } from "@/lib/db"
+import { updateTag } from "next/cache";
 
 export async function createPlant(formData: FormData) {
-  ...
+  // Validate input and create the plant.
+  // ...
 
-  updateTag("plants")
+  updateTag("plants");
 }
 ```
+
+Unlike `revalidateTag("plants", "max")`, `updateTag()` immediately expires the tagged cache instead of serving stale data while refreshing it.
+
+This is useful for read-your-own-writes scenarios, such as an admin editing a plant and then viewing the updated catalog.
+
+**Important:** `updateTag()` can only be called from a Server Action. For external webhooks and Route Handlers, use `revalidateTag()` instead.
 
 ### Option 3: `revalidatePath()`
 
-Use `revalidatePath()` when you want to revalidate a particular page or route.
-
-For example:
+Use `revalidatePath()` when you want to revalidate a particular route rather than target data through a tag.
 
 ```tsx
-"use server"
+"use server";
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath } from "next/cache";
 
 export async function createPlant(formData: FormData) {
-  // Validate the form data and create the plant.
+  // Validate input and create the plant.
   // ...
 
-  revalidatePath("/plants")
+  revalidatePath("/plants");
 }
 ```
 
-This tells Next.js to revalidate the `/plants` route. Unlike tag-based revalidation, which targets cached data associated with a tag, path-based revalidation targets a route.
+This tells Next.js to revalidate the `/plants` route.
+
+Unlike tag-based revalidation, which targets cached data associated with a tag, path-based revalidation targets a route.
+
+Use `revalidatePath()` when you know which page needs revalidation but don't want to manage its data tags. Prefer tag-based revalidation when you need more precise control over shared data used by multiple routes.

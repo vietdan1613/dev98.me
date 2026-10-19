@@ -223,11 +223,19 @@ Keep non-interactive UI as Server Components, put `"use client"` at small bounda
 
 ### 2. How do images work in Next.js?
 
-Next.js provides an Image component and image optimization features. In interviews, explain the product reason: reserve layout space, serve appropriately sized images, avoid unnecessary downloads, and protect performance metrics such as LCP.
+I use the `next/image` component to optimize images, serve responsive image sizes, and enable lazy loading by default.
+
+To prevent layout shifts, I specify `width` and `height`, or use `fill` inside a container with a predefined aspect ratio.
+
+For important above-the-fold images, such as hero images, I may use `fetchPriority="high"` to improve LCP. I also configure `remotePatterns` for remote images and use Lighthouse to measure performance improvements.
 
 ### 3. How do fonts work?
 
-Next.js font optimization helps load fonts with less layout shift and clearer ownership. The key interview point is that font loading affects perceived performance, layout stability, and branding consistency.
+I use `next/font` to optimize font loading and self-host Google Fonts, which reduces external network requests.
+
+I usually define the primary font in the root layout to apply it consistently across the application. I also use variable fonts when appropriate and choose compatible fallback fonts to minimize layout shifts when the custom font loads.
+
+Finally, I use Lighthouse and Chrome DevTools to identify and measure font-related layout shifts.
 
 ### 4. How do you debug a slow route?
 
