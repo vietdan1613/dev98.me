@@ -42,24 +42,28 @@ This creates `/`, `/products`, and `/products/:id`.
 
 Use a page for route-specific content. Use a layout for shared structure.
 
-### 5. What are dynamic routes?
+### 5. What types of routes does Next.js App Router support, and when would you use each type?
 
-Dynamic routes capture variable URL segments with folder names such as `[id]`, `[slug]`, `[...slug]`, or `[[...slug]]`.
+Next.js App Router supports several types of routing based on the file system.
 
-```tsx
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  return <h1>Product {id}</h1>;
-}
+- **Static routes** are used for fixed pages such as `/about` or `/contact`.
+- **Nested routes** organize pages into hierarchical URL structures, such as `/blog/tutorials`.
+- **Dynamic routes**, using folders like `[slug]`, are useful for pages with variable segments, such as `/products/[id]`.
+- **Catch-all routes**, using `[...slug]`, match multiple URL segments. They are useful for documentation systems or nested categories.
+- **Route groups**, using `(group)`, help organize routes and share layouts without affecting the URL.
+
+```text
+app/
+  about/page.tsx                 # Static: /about
+  blog/tutorials/page.tsx        # Nested: /blog/tutorials
+  products/[id]/page.tsx        # Dynamic: /products/:id
+  docs/[...slug]/page.tsx       # Catch-all: /docs/a/b
+  (shop)/cart/page.tsx           # Route group: /cart
 ```
 
-In current App Router examples, `params` may be treated asynchronously. Follow the project's Next.js version and conventions.
+In a real-world application, I typically combine these routing patterns. For example, in an e-commerce application, I use static routes for informational pages, dynamic routes for product details, and nested routes for product categories.
 
-For an interview, say the important part out loud: `[id]` is the dynamic segment, `params.id` is the value from the URL, and the page should still handle a missing or invalid product with `notFound()`.
+I also use layouts to share UI across related pages and loading or error files to improve the user experience during navigation. For dynamic pages, `params` may be treated asynchronously in current App Router versions, and a missing resource should still call `notFound()`.
 
 ## Project Structure
 
@@ -276,13 +280,21 @@ For example, we can redirect unauthenticated users from `/admin` to `/admin/logi
 
 ## Rendering and Caching
 
-### 1. Static generation versus request-time rendering: how do you choose?
+### 1. Can you explain the differences between SSG, SSR, ISR, and CSR in Next.js, and how would you choose the right rendering strategy for a real-world application?
 
-Use static generation when the route can be generated ahead of time and stale content is acceptable until the next build or revalidation. Use request-time rendering when the response depends on user-specific data, cookies, headers, permissions, or strict freshness.
+Next.js supports several rendering strategies, and I choose one based on how frequently the data changes, SEO requirements, and user interactions.
 
-Most product pages are mixed: marketing copy can be cached, while inventory or price may need revalidation or dynamic fetching.
+- **SSG (Static Site Generation):** Pages are generated ahead of time and served as static HTML. I use it for blog posts, documentation, and landing pages where content doesn't change frequently.
 
-In newer Next.js projects, you may also hear about Cache Components. The interview answer is still the same at the product level: decide which parts may be reused, which parts are request-specific, and where Suspense should show a loading state while uncached data resolves.
+- **SSR (Server-Side Rendering):** Pages are rendered on the server for each request when fresh or request-specific data is needed. It's useful for personalized pages or content that must reflect the latest data.
+
+- **ISR (Incremental Static Regeneration):** Pages are statically generated and can be revalidated in the background or on demand. I use it for product pages or blogs where content changes periodically but doesn't need to be regenerated on every request.
+
+- **CSR (Client-Side Rendering):** Data fetching and UI updates happen in the browser. I use it for interactive dashboards, admin interfaces, and features that rely heavily on client-side state.
+
+In a real-world e-commerce application, I might use static rendering with revalidation for product pages, server-side rendering when content depends on request-specific information, and client-side rendering for interactive cart components.
+
+With the Next.js App Router, these approaches can coexist within the same application. I choose the strategy for each page or component based on its requirements rather than using one strategy everywhere. In newer projects, you may also hear about Cache Components; the product-level decision is still which parts may be reused, which parts are request-specific, and where Suspense should show a loading state while uncached data resolves.
 
 ### 2. What is `generateStaticParams()`?
 
