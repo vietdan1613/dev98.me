@@ -328,11 +328,36 @@ Secrets should stay on the server: Server Components, Server Functions, Route Ha
 
 Server Functions run on the server and can be called from application code for mutations or server-side work. In interviews, explain why the server boundary matters: validation, authorization, secret access, and trusted writes belong on the server.
 
-### 4. How do you validate user input?
+### 4. How do you use Zod for runtime validation in a TypeScript application, and why is it important?
 
-Validate on the client for fast feedback and on the server for trust. Client validation improves UX. Server validation enforces the rule.
+I use Zod to validate untrusted data at runtime because TypeScript only provides static type checking and cannot guarantee that external data matches the expected type.
 
-A good form answer includes pending state, duplicate-submit prevention, error display, and accessible field messages.
+I define schemas to validate form inputs, API responses, and payloads. Zod also supports data transformation and TypeScript type inference, which helps reduce duplicated type definitions.
+
+For example, in a Next.js e-commerce application, I use Zod to validate checkout forms and API responses before passing the data to business logic.
+
+```ts
+import { z } from "zod";
+
+const checkoutSchema = z.object({
+  name: z.string().trim().min(2),
+  phone: z.string().regex(/^0\d{9}$/),
+});
+
+type CheckoutForm = z.infer<typeof checkoutSchema>;
+
+const result = checkoutSchema.safeParse(formData);
+
+if (!result.success) {
+  console.error(result.error.issues);
+} else {
+  await createOrder(result.data);
+}
+```
+
+I prefer `safeParse()` when I need to handle validation failures explicitly without throwing an exception.
+
+In production, I validate data on both the frontend and backend. Frontend validation improves user experience, while backend validation ensures that invalid data cannot bypass the application's business rules. A good form answer also includes pending state, duplicate-submit prevention, error display, and accessible field messages.
 
 ### 5. How do you handle authentication?
 
