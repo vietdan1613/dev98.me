@@ -129,11 +129,48 @@ Use `redirect()` when server-side route logic determines the user should go else
 
 Client-side navigation is still useful for user-initiated interactions, but protected content should not flash before a redirect.
 
-### 3. How do you add metadata?
+### 3. How do you handle metadata and SEO in Next.js App Router?
 
-Use static `metadata` for fixed route metadata and `generateMetadata()` when metadata depends on route params or fetched data.
+I use the Metadata API in Next.js to manage SEO metadata. For static pages, I define a `metadata` object, and for dynamic pages, such as blog posts or product pages, I use `generateMetadata()` to generate titles and descriptions based on the page data.
 
-For a product detail page, use the product title, description, canonical URL, and open graph image from server-side data.
+I also configure `metadataBase`, title templates, Open Graph images, and canonical URLs to improve SEO and social media previews. Additionally, I make sure pages that shouldn't appear in search results use the appropriate `robots` configuration.
+
+For example:
+
+```tsx
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
+
+  if (!post) {
+    return {
+      title: "Post Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.description,
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      images: [post.ogImage],
+    },
+  };
+}
+```
+
+This approach keeps metadata consistent, supports dynamic content, and helps search engines and social platforms understand each page.
 
 ### 4. What is `loading.tsx`?
 
