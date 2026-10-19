@@ -172,13 +172,89 @@ export async function generateMetadata({
 
 This approach keeps metadata consistent, supports dynamic content, and helps search engines and social platforms understand each page.
 
-### 4. What is `loading.tsx`?
+### 4. How do you implement a sitemap in Next.js, and why is it important for SEO?
+
+I implement a sitemap in Next.js using `app/sitemap.ts`, which automatically generates a `sitemap.xml` file for search engines.
+
+For a dynamic website, such as an e-commerce platform, I fetch product, category, and blog URLs from the database and return them using the `MetadataRoute.Sitemap` type. I also include accurate `lastModified` dates to help search engines understand when content was updated.
+
+For multilingual websites, I use `alternates.languages` to define relationships between localized URLs.
+
+```ts
+import type { MetadataRoute } from "next";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await getProducts();
+
+  return [
+    {
+      url: "https://example.com",
+      lastModified: new Date(),
+    },
+    ...products.map((product) => ({
+      url: `https://example.com/products/${product.slug}`,
+      lastModified: product.updatedAt,
+    })),
+  ];
+}
+```
+
+A sitemap helps search engines discover important pages more efficiently, but it doesn't guarantee that those pages will be indexed.
+
+### 5. How do you implement JSON-LD structured data in Next.js, and how does it improve SEO?
+
+I implement JSON-LD in Next.js using the `<script type="application/ld+json">` element to provide structured data based on the page content.
+
+For example, on an e-commerce website, I use the Product schema to describe product information such as its name, description, image, price, and availability. I also use schemas like Organization, WebSite, and BreadcrumbList where appropriate.
+
+In the Next.js App Router, I typically generate the JSON-LD dynamically from the same data used to render the page, ensuring that the structured data stays consistent with the actual content.
+
+```tsx
+export default async function ProductPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.image,
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <h1>{product.name}</h1>
+    </>
+  );
+}
+```
+
+JSON-LD helps search engines understand page content and can make pages eligible for rich results in search results. However, it doesn't guarantee better rankings or rich result display.
+
+I also validate the structured data using Google's Rich Results Test and ensure that the schema follows Google's guidelines.
+
+### 6. What is `loading.tsx`?
 
 `loading.tsx` defines route-level loading UI. It works with Suspense boundaries so the user can see an immediate loading state while route content is prepared.
 
 A good answer mentions the user experience: a slow product page needs a stable loading layout, not a blank screen.
 
-### 5. What is the difference between `error.tsx`, `global-error.tsx`, and `notFound()` in Next.js App Router, and when would you use each?
+### 7. What is the difference between `error.tsx`, `global-error.tsx`, and `notFound()` in Next.js App Router, and when would you use each?
 
 In the Next.js App Router, I use them for different types of errors.
 
@@ -190,7 +266,7 @@ For example, in an e-commerce project, I would use `notFound()` when a plant doe
 
 My general rule is to handle expected errors explicitly and use error boundaries to recover from unexpected errors.
 
-### 6. What is `proxy.ts` in Next.js 16, and what are its common use cases?
+### 8. What is `proxy.ts` in Next.js 16, and what are its common use cases?
 
 In Next.js 16, `proxy.ts` runs code before a request is completed, allowing us to inspect requests and control how they are handled.
 
