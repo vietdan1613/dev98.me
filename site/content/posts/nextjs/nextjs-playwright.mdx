@@ -1,0 +1,153 @@
+---
+title: "Next.js: Playwright End-to-End Testing"
+slug: nextjs-playwright-end-to-end-testing
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS', '#Playwright']
+date: 2026-10-19
+thumbnailText: Next.js
+---
+
+End-to-end (E2E) testing verifies that an application works correctly from the user's perspective. Playwright automates browser interactions to test complete user journeys, such as browsing products, adding items to a cart, and placing an order.
+
+### 1. What Is Playwright?
+
+Playwright is an E2E testing framework that supports Chromium, Firefox, and WebKit.
+
+Key features include:
+
+- **Cross-browser testing:** Test across multiple browser engines.
+- **Auto-waiting:** Wait for elements to become actionable before interacting with them.
+- **Web-first assertions:** Automatically retry assertions until they pass or time out.
+- **Debugging tools:** Inspect failures using traces, screenshots, and the Playwright UI.
+
+### 2. Installation and Setup
+
+Install Playwright in your Next.js project:
+
+```bash
+npm init playwright@latest
+npx playwright install
+```
+
+Run your tests:
+
+```bash
+npx playwright test
+```
+
+Run tests with a visible browser:
+
+```bash
+npx playwright test --headed
+```
+
+### 3. Writing Your First Test
+
+Create `tests/e2e/home.spec.ts`:
+
+```typescript
+import { expect, test } from "@playwright/test";
+
+test("homepage displays the main heading", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(
+    page.getByRole("heading", { name: "Welcome" })
+  ).toBeVisible();
+});
+```
+
+- `test()` defines a test case.
+- `page.goto()` navigates to a URL.
+- `getByRole()` locates an accessible element.
+- `expect()` verifies the expected behavior.
+
+### 4. Locators and Assertions
+
+Locators identify elements on a page, while assertions verify their state.
+
+```typescript
+const addToCart = page.getByTestId("add-to-cart");
+
+await expect(addToCart).toBeVisible();
+await expect(addToCart).toBeEnabled();
+
+await addToCart.click();
+```
+
+Prefer accessible locators such as `getByRole()` and `getByLabel()`. Use `getByTestId()` when you need stable selectors independent of dynamic text or styling.
+
+Playwright automatically waits for supported conditions, so arbitrary sleeps are usually unnecessary.
+
+### 5. Testing a COD Checkout Flow
+
+A typical checkout E2E test covers the complete purchase journey:
+
+1. Browse the product catalog.
+2. Open a product detail page.
+3. Add a product to the cart.
+4. Navigate to checkout.
+5. Enter shipping information.
+6. Place the order and verify success.
+
+```typescript
+import { expect, test } from "@playwright/test";
+
+test("completes a COD checkout", async ({ page }) => {
+  await page.goto("/vi/plants");
+
+  await page.getByTestId("plant-card").first().click();
+  await page.getByTestId("add-to-cart").click();
+  await page.getByTestId("cart-checkout").click();
+
+  await expect(page).toHaveURL(/\/vi\/checkout\/?$/);
+
+  await page.locator("#checkout-name").fill("Test Customer");
+  await page.locator("#checkout-phone").fill("0901234567");
+  await page.locator("#checkout-address").fill("123 Test Street");
+
+  await expect(
+    page.locator('input[name="payment-method"][value="cod"]')
+  ).toBeChecked();
+
+  await page.getByTestId("place-order").click();
+
+  await expect(page).toHaveURL(/\/vi\/order-success\/?$/);
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Đặt hàng thành công!",
+    })
+  ).toBeVisible();
+
+  await expect(
+    page.getByTestId("order-number")
+  ).toHaveText(/\S+/);
+});
+```
+
+This example assumes the product card is clickable and the specified test IDs exist in your application.
+
+**Important:** Run checkout tests against a dedicated test environment or staging API. The test submits an order, so never run it against production.
+
+### 6. Debugging Tests
+
+Use the Playwright UI to inspect test execution:
+
+```bash
+npx playwright test --ui
+```
+
+You can also enable traces and screenshots in `playwright.config.ts`:
+
+```typescript
+export default defineConfig({
+  use: {
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+  },
+});
+```
+
+These tools help identify failed assertions, unexpected navigation, and UI or network problems.

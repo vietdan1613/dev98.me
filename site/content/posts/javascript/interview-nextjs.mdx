@@ -579,11 +579,45 @@ Separate route concerns: data loading, metadata, UI composition, interactive cli
 
 Test pure utilities with unit tests, components with user-focused component tests, and critical flows with E2E tests. For framework-specific behavior such as redirects, route handlers, and server boundaries, test at the route or integration level where possible.
 
-### 9. How do you review a Next.js PR?
+### 9. How do you use Playwright to test a complete user flow in a Next.js application?
+
+I use Playwright for end-to-end testing to verify that critical user flows work correctly from start to finish. For example, in a Next.js e-commerce application, I test the checkout flow, including browsing products, adding items to the cart, and placing an order.
+
+I use locators to interact with elements and assertions to verify expected behavior. For example:
+
+```ts
+import { test, expect } from "@playwright/test";
+
+test("completes a checkout flow", async ({ page }) => {
+  await page.goto("/vi/plants");
+
+  await page.getByTestId("add-to-cart").click();
+  await page.getByTestId("cart-checkout").click();
+
+  await expect(page).toHaveURL(/\/vi\/checkout\/?$/);
+
+  await page.locator("#checkout-name").fill("Test Customer");
+  await page.locator("#checkout-phone").fill("0901234567");
+  await page.locator("#checkout-address").fill("123 Test Street");
+
+  await page.getByTestId("place-order").click();
+
+  await expect(page).toHaveURL(/\/vi\/order-success\/?$/);
+  await expect(
+    page.getByRole("heading", { name: "Đặt hàng thành công!" })
+  ).toBeVisible();
+});
+```
+
+Playwright automatically waits for elements and assertions, which helps reduce flaky tests. I also use `test.step()` to organize complex flows and traces or screenshots to debug failures.
+
+Finally, I run E2E tests against a dedicated test environment and keep them independent to ensure reliable results in CI/CD pipelines.
+
+### 10. How do you review a Next.js PR?
 
 Check whether secrets stay on the server, client boundaries are small, route states are handled, metadata is correct, caching is explicit where freshness matters, and loading/error/not-found states match the product requirement.
 
-### 10. What is a good final interview answer pattern?
+### 11. What is a good final interview answer pattern?
 
 Use this structure:
 
