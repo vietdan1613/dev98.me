@@ -1,5 +1,5 @@
 ---
-title: "Error Handling"
+title: "Next.js: Error Handling"
 category: Next.js
 author: Daniel Nguyen
 tags: ['#NextJS']
@@ -11,9 +11,9 @@ thumbnailText: Next.js
 
 > Handle expected errors as application state. Use error boundaries to recover from unexpected rendering failures.
 
-## Different Types of Errors
+### Different Types of Errors
 
-### Expected errors
+**Expected errors**
 
 Expected errors are normal outcomes of application logic. They should be handled explicitly and communicated clearly to users. Examples include:
 
@@ -21,7 +21,7 @@ Expected errors are normal outcomes of application logic. They should be handled
 - A product is out of stock.
 - A requested plant does not exist.
 
-### Unexpected errors
+**Unexpected errors**
 
 Unexpected errors occur when the application cannot complete an operation as intended. Examples include:
 
@@ -31,7 +31,7 @@ Unexpected errors occur when the application cannot complete an operation as int
 
 These errors require logging, a safe fallback UI, and sometimes a retry mechanism.
 
-## Server Actions with `useActionState`
+### Server Actions with `useActionState`
 
 Use React's `useActionState` to read the result returned by the Server Action.
 
@@ -79,7 +79,7 @@ export function CheckoutForm() {
 
 An invalid phone number is an expected validation outcome. Returning an error keeps the user on the checkout form and allows them to correct their input without losing their current context.
 
-## Failed Data Fetches in Server Components
+### Failed Data Fetches in Server Components
 
 If the page cannot function without the requested data, you can throw an exception and let the nearest error boundary handle it.
 
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
 
 The error will propagate to the nearest applicable `error.tsx` boundary.
 
-## Missing Resources with `notFound()`
+### Missing Resources with `notFound()`
 
 A missing resource is usually a normal application outcome, not an unexpected crash. For example, a customer may visit a URL for a plant that has been removed from the catalog.
 
@@ -132,7 +132,7 @@ export default function NotFound() {
 }
 ```
 
-## Use `error.tsx` as a Route-Level Error Boundary
+### Use `error.tsx` as a Route-Level Error Boundary
 
 The `error.tsx` file provides a fallback UI when an uncaught error occurs within its route segment.
 
@@ -176,7 +176,7 @@ export default function ErrorPage({
 }
 ```
 
-### How does `error.tsx` work?
+**How does `error.tsx` work?**
 
 Next.js creates an error boundary around the relevant route segment. When an uncaught rendering error occurs inside that boundary, the fallback UI is displayed instead of the failed content.
 
@@ -194,7 +194,7 @@ app/
         └── error.tsx
 ```
 
-## global-error.tsx
+### global-error.tsx
 
 What happens if the root layout itself crashes?
 

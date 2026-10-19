@@ -141,11 +141,25 @@ For a product detail page, use the product title, description, canonical URL, an
 
 A good answer mentions the user experience: a slow product page needs a stable loading layout, not a blank screen.
 
-### 5. What is `error.tsx`?
+### 5. What is the difference between `error.tsx`, `global-error.tsx`, and `notFound()` in Next.js App Router, and when would you use each?
 
-`error.tsx` defines an error boundary for a route segment. It must be a Client Component because error boundaries need client behavior.
+In the Next.js App Router, I use them for different types of errors.
 
-Use it for recoverable route errors. Do not treat it as a replacement for validating data and handling expected empty states.
+- `error.tsx` is a route-level error boundary. It catches unexpected errors in a route segment and displays a fallback UI with an option to retry. It must be a Client Component.
+- `global-error.tsx` handles errors in the root `app/layout.tsx` that the normal `app/error.tsx` boundary cannot catch. It replaces the root layout, so it must define its own `<html>` and `<body>` elements.
+- `notFound()` handles missing resources, such as a product that doesn't exist. It renders the nearest `not-found.tsx` UI and signals a 404 response.
+
+For example, in an e-commerce project, I would use `notFound()` when a plant doesn't exist, `error.tsx` when loading the dashboard fails unexpectedly, and `global-error.tsx` when the root layout crashes.
+
+My general rule is to handle expected errors explicitly and use error boundaries to recover from unexpected errors.
+
+### 6. What is `proxy.ts` in Next.js 16, and what are its common use cases?
+
+In Next.js 16, `proxy.ts` runs code before a request is completed, allowing us to inspect requests and control how they are handled.
+
+Common use cases include redirecting users, rewriting URLs, modifying request or response headers, checking cookies, and handling localization.
+
+For example, we can redirect unauthenticated users from `/admin` to `/admin/login`. However, Proxy should not replace backend authentication and authorization, because checking for a cookie alone does not verify that the user is authorized.
 
 ## Rendering and Caching
 
@@ -211,9 +225,77 @@ A good form answer includes pending state, duplicate-submit prevention, error di
 
 Read auth state from trusted server-side signals such as cookies or headers. Redirect unauthenticated users before rendering protected UI when the server has enough information.
 
+```tsx
+// app/dashboard/page.tsx
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export default async function DashboardPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+
+  if (!token) {
+    redirect("/login");
+  }
+
+  const user = await getUser(token);
+  return <h1>Welcome, {user.name}</h1>;
+}
+```
+
 For broad route gates, Next.js docs now use the term Proxy for pre-route logic. Some teams may still say Middleware because older versions and codebases used that term.
 
 Do not put all authorization logic only in Proxy. It is useful for early routing decisions, but data access and mutations still need server-side authorization at the point where protected data is read or changed.
+
+### 6. How do fetching, mutating, caching, and revalidating data work together, and when would you use `updateTag()`, `revalidateTag()`, or `revalidatePath()`?
+
+In the Next.js App Router, fetching retrieves data from an API or database, mutating changes the data, caching stores the result to avoid unnecessary requests, and revalidating updates stale cached data after a mutation.
+
+For example, when an admin creates a new plant, we save it to the database and then revalidate the cache so the storefront can display the updated data.
+
+```tsx
+// Fetch and tag the cached result
+const plants = await fetch("https://api.example.com/plants", {
+  next: { tags: ["plants"] },
+}).then((res) => res.json());
+```
+
+```tsx
+// app/actions.ts
+"use server";
+
+import { updateTag, revalidateTag, revalidatePath } from "next/cache";
+
+export async function createPlant(formData: FormData) {
+  await db.plant.create({ data: { name: String(formData.get("name")) } });
+
+  updateTag("plants");              // Immediate: read-your-own-writes
+  // revalidateTag("plants", "max"); // Stale-while-revalidate for public content
+  // revalidatePath("/plants");      // Revalidate a specific route
+}
+```
+
+Next.js provides three main APIs for revalidation:
+
+- `updateTag()` immediately expires tagged cache entries. It's useful in Server Actions when users need to see their own changes immediately.
+- `revalidateTag()` revalidates cached data by tag. With the `"max"` profile, Next.js uses stale-while-revalidate, which is suitable for public content that doesn't need to update immediately.
+- `revalidatePath()` revalidates a specific route, such as `/plants`, rather than targeting data through a tag.
+
+I choose the approach based on the use case. For example, in an e-commerce application, I'd use `updateTag()` after an admin updates a product when immediate consistency is important, and `revalidateTag()` for public catalog data where serving stale content briefly is acceptable.
+
+### 7. How does TanStack Query (React Query) manage server state, and how do you handle caching, loading and error states, and cache invalidation after a mutation?
+
+TanStack Query, formerly known as React Query, is a library for managing server state in React applications. It simplifies data fetching, caching, synchronization, and error handling.
+
+I typically use `useQuery` to fetch data and `useMutation` to create, update, or delete data. React Query automatically manages loading, success, and error states, so I don't need to implement them manually.
+
+For caching, I use `queryKey` to identify each query. When the parameters change, React Query can fetch the corresponding data and reuse cached results when appropriate.
+
+After a successful mutation, I use `invalidateQueries()` to mark related queries as stale and refetch active queries. For example, after creating a product, I invalidate the product list so the UI displays the latest data.
+
+I also use features like `keepPreviousData` to prevent the UI from flickering during pagination and `AbortSignal` to cancel unnecessary requests.
+
+Overall, TanStack Query helps me manage server state efficiently, reduce unnecessary API calls, and keep the UI synchronized with the backend.
 
 ## Performance and Deployment
 
