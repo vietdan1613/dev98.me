@@ -405,7 +405,119 @@ For broad route gates, Next.js docs now use the term Proxy for pre-route logic. 
 
 Do not put all authorization logic only in Proxy. It is useful for early routing decisions, but data access and mutations still need server-side authorization at the point where protected data is read or changed.
 
-### 6. How do fetching, mutating, caching, and revalidating data work together, and when would you use `updateTag()`, `revalidateTag()`, or `revalidatePath()`?
+### 6. How do you implement JWT authentication in a Next.js application with a FastAPI backend?
+
+I implement JWT authentication using short-lived access tokens and longer-lived refresh tokens stored in HttpOnly, Secure, and SameSite cookies.
+
+In Next.js, I use `proxy.ts` to check for authentication cookies and protect admin routes. However, checking whether a cookie exists does not guarantee that the token is valid, so I call `/auth/me` to verify the current admin with the FastAPI backend.
+
+When an API request returns `401 Unauthorized`, the API client attempts to refresh the access token. If the refresh succeeds, it retries the original request. Otherwise, it clears the authentication state and redirects the user to the login page.
+
+For security, I avoid storing JWTs in `localStorage`, validate tokens on the backend, and protect cookie-based authentication endpoints against CSRF where necessary.
+
+Protect admin routes with `proxy.ts`:
+
+```ts
+import { NextRequest, NextResponse } from "next/server";
+
+export function proxy(request: NextRequest) {
+  const accessToken = request.cookies.get("gg_access_token");
+  const refreshToken = request.cookies.get("gg_refresh_token");
+
+  if (!accessToken && !refreshToken) {
+    return NextResponse.redirect(
+      new URL("/admin/login", request.url)
+    );
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/admin/:path*"],
+};
+```
+
+This provides a basic route guard. It checks cookie presence, not JWT validity. The FastAPI backend must still validate authentication and authorization.
+
+Handle token refresh in the API client:
+
+```ts
+let refreshPromise: Promise<boolean> | null = null;
+
+async function refreshAccessToken(): Promise<boolean> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+    {
+      method: "POST",
+      credentials: "include",
+    }
+  );
+
+  return response.ok;
+}
+
+export async function apiFetch(
+  url: string,
+  options: RequestInit = {}
+) {
+  const request = () =>
+    fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+
+  let response = await request();
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  refreshPromise ??= refreshAccessToken().finally(() => {
+    refreshPromise = null;
+  });
+
+  const refreshed = await refreshPromise;
+
+  if (!refreshed) {
+    window.location.assign("/admin/login");
+    return response;
+  }
+
+  return request();
+}
+```
+
+The shared promise prevents multiple simultaneous requests from unnecessarily triggering separate refresh calls within the same browser context.
+
+Key points:
+
+- **HttpOnly cookies:** Prevent JavaScript from directly reading authentication tokens, reducing token theft through XSS.
+- **Proxy:** Provides early route protection but is not a substitute for backend authorization.
+- **Refresh token:** Allows the user to continue working after the access token expires.
+- **Concurrency:** Avoid duplicate refresh requests when several API calls fail simultaneously.
+- **Security:** Use HTTPS, appropriate cookie settings, CSRF protection, token expiry, and refresh-token rotation or revocation where appropriate.
+
+### 7. What are the differences between cookies, `localStorage`, and `sessionStorage`, and when would you use each one?
+
+Cookies, `localStorage`, and `sessionStorage` store data in the browser, but they have different purposes.
+
+- **Cookies:** I use HttpOnly cookies to store authentication tokens because JavaScript cannot access them directly, reducing the risk of token theft through XSS. Cookies are automatically sent with matching HTTP requests.
+- **`localStorage`:** I use it to store persistent, non-sensitive client-side data, such as theme preferences. The data remains after the browser is closed.
+- **`sessionStorage`:** I use it for temporary data, such as a checkout step or form progress. The data is scoped to a browser tab and generally cleared when that tab session ends.
+
+```ts
+// Persist a theme preference
+localStorage.setItem("theme", "dark");
+
+// Store temporary checkout progress
+sessionStorage.setItem("checkoutStep", "2");
+
+// Set a basic cookie
+document.cookie = "language=en; path=/; SameSite=Lax";
+```
+
+### 8. How do fetching, mutating, caching, and revalidating data work together, and when would you use `updateTag()`, `revalidateTag()`, or `revalidatePath()`?
 
 In the Next.js App Router, fetching retrieves data from an API or database, mutating changes the data, caching stores the result to avoid unnecessary requests, and revalidating updates stale cached data after a mutation.
 
@@ -441,7 +553,7 @@ Next.js provides three main APIs for revalidation:
 
 I choose the approach based on the use case. For example, in an e-commerce application, I'd use `updateTag()` after an admin updates a product when immediate consistency is important, and `revalidateTag()` for public catalog data where serving stale content briefly is acceptable.
 
-### 7. How does TanStack Query (React Query) manage server state, and how do you handle caching, loading and error states, and cache invalidation after a mutation?
+### 9. How does TanStack Query (React Query) manage server state, and how do you handle caching, loading and error states, and cache invalidation after a mutation?
 
 TanStack Query, formerly known as React Query, is a library for managing server state in React applications. It simplifies data fetching, caching, synchronization, and error handling.
 
@@ -455,7 +567,7 @@ I also use features like `keepPreviousData` to prevent the UI from flickering du
 
 Overall, TanStack Query helps me manage server state efficiently, reduce unnecessary API calls, and keep the UI synchronized with the backend.
 
-### 8. Why would you choose Zustand over Redux for client-side state management?
+### 10. Why would you choose Zustand over Redux for client-side state management?
 
 I would choose Zustand when I need lightweight shared client-side state with minimal boilerplate. Zustand doesn't require actions, reducers, dispatchers, or a Provider. I can define state and actions directly in a store and use selectors to subscribe to only the data a component needs.
 
@@ -463,7 +575,7 @@ For example, I might use Zustand for a shopping cart, UI preferences, or authent
 
 So my decision is usually: Zustand for shared client state, React Query for server state, and `useState` for local component state.
 
-### 9. How do you handle global state in a Next.js application using Zustand?
+### 11. How do you handle global state in a Next.js application using Zustand?
 
 I usually handle global client-side state in a Next.js application with Zustand.
 
