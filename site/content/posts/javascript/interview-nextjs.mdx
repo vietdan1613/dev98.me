@@ -278,6 +278,16 @@ Common use cases include redirecting users, rewriting URLs, modifying request or
 
 For example, we can redirect unauthenticated users from `/admin` to `/admin/login`. However, Proxy should not replace backend authentication and authorization, because checking for a cookie alone does not verify that the user is authorized.
 
+### 9. How do you handle multiple languages in a Next.js application?
+
+I use `next-intl` to handle multiple languages in a Next.js application. I configure supported locales, set a default language, and use locale-based routing with the App Router.
+
+I organize translation files by feature or component, such as `home.json`, `plants.json`, and `checkout.json`, with separate files for each language.
+
+For Server Components, I use `getTranslations()`, while Client Components use `useTranslations()`. I also use `proxy.ts` to handle locale routing and validate supported locales.
+
+This approach keeps translations organized, makes the application easier to maintain, and allows me to add new languages without significantly changing the existing architecture.
+
 ## Rendering and Caching
 
 ### 1. Can you explain the differences between SSG, SSR, ISR, and CSR in Next.js, and how would you choose the right rendering strategy for a real-world application?
