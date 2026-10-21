@@ -1,17 +1,15 @@
 ---
-title: "Python Basics: A Practical Guide for Beginners"
+title: "Python: Fundamentals"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python']
-date: 2026-09-15
+date: 2026-09-01
 thumbnailText: Python
 ---
 
-If you're getting into **Backend Development, FastAPI, Automation, or AI**, Python is a great language to start with.
+### 1. Variables & Data Types
 
-# 1. Variables & Data Types
-
-A variable stores a value. Python is dynamically typed, but type hints help in backend work.
+Python is dynamically typed, meaning you don't need to declare a variable's type. Type hints improve readability and help tools detect errors.
 
 ```python
 name: str = "Daniel"
@@ -21,116 +19,88 @@ is_active: bool = True
 data = None
 ```
 
-`input()` always returns a string — convert when needed:
+Key points:
+
+- `int`, `float`, `str`, `bool`, `None`
+- `type(value)` returns an object's type
+- `input()` always returns a string
+- Type hints do not enforce types at runtime by themselves
+- Python uses `None` to represent the absence of a value
+
+### 2. Operators & Control Flow
+
+Operators perform calculations and comparisons.
+
+| Operator           | Meaning           | Example                |
+| ------------------ | ----------------- | ---------------------- |
+| `==`               | Equal             | `a == b`               |
+| `!=`               | Not equal         | `a != b`               |
+| `//`               | Floor division    | `7 // 2 == 3`          |
+| `%`                | Modulo            | `7 % 2 == 1`           |
+| `**`               | Exponentiation    | `2 ** 3 == 8`          |
+| `and`, `or`, `not` | Logical operators | `age >= 18 and active` |
+
+Use `if`, `elif`, and `else` for conditions.
 
 ```python
-age = int(input("Enter your age: "))
-message = f"My name is {name} and I am {age}."
+def get_access(age: int, is_active: bool) -> str:
+    if age < 18:
+        return "Underage"
+    elif not is_active:
+        return "Account disabled"
+    return "Access granted"
 ```
 
-# 2. Operators & Control Flow
-
-Use `=` to assign and `==` to compare.
+Loops iterate over collections or repeat while a condition is true.
 
 ```python
-a + b, a - b, a * b, a / b, a // b, a % b, a ** b
-age >= 18 and is_active
-```
+for number in range(1, 6):
+    print(number)
 
-```python
-if score >= 90:
-    grade = "A"
-elif score >= 80:
-    grade = "B"
-else:
-    grade = "C"
-
-message = "Adult" if age >= 18 else "Minor"
-```
-
-```python
-for user in users:
-    print(user)
-
-for i in range(1, 10, 2):
-    print(i)
-
-while count < 5:
+count = 0
+while count < 3:
     count += 1
 ```
 
-`break` stops a loop. `continue` skips the current iteration.
+- `break`: exits the loop
+- `continue`: skips to the next iteration
+- `range(start, stop, step)`: excludes `stop`
 
-# 3. Collections
+### 6. Modules & Packages
 
-**List** — ordered, mutable:
+A module is a Python file. A package organizes related modules, typically in a directory.
 
-```python
-users = ["Daniel", "John", "Anna"]
-users.append("Michael")
-users[0], users[-1], len(users), "Daniel" in users
-numbers[1:4]
+Example project structure:
+
+```text
+app/
+├── main.py
+├── routers/
+│   └── users.py
+├── services/
+│   └── user_service.py
+└── utils/
+    └── math_utils.py
 ```
 
-**Dict** — key-value (like JSON):
+Import functions explicitly:
 
 ```python
-user = {"id": 1, "name": "Daniel", "age": 25}
-user["name"]
-user.get("email", "No email")
-
-for key, value in user.items():
-    print(key, value)
-```
-
-**Set** — unique values, no indexing:
-
-```python
-unique = set([1, 2, 2, 3])
-a & b, a | b, a - b
-```
-
-**Tuple** — fixed, unpackable:
-
-```python
-name, age, role = ("Daniel", 25, "admin")
-```
-
-# 4. Functions
-
-```python
+# math_utils.py
 def add(a: int, b: int) -> int:
     return a + b
-
-def greet(name: str = "Guest") -> str:
-    return f"Hello, {name}"
 ```
-
-`print()` displays. `return` sends a value back.
-
-# 5. Exceptions
 
 ```python
-try:
-    age = int(input("Enter your age: "))
-except ValueError:
-    print("Invalid age")
-finally:
-    print("Finished")
+# main.py
+from utils.math_utils import add
 
-if age < 18:
-    raise ValueError("User must be at least 18")
+print(add(2, 3))  # 5
 ```
 
-Don't hide errors — handle them intentionally.
+Key points:
 
-# 6. Modules
-
-Split reusable code into files and import what you need.
-
-```python
-from math_utils import add
-import math as m
-```
-
-Avoid `from module import *`. Prefer clear imports as the project grows (routers, services, models).
+- `import math` imports a module
+- `import math as m` creates an alias
+- `from module import function` imports a specific name
+- Avoid `from module import *` because it makes dependencies less clear
