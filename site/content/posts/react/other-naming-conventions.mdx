@@ -7,26 +7,23 @@ date: 2025-12-25
 thumbnailText: ReactJS
 ---
 
-Good naming is not about style — it’s about **clarity, scalability, and long-term maintainability**. Senior developers optimize for *reading code six months later*, not typing speed.
+Good naming isn't just about style. It's about **clarity, consistency, and maintainability**. Senior developers optimize for code that's easy to understand six months later, not just quick to write today.
 
-## 1. Components: **PascalCase**
+### 1. Components: PascalCase
 
-**Why:** Distinguishes components from HTML elements.
+Use PascalCase to distinguish React components from HTML elements.
 
 ```tsx
 UserProfile.tsx
 SettingsSidebar.tsx
-ModalConfirm.tsx
+ConfirmModal.tsx
 ```
 
-✅ **Rule**
+**Rule:** Keep component names and filenames consistent.
 
-* One component per file
-* File name = component name
+### 2. Hooks: `use` + camelCase
 
-## 2. Hooks: **camelCase + `use` prefix**
-
-**Why:** React relies on this convention for rules of hooks.
+Custom hooks must follow React's naming convention so their hook usage is recognizable to developers and lint tools.
 
 ```ts
 useAuth.ts
@@ -34,39 +31,38 @@ useUserSettings.ts
 useConnectionsTable.ts
 ```
 
-## 3. Variables & Functions: **camelCase**
+### 3. Variables and Functions: camelCase
 
-**Why:** Consistency with JavaScript ecosystem.
+Follow standard JavaScript naming conventions.
 
 ```ts
-const isAuthenticated = true;
 const fetchUserData = async () => {};
+
+const isAuthenticated = true;
+const hasPermission = false;
+const canEdit = true;
 ```
 
-Boolean variables should sound like **questions**:
+For booleans, prefer descriptive prefixes such as `is`, `has`, and `can`.
 
-```ts
-isOpen
-hasPermission
-canEdit
-```
+### 4. Constants: SCREAMING_SNAKE_CASE When Appropriate
 
-## 4. Constants & Enums: **SCREAMING_SNAKE_CASE**
-
-**Why:** Signals immutability instantly.
+Use uppercase names for true, shared constants when that convention improves readability.
 
 ```ts
 const MAX_RETRY_COUNT = 3;
 
-export const ROUTES = {
+const ROUTES = {
   HOME: "/",
   SETTINGS: "/settings",
-};
+} as const;
 ```
 
-## 5. Types & Interfaces: **PascalCase**
+Not every `const` variable needs uppercase naming. Local variables and values that aren't treated as configuration constants should generally remain camelCase.
 
-**No `I` prefix** (modern TypeScript best practice).
+### 5. Types and Interfaces: PascalCase
+
+Use descriptive PascalCase names. An `I` prefix is usually unnecessary in TypeScript.
 
 ```ts
 interface User {
@@ -77,65 +73,65 @@ interface User {
 type SortOrder = "asc" | "desc";
 ```
 
-## 6. Props Interfaces: **`ComponentNameProps`**
+### 6. Props: `ComponentNameProps`
 
-**Why:** Improves searchability and readability.
+Give component props a clear, searchable name.
 
-```ts
+```tsx
 interface ModalProps {
   open: boolean;
   onClose: () => void;
 }
+
+function Modal({ open, onClose }: ModalProps) {
+  if (!open) return null;
+
+  return <button onClick={onClose}>Close</button>;
+}
 ```
 
-## 7. Event Handlers: **`handle` prefix**
+### 7. Event Handlers: `handle` Prefix
 
-**Why:** Makes intent explicit.
-
-```ts
-const handleSubmit = () => {};
-const handleCloseModal = () => {};
-```
-
-JSX:
+Use `handle` for functions that respond to events.
 
 ```tsx
-<button onClick={handleSubmit} />
+const handleSubmit = () => {
+  // Submit form
+};
+
+const handleClose = () => {
+  // Close modal
+};
+
+return <button onClick={handleSubmit}>Submit</button>;
 ```
 
-## 8. Files & Folders: **kebab-case**
+A useful distinction: `handleSubmit` handles an event, while `submitForm` describes the action itself.
 
-**Why:** Works best across OS, Git, and URLs.
+### 8. Files and Folders: Choose a Consistent Convention
 
-```txt
+Use naming conventions that make files easy to locate.
+
+```text
 features/
   user-profile/
-    user-profile.page.tsx
-    user-profile.hook.ts
+    UserProfile.tsx
+    useUserProfile.ts
     user-profile.types.ts
 ```
 
-## 9. Page, Layout, Component suffixes
+Kebab-case works well for folders and non-component files. PascalCase is common for React component files. The important thing is consistency across the project.
 
-```txt
-home.page.tsx
-auth.layout.tsx
-user-card.component.tsx
+### 9. Use Suffixes When They Add Clarity
+
+Suffixes can distinguish pages, layouts, hooks, and types in larger codebases.
+
+```text
+HomePage.tsx
+AuthLayout.tsx
+UserCard.tsx
 ```
 
-**Rule:**
+Alternatively, a project may use `home.page.tsx` or `user-card.component.tsx`. Neither style is universally superior.
 
-* Use suffixes only when project grows
-* Be consistent across the codebase
-
-### Concise
-
-| Item             | Convention           |
-| ---------------- | -------------------- |
-| Component        | PascalCase           |
-| Hook             | use + camelCase      |
-| Variable         | camelCase            |
-| Boolean          | is / has / can       |
-| Constant         | SCREAMING_SNAKE_CASE |
-| Type / Interface | PascalCase           |
-| Files            | kebab-case           |
+**Rule:** Adopt a convention that fits your project and apply it consistently.

@@ -1,107 +1,177 @@
 ---
-title: "React Micro-Frontends with Vite & Module Federation"
+title: "Micro Frontends with Vite and Module Federation"
 category: React
 author: Daniel Nguyen
-tags: ['#tailwindcss']
+tags: ['#React']
 date: 2025-12-29
-thumbnailText: Vitest
+thumbnailText: Micro Frontends
 ---
 
-> **Micro Frontends** split a large frontend into **independently developed and deployed apps**. Combined with **Vite** and **Module Federation**, this approach enables fast builds, team autonomy, and scalable frontend architecture.
+Micro Frontends split a large frontend into **independently developed and deployed applications**. Combined with Vite and Module Federation, this architecture enables team autonomy and independent releases, but also introduces integration complexity.
 
-![example](./imgs/vitest-1.png 'example')
+![Module Federation overview](./imgs/vitest-1.png 'Module Federation overview')
 
-## What is a Micro Frontend?
+### 1. What Is a Micro Frontend?
 
-A **Micro Frontend** is an architectural pattern where each UI domain is built, tested, and deployed separately, then composed at runtime by a **host application**.
-This helps teams:
+A Micro Frontend is an architectural pattern where different UI domains are developed, tested, and deployed independently, then composed into a larger application.
 
-* Move faster
-* Reduce coupling
-* Scale independently
+Benefits include:
 
-## Module Federation (in short)
+- Independent development and deployment
+- Clearer ownership between teams
+- Reduced coupling between business domains
+- Flexibility to evolve individual applications
 
-**Module Federation** allows one app to **dynamically load modules from another app at runtime**, while **sharing dependencies** like React to avoid duplication.
+### 2. How Module Federation Works
 
-With Vite, this is enabled via:
+**Module Federation** allows one application to load exposed modules from another application at runtime.
 
-```
-@originjs/vite-plugin-federation
-```
+- **Host:** The main application that loads remote modules.
+- **Remote:** An application that exposes components or functionality.
+- **`remoteEntry.js`:** The remote's entry file, used by the federation runtime to discover exposed modules.
+- **Shared dependencies:** Libraries such as React that can be shared between applications.
 
-## Why Vite?
+With Vite, one option is `@originjs/vite-plugin-federation`.
 
-* ⚡ Extremely fast dev server
-* 🧩 Simple configuration
-* 🚀 Ideal for micro-frontend workflows
-* 🛠 Works well with modern React setups
-
-## Architecture Overview
-
-* **Host App**: Main container users interact with
-* **Remote App**: Exposes reusable components (micro frontend)
-
-```
-Host App
- └── loads → Remote Components (via remoteEntry.js)
-```
-
-## Implementation Steps (High Level)
-
-### 1. Create Apps
+### 3. Create the Applications
 
 ```bash
 npm create vite@latest host-app -- --template react
 npm create vite@latest todo-components -- --template react
+```
+
+Install dependencies in both applications:
+
+```bash
+cd host-app
+npm install
+
+cd ../todo-components
 npm install
 ```
 
-### 2. Build Remote Components
-
-Expose reusable UI from the remote app:
-
-* `Input.jsx`
-* `List.jsx`
-
-### 3. Add Module Federation (Remote)
-
-```js
-federation({
-  name: "todo-components",
-  filename: "remoteEntry.js",
-  exposes: {
-    "./List": "./src/components/List.jsx",
-    "./Input": "./src/components/Input.jsx",
-  },
-  shared: ["react"],
-})
-```
-
-Build and serve:
+Install the federation plugin in each project:
 
 ```bash
-npm run build
-npm run preview
+npm install @originjs/vite-plugin-federation
 ```
 
-### 4. Add Module Federation (Host)
+### 4. Configure the Remote
+
+In `todo-components/vite.config.js`:
 
 ```js
-federation({
-  name: "host-app",
-  remotes: {
-    todo_components: "http://localhost:4173/assets/remoteEntry.js",
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import federation from "@originjs/vite-plugin-federation";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    federation({
+      name: "todo_components",
+      filename: "remoteEntry.js",
+      exposes: {
+        "./Input": "./src/components/Input.jsx",
+        "./List": "./src/components/List.jsx",
+      },
+      shared: ["react", "react-dom"],
+    }),
+  ],
+  build: {
+    target: "esnext",
   },
-  shared: ["react"],
-})
+});
 ```
 
-### 5. Use Remote Components
+The remote exposes `Input` and `List`, making them available to the host through Module Federation.
+
+### 5. Configure the Host
+
+In `host-app/vite.config.js`:
 
 ```js
-import Input from "todo_components/Input";
-import List from "todo_components/List";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import federation from "@originjs/vite-plugin-federation";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    federation({
+      name: "host_app",
+      remotes: {
+        todo_components: {
+          external:
+            "http://localhost:4173/assets/remoteEntry.js",
+          format: "esm",
+          from: "vite",
+        },
+      },
+      shared: ["react", "react-dom"],
+    }),
+  ],
+  build: {
+    target: "esnext",
+  },
+});
 ```
 
-Remote components now behave like **local imports**.
+The host now knows where to find the remote application's federation entry file.
+
+### 6. Import Remote Components
+
+Use the exposed modules in the host just like regular imports:
+
+```jsx
+import { Suspense, lazy } from "react";
+
+const Input = lazy(() => import("todo_components/Input"));
+const List = lazy(() => import("todo_components/List"));
+
+export default function App() {
+  return (
+    <Suspense fallback={<p>Loading components...</p>}>
+      <Input />
+      <List />
+    </Suspense>
+  );
+}
+```
+
+For TypeScript, add module declarations for the remote imports so the compiler can resolve their types.
+
+### 7. Build and Run
+
+Build the remote first:
+
+```bash
+cd todo-components
+npm run build
+npm run preview -- --host 0.0.0.0
+```
+
+Then start the host in another terminal:
+
+```bash
+cd host-app
+npm run dev
+```
+
+The host loads the remote from the preview server. Ensure the remote URL, exposed modules, and shared dependency configuration match your setup.
+
+### Key Considerations
+
+- **Version compatibility:** Keep React versions compatible between host and remote.
+- **Loading failures:** Provide fallback UI when a remote is unavailable.
+- **Deployment:** Publish the remote entry file and its assets to a stable URL.
+- **Testing:** Test remote components independently and verify host integration.
+- **Trade-offs:** Module Federation adds runtime dependencies, deployment coordination, and debugging complexity.
+
+### Final Thoughts
+
+Vite and Module Federation can make Micro Frontends practical when multiple teams need to develop and deploy parts of a large frontend independently.
+
+However, Micro Frontends are not automatically better than a modular monolith. For a small application or a single team, a feature-based React architecture is often simpler.
+
+**Use Micro Frontends when independent team ownership and deployment justify the additional complexity.**

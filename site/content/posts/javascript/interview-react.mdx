@@ -1993,3 +1993,447 @@ console.log(user.name.toUpperCase());
 ```
 
 ---
+
+## Micro Frontends
+
+### 1. What are Micro Frontends, and how does Module Federation work?
+
+**Expectations:** Independent apps · Host · Remote · `remoteEntry.js` · Shared dependencies · Vite federation plugin
+
+**Example answer:**
+
+> Micro Frontends split a large frontend into independently developed and deployed applications, each responsible for a specific business domain.
+>
+> Module Federation allows a host application to load components or modules exposed by remote applications at runtime.
+>
+> Key concepts:
+>
+> - **Host:** The application that consumes remote modules.
+> - **Remote:** An application that exposes modules.
+> - **`remoteEntry.js`:** An entry file used by the federation runtime to discover remote modules.
+> - **Shared dependencies:** Libraries such as React that can be shared between host and remote applications.
+>
+> With Vite, `@originjs/vite-plugin-federation` is one option for implementing this architecture.
+
+---
+
+### 2. What are the main benefits and drawbacks of Micro Frontends?
+
+**Expectations:** Team autonomy · Independent releases · Integration complexity · Dependency conflicts · Organizational trade-off
+
+**Example answer:**
+
+> Benefits include independent development and deployment, clearer ownership between teams, reduced coupling between business domains, and flexible release schedules.
+>
+> Drawbacks include more complex deployment and integration, potential dependency version conflicts, runtime loading failures and performance overhead, and more complicated testing, debugging, and shared state management.
+>
+> Use Micro Frontends when team autonomy and independent releases justify the extra complexity.
+
+---
+
+### 3. What is the difference between a host and a remote?
+
+**Expectations:** Host consumes · Remote exposes · Matching remote name/URL · `lazy` + `Suspense` · Failure handling
+
+**Example answer:**
+
+> The host consumes modules exposed by remote applications. The remote must expose the module, and the host must configure the matching remote name and URL.
+>
+> `React.lazy` handles asynchronous component loading, while `Suspense` displays fallback UI during loading. Production applications should also handle remote loading failures.
+
+```jsx
+import { lazy, Suspense } from "react";
+
+const TodoList = lazy(() => import("todo_components/List"));
+
+function App() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <TodoList />
+    </Suspense>
+  );
+}
+```
+
+---
+
+### 4. Why share React between host and remote applications?
+
+**Expectations:** Avoid duplicate React · Compatible versions · Invalid Hook calls · Correct shared config
+
+**Example answer:**
+
+> Sharing compatible versions of `react` and `react-dom` can reduce duplicated dependencies and help prevent problems caused by multiple React instances.
+>
+> However, sharing requires compatible versions and correct federation configuration. An incompatible or incorrectly shared dependency can cause runtime errors, including invalid Hook calls.
+
+---
+
+### 5. How do you handle remote loading failures?
+
+**Expectations:** Error Boundary · Suspense fallback · Retry · Monitoring · Graceful degradation
+
+**Example answer:**
+
+> Use an Error Boundary around the remote component to display fallback UI if loading or rendering fails. A production implementation should also consider retry behavior, monitoring, and graceful degradation when a remote server or asset is unavailable.
+
+```jsx
+<ErrorBoundary fallback={<p>Feature unavailable.</p>}>
+  <Suspense fallback={<p>Loading feature...</p>}>
+    <RemoteFeature />
+  </Suspense>
+</ErrorBoundary>
+```
+
+---
+
+### 6. When would you choose Micro Frontends over a feature-based React architecture?
+
+**Expectations:** Multi-team ownership · Independent deployment · Monolith for single team · Organizational problem
+
+**Example answer:**
+
+> Choose Micro Frontends when multiple teams need clear ownership and independently deployed frontend applications.
+>
+> Choose a feature-based monolith when one team can share a codebase and deploy the application together. It usually provides simpler routing, state management, testing, and dependency management.
+>
+> Micro Frontends solve organizational and deployment problems, not just code organization. Module Federation enables runtime module sharing, but it does not eliminate the need for clear domain boundaries, compatible dependencies, and reliable integration.
+
+---
+
+## Redux Toolkit & Redux Saga
+
+### 1. What is the difference between Redux Toolkit and Redux Saga?
+
+**Expectations:** RTK state · Saga side effects · Slices/reducers · Generators · Complementary roles
+
+**Example answer:**
+
+> Redux Toolkit (RTK) simplifies Redux state management, while Redux Saga orchestrates complex asynchronous workflows using generator functions.
+>
+> - **Redux Toolkit:** Manages application state through slices, reducers, and actions.
+> - **Redux Saga:** Coordinates asynchronous operations, concurrency, cancellation, retries, and timeouts.
+>
+> They complement each other: Saga dispatches actions, and Redux Toolkit reducers update the state consumed by the UI.
+
+---
+
+### 2. What are `put` and `select` in Redux Saga?
+
+**Expectations:** `select` reads state · `put` dispatches actions · Decision vs update
+
+**Example answer:**
+
+> - **`select`:** Reads data from the current Redux state.
+> - **`put`:** Dispatches a Redux action.
+>
+> Use `select` to make decisions based on state and `put` to communicate state changes.
+
+```js
+const runs = yield select(selectTestRuns);
+
+yield put(runStarted("101"));
+```
+
+---
+
+### 3. What is the difference between `call` and `fork`?
+
+**Expectations:** Blocking `call` · Non-blocking `fork` · Task descriptor · `join`
+
+**Example answer:**
+
+> - **`call`:** Invokes a function and waits for its result before continuing.
+> - **`fork`:** Starts a non-blocking Saga task and returns a task descriptor.
+>
+> `join` waits for a forked task to finish. These effects help coordinate dependent operations and concurrent workers.
+
+```js
+const result = yield call(fetchData);
+
+const task = yield fork(runBackgroundTask);
+yield join(task);
+```
+
+---
+
+### 4. What is the difference between `takeEvery` and `takeLatest`?
+
+**Expectations:** Every action · Cancel previous · Search vs independent requests · No concurrency limit
+
+**Example answer:**
+
+> - **`takeEvery`:** Starts a worker for each matching action.
+> - **`takeLatest`:** Cancels the previous matching Saga task when a new action arrives.
+>
+> Use `takeEvery` when every request matters, such as submitting independent test runs. Use `takeLatest` for operations such as search, where only the newest result is relevant.
+>
+> Note: `takeEvery` does not enforce a concurrency limit. A separate scheduler is needed to limit simultaneous tasks.
+
+```js
+yield takeEvery(runRequested.type, runSaga);
+yield takeLatest(searchRequested.type, searchSaga);
+```
+
+---
+
+### 5. How does Redux Saga handle cancellation and timeouts?
+
+**Expectations:** `cancel` · `race` · `delay` · `finally` · `cancelled()` · Explicit I/O cancel
+
+**Example answer:**
+
+> Use `cancel` to cancel a Saga task and `race` to determine which competing effect finishes first. If the timeout wins, the request's Saga effect is cancelled. However, the underlying network request or external process may require explicit cancellation support.
+>
+> A cancelled Saga can use `finally` and `cancelled()` to perform cleanup and dispatch the appropriate state update.
+
+```js
+const result = yield race({
+  request: call(fetchData),
+  timeout: delay(5000),
+});
+```
+
+---
+
+### 6. When should you use Redux Saga instead of `createAsyncThunk` or RTK Query?
+
+**Expectations:** AsyncThunk for single ops · RTK Query for server state · Saga for complex workflows
+
+**Example answer:**
+
+> - **`createAsyncThunk`:** Best for individual asynchronous operations.
+> - **RTK Query:** Best for server-state fetching, caching, and invalidation.
+> - **Redux Saga:** Best for complex workflows involving concurrency, cancellation, action coordination, or long-running tasks.
+>
+> For most standard API requests, RTK Query or `createAsyncThunk` is simpler. Choose Saga when workflow orchestration becomes complex enough to justify the additional abstraction.
+>
+> Redux Toolkit manages state transitions, while Redux Saga coordinates side effects. A concurrent test runner is a good example for discussing task scheduling, cancellation, and timeout handling.
+
+---
+
+## React Architecture
+
+### 1. How do you structure a React application to make it scalable and maintainable?
+
+**Expectations:** Feature-based · Domain grouping · `app` / `features` / `shared` / `services` · Reduce coupling
+
+**Example answer:**
+
+> I prefer a feature-based architecture that groups related components, hooks, API functions, and state logic by business domain rather than file type.
+>
+> This structure keeps related code together, reduces unnecessary coupling, and makes features easier to develop, test, and maintain.
+
+```text
+src/
+  app/
+    providers/
+    routes/
+  features/
+    auth/
+      api/
+      hooks/
+      ui/
+    users/
+      api/
+      hooks/
+      ui/
+  shared/
+    components/
+    hooks/
+    utils/
+  services/
+    http/
+```
+
+---
+
+### 2. Why organize by feature instead of file type?
+
+**Expectations:** Colocation · Files that change together · Easier ownership · Less scattering
+
+**Example answer:**
+
+> Organizing by file type can scatter related code across multiple folders. Feature-based organization keeps files that change together close together.
+>
+> For example, updating authentication may involve its API, hooks, components, and validation. With a feature-based structure, these files are easy to locate.
+
+---
+
+### 3. What belongs in `shared/`?
+
+**Expectations:** Truly reusable · Generic UI · Pure utils · Avoid premature abstraction · Keep domain code in features
+
+**Example answer:**
+
+> `shared/` contains reusable code that is genuinely useful across multiple features, such as generic UI components (`Button`, `Modal`, `Input`), reusable hooks (`useDebounce`), pure utilities (`formatCurrency`), and common types.
+>
+> Keep business-specific components inside their respective features. Avoid moving code into `shared/` prematurely just because it might be reused someday.
+
+---
+
+### 4. How do you separate UI, client state, and server state?
+
+**Expectations:** UI renders · Client state (Redux/Zustand) · Server state (React Query/RTK Query) · Feature API hooks
+
+**Example answer:**
+
+> Give each responsibility a clear place:
+>
+> - **UI:** Components that render content and handle interactions.
+> - **Client state:** Redux or Zustand for shared client-side state when needed.
+> - **Server state:** React Query or RTK Query for fetching, caching, and synchronizing remote data.
+> - **Data access:** Feature-specific API functions and hooks.
+>
+> For example, a `useUser` hook can handle data fetching while `UserProfile` focuses on rendering loading, error, and success states.
+
+---
+
+### 5. What is the purpose of `app/`, `features/`, and `services/`?
+
+**Expectations:** App bootstrap · Domain features · Shared infrastructure · Proportional complexity
+
+**Example answer:**
+
+> - **`app/`:** Application initialization, routing, global providers, and store setup.
+> - **`features/`:** Business-domain functionality, such as authentication, users, and products.
+> - **`services/`:** Shared infrastructure integrations, such as HTTP clients, storage, and logging.
+>
+> These boundaries are conventions, not strict requirements. Keep the architecture proportional to the application's complexity.
+
+---
+
+### 6. When should you introduce a more complex architecture?
+
+**Expectations:** Start simple · Real pain points · Public APIs · Dependency boundaries · Cost of change
+
+**Example answer:**
+
+> Start simple and introduce additional layers when they solve an actual problem, such as duplicated logic, unclear ownership, difficult testing, or tightly coupled features.
+>
+> A small application may need only a few feature folders. A larger application may benefit from explicit public APIs, stricter dependency boundaries, or domain-oriented modules.
+>
+> Good architecture minimizes the cost of change. The goal isn't to create more folders; it's to keep related code together, separate responsibilities where useful, and prevent unnecessary coupling.
+
+---
+
+## React & TypeScript Naming
+
+### 1. What naming conventions do you follow in React projects, and why?
+
+**Expectations:** Clarity · Consistency · PascalCase components · camelCase hooks · Boolean prefixes · Props types
+
+**Example answer:**
+
+> I prioritize clarity, consistency, and readability. Naming should communicate a variable's purpose, distinguish components from ordinary functions, and make code easy to navigate.
+>
+> Common conventions include:
+>
+> - **Components and types:** `PascalCase`
+> - **Hooks, variables, and functions:** `camelCase`
+> - **Boolean variables:** Descriptive prefixes such as `is`, `has`, and `can`
+> - **Constants:** `SCREAMING_SNAKE_CASE` when appropriate
+> - **Component props:** `ComponentNameProps`
+
+---
+
+### 2. Why do React components use PascalCase?
+
+**Expectations:** Distinguish from HTML · JSX convention · Matching filenames
+
+**Example answer:**
+
+> PascalCase distinguishes React components from native HTML elements in JSX. Component filenames commonly use the same convention, such as `UserProfile.tsx`.
+
+```jsx
+function UserProfile() {
+  return <div>User profile</div>;
+}
+
+<UserProfile />; // React component
+<div />;         // HTML element
+```
+
+---
+
+### 3. Why must custom hooks start with `use`?
+
+**Expectations:** Recognizable · Lint rules · Rules of Hooks · Top-level calls
+
+**Example answer:**
+
+> The `use` prefix makes hooks recognizable and allows React's lint rules to identify hook usage patterns.
+>
+> Custom hooks should follow the Rules of Hooks, including calling hooks at the top level of React components or other custom hooks.
+
+```js
+function useUserSettings() {
+  // Reuse stateful React logic
+}
+```
+
+---
+
+### 4. How do you name event handlers and action functions?
+
+**Expectations:** `handle` for events · Action verbs for operations · Intent clarity
+
+**Example answer:**
+
+> Use `handle` for event handlers and action-oriented names for the underlying operations. `handleSubmit` describes responding to an event, while `submitForm` describes the operation itself.
+
+```js
+function handleSubmit() {
+  submitForm();
+}
+
+function submitForm() {
+  // Perform submission logic
+}
+```
+
+---
+
+### 5. Should every `const` use `SCREAMING_SNAKE_CASE`?
+
+**Expectations:** Shared/config constants only · Local values stay camelCase · Readability
+
+**Example answer:**
+
+> No. Use uppercase names for true shared constants or configuration values when that convention helps readability.
+>
+> Although `userName` and `isAuthenticated` are declared with `const`, they are ordinary local values rather than configuration constants.
+
+```js
+const MAX_RETRY_COUNT = 3;
+
+const userName = "Alex";
+const isAuthenticated = true;
+```
+
+---
+
+### 6. How do you name TypeScript types and component props?
+
+**Expectations:** PascalCase · `ComponentNameProps` · No `I` prefix · Descriptive names
+
+**Example answer:**
+
+> Use descriptive PascalCase names. A component's props can follow the `ComponentNameProps` convention.
+>
+> An `I` prefix for interfaces is generally unnecessary in TypeScript because the `interface` keyword already communicates the declaration's purpose.
+>
+> Naming conventions are team agreements, not universal laws. The most important qualities are consistency, meaningful names, and making intent obvious without unnecessary comments.
+
+```tsx
+interface UserCardProps {
+  userName: string;
+  isActive: boolean;
+}
+
+function UserCard({ userName, isActive }: UserCardProps) {
+  return <div>{isActive ? userName : "Inactive user"}</div>;
+}
+```
+
+---

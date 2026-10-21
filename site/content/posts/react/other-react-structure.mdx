@@ -1,19 +1,21 @@
 ---
-title: How I Organize React Projects
+title: "5 Lessons for Structuring React Projects"
 category: React
 author: Daniel Nguyen
-tags: ['#redux']
+tags: ['#React']
 date: 2025-11-02
 thumbnailText: Structure
 ---
 
-> Here are five lessons that completely changed how I structure React projects 
+A good project structure isn't about creating more folders. It's about making code easier to find, change, test, and maintain as an application grows.
 
-## 1. Organize by **Feature**, Not by **Type**
+Here are five principles that have helped me build more scalable React applications.
 
-A common mistake many developers make (including my past self) is splitting everything by type:
+### 1. Organize by Feature, Not by File Type
 
-```
+A common approach is to group files by type:
+
+```text
 src/
   components/
   hooks/
@@ -21,227 +23,186 @@ src/
   utils/
 ```
 
-That seems neat at first — until your app grows. Suddenly, you’re jumping across files and folders just to make one change.
+This works for small applications, but as the project grows, related files become scattered across multiple folders.
 
-A better way: **group by feature**.
-Keep everything related to a feature together — components, hooks, and API calls included.
+Instead, organize around business features:
 
-```
+```text
 src/
   features/
     auth/
-      components/
-      hooks/
       api/
+      hooks/
+      ui/
     dashboard/
-      components/
-      hooks/
       api/
+      hooks/
+      ui/
 ```
 
-## 2. Create a **shared/** Folder for Reusable Code
+Now, most changes stay within the relevant feature, making the codebase easier to navigate and maintain.
 
-Some elements — buttons, modals, utility functions — are used everywhere.
-Put these in a `shared/` folder to **avoid duplication** and keep your code DRY (Don’t Repeat Yourself).
+**Rule:** Keep code that changes together close together.
 
-```
+### 2. Create a `shared/` Folder for Reusable Code
+
+Some components and utilities are genuinely useful across multiple features.
+
+```text
 src/
+  shared/
+    components/
+      Button/
+      Modal/
+      Input/
+    hooks/
+      useDebounce.ts
+    utils/
+      formatCurrency.ts
+```
+
+The key is to share code when reuse is real, not just because two components look similar.
+
+Avoid turning `shared/` into a dumping ground for everything that doesn't fit elsewhere.
+
+**Rule:** Share stable, reusable abstractions; keep feature-specific code inside its feature.
+
+### 3. Use Consistent Naming Conventions
+
+Consistent naming makes a project easier to understand, especially for new contributors.
+
+- **Components:** PascalCase — `UserProfile.tsx`
+- **Hooks:** camelCase with the `use` prefix — `useAuth.ts`
+- **Utilities:** camelCase — `formatDate.ts`
+- **Types:** descriptive names — `UserProfile.ts`
+- **Barrel files:** use `index.ts` when it provides a clear public API.
+
+For example:
+
+```tsx
+// features/auth/hooks/useAuth.ts
+export function useAuth() {
+  // Authentication-related logic
+}
+```
+
+Avoid creating an `index.ts` in every folder without a clear purpose. Explicit exports can make dependencies easier to trace.
+
+**Rule:** Consistency matters more than any particular naming convention.
+
+### 4. Separate Responsibilities into Layers
+
+A maintainable React application separates UI, state management, data access, and infrastructure concerns.
+
+| Layer | Responsibility |
+|---|---|
+| UI | Render components and handle user interactions |
+| State | Manage client-side application state |
+| Data | Fetch, cache, and update server data |
+| Infrastructure | HTTP clients, storage, logging, and configuration |
+| Utilities | Reusable functions with focused responsibilities |
+
+For example, React Query can manage server state, while Redux or Zustand can manage client-side state when needed.
+
+```tsx
+function UserProfile({ userId }: { userId: string }) {
+  const { data: user, isPending } = useUser(userId);
+
+  if (isPending) return <p>Loading...</p>;
+
+  if (!user) return <p>User not found.</p>;
+
+  return <h1>{user.name}</h1>;
+}
+```
+
+Here, the component focuses on rendering, while `useUser` encapsulates the data-fetching logic.
+
+Don't over-engineer the boundaries, though. A small application doesn't need a separate layer for every responsibility.
+
+**Rule:** Separate concerns where it improves clarity, testing, or changeability.
+
+### 5. Start Simple and Scale Your Structure Gradually
+
+A scalable project structure might look like this:
+
+```text
+src/
+  app/
+    providers/
+    routes/
+    store/
+  features/
+    auth/
+      api/
+      model/
+      ui/
+      hooks/
+      index.ts
+    users/
+      api/
+      model/
+      ui/
+      index.ts
   shared/
     components/
     hooks/
     utils/
+    types/
+  services/
+    http/
+    storage/
+  config/
+  tests/
 ```
 
-This helps maintain consistency across your app and reduces future headaches.
+- `app/` contains application setup, routing, and global providers.
+- `features/` contains business-specific functionality.
+- `shared/` contains reusable UI components and utilities.
+- `services/` contains infrastructure integrations.
+- `config/` contains environment parsing and application configuration.
+- `tests/` contains shared test setup and testing utilities.
 
-## 3. **Naming Conventions Matter**
+This is a starting point, not a universal template. For example, `entities/` can be useful in a domain-heavy application, but unnecessary in a small dashboard.
 
-Clear naming = clear thinking. Here’s what works well:
+For Vite, aliases can make imports easier to read:
 
-* **Components →** PascalCase → `UserProfile.jsx`
-* **Hooks & Utils →** camelCase → `useAuth.js`, `formatDate.js`
-* **index.js →** use only for re-exports
+```ts
+// vite.config.ts
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
 
-Small details like this make your project easier to navigate — especially for new contributors.
-
-## 4. Think in **Layers** 
-
-Just like in backend development, frontend apps have layers too. Understanding them helps you keep your architecture clean and modular.
-
-* **UI Layer →** Components
-* **State Layer →** Context, Redux, or Zustand
-* **Data Layer →** API calls (Axios, fetch, React Query)
-* **Utilities Layer →** Helper functions
-
-👉 **Rule:** Keep these layers **decoupled**.
-
-## 5. A Scalable Project Structure Example
-
-```
-my-app/
-│
-├── public/
-│   └── favicon.svg
-│
-├── src/
-│   │
-│   ├── app/                          # Application bootstrap & global config
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   │
-│   │   ├── layouts/
-│   │   │   ├── MainLayout.tsx
-│   │   │   ├── AuthLayout.tsx
-│   │   │   └── DashboardLayout.tsx
-│   │   │
-│   │   ├── providers/                # Global providers
-│   │   │   ├── QueryProvider.tsx
-│   │   │   ├── StoreProvider.tsx
-│   │   │   ├── ThemeProvider.tsx
-│   │   │   └── RouterProvider.tsx
-│   │   │
-│   │   ├── routes/                   # Centralized routing
-│   │   │   ├── index.tsx
-│   │   │   ├── ProtectedRoute.tsx
-│   │   │   └── routeConfig.ts
-│   │   │
-│   │   └── store/                    # Global state config
-│   │       ├── index.ts
-│   │       ├── rootReducer.ts
-│   │       └── middleware.ts
-│   │
-│   ├── shared/                       # Truly reusable across features
-│   │   ├── components/               # Design system components
-│   │   │   ├── Button/
-│   │   │   │   ├── Button.tsx
-│   │   │   │   └── index.ts
-│   │   │   ├── Input/
-│   │   │   ├── Table/
-│   │   │   └── Modal/
-│   │   │
-│   │   ├── hooks/                    # Generic hooks
-│   │   │   ├── useDebounce.ts
-│   │   │   ├── useToggle.ts
-│   │   │   └── useIntersection.ts
-│   │   │
-│   │   ├── utils/                    # Pure functions (NO React)
-│   │   │   ├── date.ts
-│   │   │   ├── validation.ts
-│   │   │   └── formatCurrency.ts
-│   │   │
-│   │   ├── types/
-│   │   │   └── common.ts
-│   │   │
-│   │   ├── constants/
-│   │   │   └── index.ts
-│   │   │
-│   │   └── styles/                   # Global styling
-│   │       ├── globals.css
-│   │       └── variables.css
-│   │
-│   ├── features/                     # 🔥 Business features (CORE of system)
-│   │
-│   │   ├── auth/
-│   │   │   ├── api/
-│   │   │   │   └── authApi.ts
-│   │   │   │
-│   │   │   ├── model/
-│   │   │   │   ├── authSlice.ts
-│   │   │   │   ├── authSelectors.ts
-│   │   │   │   └── authTypes.ts
-│   │   │   │
-│   │   │   ├── ui/
-│   │   │   │   ├── LoginForm.tsx
-│   │   │   │   └── AuthLayout.tsx
-│   │   │   │
-│   │   │   ├── hooks/
-│   │   │   │   └── useAuth.ts
-│   │   │   │
-│   │   │   └── index.ts
-│   │   │
-│   │   ├── users/
-│   │   │   ├── api/
-│   │   │   ├── model/
-│   │   │   ├── ui/
-│   │   │   ├── hooks/
-│   │   │   └── index.ts
-│   │   │
-│   │   └── dashboard/
-│   │       ├── api/
-│   │       ├── model/
-│   │       ├── ui/
-│   │       └── index.ts
-│   │
-│   ├── entities/                     # Domain entities (optional advanced layer)
-│   │   ├── user/
-│   │   │   ├── types.ts
-│   │   │   └── mapper.ts
-│   │   └── product/
-│   │
-│   ├── services/                     # Infrastructure layer
-│   │   ├── http/
-│   │   │   ├── httpClient.ts
-│   │   │   ├── interceptors.ts
-│   │   │   └── errorHandler.ts
-│   │   │
-│   │   ├── storage/
-│   │   │   └── localStorage.ts
-│   │   │
-│   │   └── logger/
-│   │       └── logger.ts
-│   │
-│   ├── lib/                          # Third-party wrappers
-│   │   ├── react-query.ts
-│   │   ├── dayjs.ts
-│   │   └── sentry.ts
-│   │
-│   ├── config/                       # Runtime configs
-│   │   ├── env.ts
-│   │   ├── featureFlags.ts
-│   │   └── permissions.ts
-│   │
-│   ├── tests/                        # Global test utilities
-│   │   ├── setupTests.ts
-│   │   ├── renderWithProviders.tsx
-│   │   └── mockServer.ts
-│   │
-│   ├── e2e/                          # Playwright / Cypress tests
-│   │   ├── auth.spec.ts
-│   │   └── dashboard.spec.ts
-│   │
-│   └── index.d.ts                    # Global type declarations
-│
-├── .env
-├── .env.development
-├── .env.production
-│
-├── package.json
-├── tsconfig.json
-├── tsconfig.node.json
-├── vite.config.ts
-├── vitest.config.ts
-├── playwright.config.ts
-│
-├── .eslintrc.cjs
-├── .prettierrc
-├── .editorconfig
-├── .lintstagedrc
-├── .gitignore
-└── README.md
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@app": fileURLToPath(
+        new URL("./src/app", import.meta.url)
+      ),
+      "@features": fileURLToPath(
+        new URL("./src/features", import.meta.url)
+      ),
+      "@shared": fileURLToPath(
+        new URL("./src/shared", import.meta.url)
+      ),
+    },
+  },
+});
 ```
 
-Simple, predictable, and scalable.
+Configure matching paths in `tsconfig.json` as well so TypeScript understands the aliases.
 
-### Example Aliases (Vite or Webpack)
+**Rule:** Introduce architectural complexity only when the application needs it.
 
-```
-// vite.config.js
-resolve: {
-  alias: {
-    '@app': '/src/app',
-    '@features': '/src/features',
-    '@shared': '/src/shared',
-    '@assets': '/src/assets',
-  }
-}
-```
+### Final Thoughts
+
+A good React architecture isn't defined by how many folders you have. It's defined by how easily developers can understand and change the system.
+
+Remember these five principles:
+
+1. Organize by feature.
+2. Share code intentionally.
+3. Keep naming consistent.
+4. Separate responsibilities.
+5. Scale the architecture with the application.
+
+The best structure is the one that helps your team move quickly without making future changes unnecessarily difficult.
