@@ -1,5 +1,5 @@
 ---
-title: "React Suspense: useDeferredValue()"
+title: "Suspense: useDeferredValue()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactSuspense']
@@ -7,49 +7,74 @@ date: 2025-08-09
 thumbnailText: React Suspense
 ---
 
-> `useDeferredValue` lets React **delay updating a value for non-urgent renders**, while keeping the UI responsive.
+`useDeferredValue` lets React defer updating part of the UI when a value changes, keeping urgent interactions responsive while expensive content catches up.
 
-React immediately updates the UI using `search`, and in the background updates parts that depend on `deferredValue`.
+### 1. How It Works
 
 ```tsx
-const [search, setSearch] = useState('')
-const deferredSearch = useDeferredValue(search)
+const [search, setSearch] = useState("");
+const deferredSearch = useDeferredValue(search);
 ```
 
-Use `search` for the input
-Use `deferredSearch` for heavy rendering or fetching
+- Use `search` for the controlled input so typing responds immediately.
+- Use `deferredSearch` for expensive rendering, such as filtering a large list.
+- React can prioritize the input update and interrupt the deferred render when newer input arrives.
 
-### Practical Example
+### 2. Practical Example: Search a Large List
 
 ```tsx
-function PokemonSearch() {
-  const [search, setSearch] = useState('')
-  const deferredSearch = useDeferredValue(search)
+import { memo, useDeferredValue, useState } from "react";
 
-  const pokemons = use(searchPokemons(deferredSearch))
-  const isPending = deferredSearch !== search
+const PokemonList = memo(function PokemonList({
+  pokemons,
+  search,
+}: {
+  pokemons: { id: number; name: string }[];
+  search: string;
+}) {
+  const filtered = pokemons.filter(pokemon =>
+    pokemon.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <ul>
+      {filtered.map(pokemon => (
+        <li key={pokemon.id}>{pokemon.name}</li>
+      ))}
+    </ul>
+  );
+});
+
+function PokemonSearch({ pokemons }) {
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+  const isPending = search !== deferredSearch;
 
   return (
     <>
       <input
         value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Search pokemons..."
+        onChange={event => setSearch(event.target.value)}
+        placeholder="Search Pokémon..."
       />
-      {isPending && <span>Loading...</span>}
-      <ul>
-        {pokemons.map(p => <li key={p.id}>{p.name}</li>)}
-      </ul>
+
+      {isPending && <span>Updating results...</span>}
+
+      <div style={{ opacity: isPending ? 0.6 : 1 }}>
+        <PokemonList
+          pokemons={pokemons}
+          search={deferredSearch}
+        />
+      </div>
     </>
-  )
+  );
 }
 ```
 
-✔ Typing stays instant.    
-✔ Fetching can suspend.    
-✔ UI feels smooth.    
+Here, `memo` allows `PokemonList` to skip rendering during urgent parent updates when its props remain unchanged. The deferred search value then updates separately, allowing React to prioritize typing over expensive filtering.
 
-### Use:
+### 3. What About Data Fetching?
 
-* `useTransition` → for navigation and view changes
-* `useDeferredValue` → for inputs and filters
+`useDeferredValue` can also help coordinate UI that suspends while loading data, but it does not itself initiate, debounce, or cache requests.
+
+For Suspense-based fetching, use a data source that provides stable, cached resources or a Suspense-compatible framework. Avoid creating a fresh Promise directly during every render.

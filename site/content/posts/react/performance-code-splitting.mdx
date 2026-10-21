@@ -1,5 +1,5 @@
 ---
-title: "React Performance: Code Splitting"
+title: "Performance: Code Splitting"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactPerformance']
@@ -7,63 +7,127 @@ date: 2025-08-06
 thumbnailText: React Performance
 ---
 
-> Code splitting breaks your bundle into smaller chunks that load on demand instead of all at once.
+Code splitting divides your JavaScript bundle into smaller chunks that can load on demand instead of downloading everything upfront.
 
-> Think: *stream one episode, not the whole season.*
+Think: *stream one episode, not the whole season.*
 
-### Lazy Load with `React.lazy` + `Suspense`
+### 1. Lazy Load Components
 
-```tsx
-const SmileyFace = lazy(() => import('./SmileyFace'));
-
-<Suspense fallback={<div>Loading...</div>}>
-  <SmileyFace />
-</Suspense>
-```
-
-✔ Component loads only when rendered.   
-✔ Smaller initial bundle.   
-✔ Faster startup.   
-
-### Load Heavy Features On Demand
-
-Avoid loading expensive libraries (e.g. Three.js) until needed:
+Use `React.lazy` with `Suspense` to load a component when it is first rendered.
 
 ```tsx
-const Globe = lazy(() => import('./Globe'));
+import { lazy, Suspense } from "react";
 
-{showGlobe && (
-  <Suspense fallback={<div>Loading globe...</div>}>
-    <Globe />
-  </Suspense>
-)}
+const SmileyFace = lazy(() => import("./SmileyFace"));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SmileyFace />
+    </Suspense>
+  );
+}
 ```
 
-✔ Login page stays fast.    
-✔ Globe loads only when user requests it
+- Reduces the JavaScript required for the initial page.
+- Defers downloading and evaluating the component's module until needed.
+- Displays fallback UI while the module is loading.
 
-### Preload on Hover or Focus
+### 2. Load Heavy Features on Demand
 
-If users almost always open the feature, preload it early:
+Avoid loading expensive features, such as a Three.js globe, until the user requests them.
 
 ```tsx
-const preloadGlobe = () => import('./Globe');
+import { lazy, Suspense, useState } from "react";
 
-<label onPointerOver={preloadGlobe} onFocus={preloadGlobe}>
+const Globe = lazy(() => import("./Globe"));
+
+function App() {
+  const [showGlobe, setShowGlobe] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setShowGlobe(true)}>
+        Open Globe
+      </button>
+
+      {showGlobe && (
+        <Suspense fallback={<div>Loading globe...</div>}>
+          <Globe />
+        </Suspense>
+      )}
+    </>
+  );
+}
 ```
 
-✔ Starts loading before click.    
-✔ Feels instant
+The globe module isn't requested by this component until `showGlobe` becomes `true` and React attempts to render it.
 
-### Smooth UX with `useTransition`
+This keeps the initial experience lighter, especially when the feature is rarely used.
 
-Avoid flashing loaders when lazy components load quickly:
+### 3. Preload on Hover or Focus
+
+If users are likely to open a feature, start downloading its module before they click.
 
 ```tsx
-startTransition(() => setShowGlobe(true));
+const preloadGlobe = () => import("./Globe");
+
+function GlobeLauncher({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      onPointerEnter={preloadGlobe}
+      onFocus={preloadGlobe}
+      onClick={onOpen}
+    >
+      Open Globe
+    </button>
+  );
+}
 ```
 
-✔ Marks UI update as low priority
-✔ Keeps interactions smooth
+The dynamic import starts loading the module early. When `React.lazy` later requests the same module, the module loader can reuse the in-flight or cached import.
 
-Optional: use `spin-delay` to prevent flickering loaders.
+Use this selectively: preloading every feature can increase network usage and compete with more important resources.
+
+### 4. Keep UI Responsive with `useTransition`
+
+When revealing a lazy-loaded component, `useTransition` can mark the state update as non-urgent.
+
+```tsx
+import { lazy, Suspense, useState, useTransition } from "react";
+
+const Globe = lazy(() => import("./Globe"));
+
+function App() {
+  const [showGlobe, setShowGlobe] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function openGlobe() {
+    startTransition(() => {
+      setShowGlobe(true);
+    });
+  }
+
+  return (
+    <>
+      <button onClick={openGlobe}>Open Globe</button>
+
+      {isPending && <span>Preparing feature...</span>}
+
+      <Suspense fallback={<div>Loading globe...</div>}>
+        {showGlobe && <Globe />}
+      </Suspense>
+    </>
+  );
+}
+```
+
+`useTransition` helps React prioritize urgent interactions over non-urgent rendering work. It does not make the network request faster or guarantee that the Suspense fallback will never appear.
+
+For transitions that reveal already-visible content, React can often keep the existing UI visible while the new content suspends.
+
+### 5. Avoid Loading Indicator Flicker
+
+For very fast requests, showing a spinner for only a few milliseconds can make the interface feel less polished.
+
+You can delay the appearance of a loading indicator using a small delay or a utility such as `spin-delay`.

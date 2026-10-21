@@ -1448,6 +1448,211 @@ function Container({ children }) {
 
 ---
 
+## Performance
+
+### 1. How do you optimize React applications to reduce unnecessary rendering and improve performance?
+
+**Expectations:** Profile first · Memoization · Code splitting · Concurrent APIs · Context · Virtualization
+
+**Example answer:**
+
+> I start by identifying the bottleneck using React DevTools Profiler and browser performance tools. Then I apply targeted optimizations, such as memoization, code splitting, concurrent rendering features, Context optimization, and list virtualization.
+
+---
+
+### 2. How can you prevent unnecessary re-renders?
+
+**Expectations:** `React.memo` · `useMemo` · `useCallback` · Reuse JSX · Measure first
+
+**Example answer:**
+
+> Use `React.memo` to skip parent-driven renders when props remain unchanged, `useMemo` to cache expensive calculations, and `useCallback` when stable function identity matters.
+>
+> You can also reuse static JSX elements across renders. However, memoization should be applied when it provides a meaningful performance benefit.
+
+---
+
+### 3. What is the difference between `useTransition` and `useDeferredValue`?
+
+**Expectations:** Non-urgent updates · Deferred values · Not debounce · Not faster compute
+
+**Example answer:**
+
+> Both help keep the UI responsive by allowing non-urgent rendering work to be deprioritized.
+>
+> - **`useTransition`:** Marks a state update as non-urgent.
+> - **`useDeferredValue`:** Lets a value used by part of the UI lag behind its latest value.
+>
+> For example, a search input can update immediately while an expensive results list renders using a deferred query.
+>
+> Neither Hook automatically makes expensive calculations faster or debounces network requests.
+
+---
+
+### 4. How do you optimize React Context?
+
+**Expectations:** `Object.is` · Memoize values · Split state/actions · Memo doesn't block context
+
+**Example answer:**
+
+> Context consumers re-render when the provided value changes according to `Object.is`.
+>
+> To reduce unnecessary updates, memoize object or array values when appropriate, split state and actions into separate Contexts when consumers need different update patterns, and keep Providers close to the components that need them.
+>
+> Remember that a component consuming a Context still re-renders when that Context value changes, even if it is wrapped in `React.memo`.
+
+---
+
+### 5. What is code splitting, and how does it improve performance?
+
+**Expectations:** Smaller initial JS · `React.lazy` · `Suspense` · On-demand features
+
+**Example answer:**
+
+> Code splitting divides JavaScript into smaller bundles that can load when needed, reducing the amount of JavaScript required for the initial page.
+>
+> The Globe module is loaded when the component is first rendered. This is particularly useful for heavy features that users may not need immediately.
+
+```jsx
+const Globe = lazy(() => import("./Globe"));
+
+<Suspense fallback={<div>Loading...</div>}>
+  {showGlobe && <Globe />}
+</Suspense>
+```
+
+---
+
+### 6. How do you optimize a list containing thousands of items?
+
+**Expectations:** Virtualization · Visible rows only · `react-window` · Smaller DOM
+
+**Example answer:**
+
+> Use list virtualization to render only the visible items and a small buffer rather than mounting the entire list.
+>
+> Libraries such as `react-window` can reduce DOM size, memory usage, and layout work, improving scrolling performance.
+>
+> For example, a list of 10,000 items may only need around a dozen visible rows at a time, depending on viewport and row height.
+
+---
+
+## Concurrent UI Hooks
+
+### 1. How do you keep React interfaces responsive during expensive updates and form submissions?
+
+**Expectations:** `useDeferredValue` · `useTransition` · `useFormStatus` · `useOptimistic`
+
+**Example answer:**
+
+> React provides specialized hooks for different UI responsiveness problems:
+>
+> - **`useDeferredValue`** — defer updating a value used by expensive UI.
+> - **`useTransition`** — mark state updates as non-urgent.
+> - **`useFormStatus`** — access the pending status of a parent form.
+> - **`useOptimistic`** — display temporary UI state before an Action finishes.
+
+---
+
+### 2. What is the difference between `useDeferredValue` and `useTransition`?
+
+**Expectations:** Defer a value · Mark updates non-urgent · Not faster compute · Not debounce
+
+**Example answer:**
+
+> Both help React prioritize urgent interactions, but they work differently.
+>
+> - **`useDeferredValue`** lets a value used by expensive UI lag behind the latest value.
+> - **`useTransition`** lets you mark specific state updates as non-urgent.
+>
+> Use `useDeferredValue` when you don't control the state update, or want to defer a value passed to an expensive component. Use `useTransition` when you control the state update and want to mark it as a transition.
+>
+> Important: Neither hook makes expensive JavaScript execute faster or debounces network requests.
+
+---
+
+### 3. How does `useFormStatus` work?
+
+**Expectations:** Nearest parent form · `pending` · Must be inside the form
+
+**Example answer:**
+
+> `useFormStatus` from `react-dom` exposes the submission status of the nearest parent form.
+>
+> The component calling `useFormStatus` must be rendered inside the form it tracks. Calling it in the component that creates the form won't track that form's submission.
+
+```jsx
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? "Submitting..." : "Submit"}
+    </button>
+  );
+}
+```
+
+---
+
+### 4. What is optimistic UI, and how does `useOptimistic` help?
+
+**Expectations:** Update UI immediately · Temporary state · Revert on failure · Sync confirmed state
+
+**Example answer:**
+
+> Optimistic UI updates the interface immediately while an asynchronous Action is running, rather than waiting for server confirmation.
+>
+> Here, `liked` is the underlying state, and `optimisticLiked` is the temporary UI state. The example assumes `startTransition` is available in scope and the parent updates `liked` after the server confirms the change.
+>
+> If the Action fails, handle the error and ensure the underlying state remains consistent. The optimistic state reverts when the Action ends unless the confirmed state has also been updated.
+
+```jsx
+const [optimisticLiked, setOptimisticLiked] =
+  useOptimistic(liked);
+
+async function handleLike() {
+  startTransition(async () => {
+    setOptimisticLiked(!optimisticLiked);
+    await updateLikeOnServer(!optimisticLiked);
+  });
+}
+```
+
+---
+
+### 5. When should you use `useState` instead of `useOptimistic`?
+
+**Expectations:** Persistent client state · Temporary Action anticipation
+
+**Example answer:**
+
+> Use `useState` for persistent client-side state, such as form values, validation errors, or multi-step workflow progress.
+>
+> Use `useOptimistic` for temporary UI state that anticipates the result of an asynchronous Action, such as liking a post or adding a todo.
+
+---
+
+### 6. Do these hooks replace each other?
+
+**Expectations:** Different problems · Choose by bottleneck
+
+**Example answer:**
+
+> No. Each addresses a different problem.
+>
+> | Hook | Main purpose |
+> | --- | --- |
+> | `useDeferredValue` | Defer value-driven rendering |
+> | `useTransition` | Mark updates as non-urgent |
+> | `useFormStatus` | Track parent form submission status |
+> | `useOptimistic` | Show temporary optimistic state |
+> | `useState` | Store regular component state |
+>
+> Start by identifying the problem—expensive rendering, form submission feedback, or perceived network latency—then choose the hook that addresses it.
+
+---
+
 ## TypeScript
 
 ### 1. How does TypeScript improve code quality, and which features do you use to make applications type-safe?

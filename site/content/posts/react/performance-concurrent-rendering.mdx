@@ -1,5 +1,5 @@
 ---
-title: "React Performance: Concurrent Rendering"
+title: "Performance: Concurrent Rendering"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactPerformance']
@@ -7,87 +7,85 @@ date: 2025-08-06
 thumbnailText: React Performance
 ---
 
-> To feel smooth, browsers aim for **60 frames per second**, giving us only:
+Concurrent Rendering allows React to interrupt rendering work and prioritize more urgent updates, helping keep the UI responsive during expensive renders.
 
-React must:
+### 1. The Problem: Expensive Rendering
 
-* Reconcile changes
-* Render components
-* Let the browser paint updates
+Browsers aim for 60 FPS, giving each frame approximately 16.7 ms to render.
 
-When React takes too long, users experience:
+When JavaScript monopolizes the main thread for too long, users may experience input lag, delayed updates, and stuttering animations.
 
-* Input lag
-* Frozen UI
+React rendering itself can contribute to this problem, especially when a component tree is expensive to render.
 
-This is where concurrent rendering changes the game.
+### 2. What Is Concurrent Rendering?
 
-# What Is Concurrent Rendering?
+Concurrent Rendering is a rendering capability introduced in React 18 that lets React prepare UI updates without treating every render as one uninterrupted task.
 
-Concurrent rendering is a new rendering model in React 18 that allows React to:
+React can:
 
-✅ Start rendering.   
-⏸ Pause rendering if it takes too long.   
-▶ Resume later.   
-🚫 Without blocking user interactions.   
+- Start rendering an update.
+- Pause or abandon render work when appropriate.
+- Prioritize more urgent updates.
+- Resume or restart work later.
 
-Instead of treating rendering as a single uninterruptible task, React now breaks it into small chunks and yields control back to the browser when needed.
+This helps keep interactions responsive while React prepares less urgent UI changes.
 
-This allows:
+**Important:** React can yield between units of its own rendering work, but it cannot interrupt a long-running synchronous JavaScript function in the middle of execution. Concurrent rendering also does not make expensive computations inherently faster.
 
-* Buttons to stay clickable
-* Typing to stay responsive
-* Animations to remain smooth
+### 3. What Changed in React 18?
 
-Even during heavy UI updates.
+Concurrent rendering is not a switch you enable directly. React 18 introduced a concurrent rendering foundation that powers APIs for coordinating updates.
 
-# What Changed in React 18?
+Examples include:
 
-Concurrent rendering is not a feature you “turn on” directly — it’s the foundation for new APIs like:
+- `startTransition` and `useTransition`
+- `useDeferredValue`
+- Suspense-enabled rendering patterns
+- Streaming server-side rendering with Suspense
 
-* `useDeferredValue`
-* `startTransition`
-* `Suspense`
-* Streaming SSR
+These features help React prioritize work and coordinate when UI becomes visible.
 
-These APIs allow React to **prioritize updates** instead of treating all renders equally.
+### 4. Why Prioritization Matters
 
-# Why Prioritization Matters
+Consider a search page with an input and a list of 1,000 results.
 
-Not all UI updates are equally important.
+- Typing in the input is urgent.
+- Updating an expensive result list can be deferred.
 
-Example:
+Without prioritization, expensive rendering triggered by each keystroke can make the input feel sluggish.
 
-* Typing in a search box → **High priority**
-* Rendering 1,000 filtered results → **Low priority**
-
-Without prioritization, React would block typing until all results finish rendering 😵.
-
-Concurrent rendering lets React:
-
-* Update what users care about **first**
-* Defer less important work
-
-## Example Concurrent Features
-
-### Using `useDeferredValue`
+### 5. Example: `useDeferredValue`
 
 ```tsx
+import { useDeferredValue, useState } from "react";
+
 function App() {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const deferredText = useDeferredValue(text);
 
   return (
     <>
-      <input value={text} onChange={e => setText(e.target.value)} />
+      <input
+        value={text}
+        onChange={event => setText(event.target.value)}
+        placeholder="Search..."
+      />
+
       <SlowList text={deferredText} />
     </>
   );
 }
 ```
 
-Now:
+Here, `text` updates immediately, while `SlowList` can continue rendering with the previous `deferredText` value until React can process the newer value.
 
-* Input updates immediately
-* Heavy list updates later
-* UI feels smooth
+React can prioritize the input update over the deferred list update, keeping typing responsive when the list is expensive to render.
+
+**Important details**
+
+- `useDeferredValue` does not debounce input or reduce the number of computations by itself.
+- It does not guarantee that the list updates after a fixed delay.
+- React may interrupt and restart deferred rendering as newer values arrive.
+- The list must actually be expensive to render for the benefit to be noticeable.
+
+For a real performance improvement, combine deferred rendering with efficient list rendering, component memoization where appropriate, or virtualization for very large lists.

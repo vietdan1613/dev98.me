@@ -1,5 +1,5 @@
 ---
-title: "React Performance: Element Optimization"
+title: "Performance: Element Optimization"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactPerformance']
@@ -7,87 +7,123 @@ date: 2025-08-06
 thumbnailText: React Performance
 ---
 
-> **If React receives the same element as last render, it skips re-rendering it.**
+Reusing the same React element object can help React skip unnecessary work when its parent re-renders.
 
-This means **reusing elements** can significantly improve performance.
-
-# Unnecessary Re-renders
+### 1. The Problem: Unnecessary Re-renders
 
 ```tsx
 function Message({ greeting }) {
-  console.log('rendering', greeting)
-  return <div>{greeting}</div>
+  console.log("Rendering Message");
+
+  return <div>{greeting}</div>;
 }
 
 function Counter() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
   return (
     <>
       <button onClick={() => setCount(c => c + 1)}>
         Count: {count}
       </button>
+
       <Message greeting="Hello!" />
     </>
-  )
+  );
 }
 ```
 
-Even though `greeting` never changes, `Message` re-renders on every click.
+Every time `count` changes, `Counter` re-renders and creates a new `<Message />` element.
 
+Although `greeting` remains unchanged, `Message` normally renders again because its parent rendered again.
 
-### Solution: Reuse JSX
+### 2. Solution: Reuse the Same JSX Element
 
 ```tsx
-const message = <Message greeting="Hello!" />
+const message = <Message greeting="Hello!" />;
 
 function Counter() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
   return (
     <>
       <button onClick={() => setCount(c => c + 1)}>
         Count: {count}
       </button>
+
       {message}
     </>
-  )
+  );
 }
 ```
 
-Now `Message` renders **only once**.
+Because `message` references the same React element object across renders, React can skip rendering that subtree when reconciling it.
 
+**Important:** This works because the element object is reused, not simply because its props are unchanged.
 
-# Static Components: Hoist Them
+### 3. Hoist Static JSX
+
+For UI that never depends on component state or props, you can create the element outside the component.
 
 ```tsx
-const footer = <Footer />
+const footer = <Footer />;
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
   return (
     <>
-      <button onClick={() => setCount(c => c + 1)}>Click</button>
+      <button onClick={() => setCount(c => c + 1)}>
+        Count: {count}
+      </button>
+
       {footer}
     </>
-  )
+  );
 }
 ```
 
-> Avoid re-rendering components that don’t depend on state.
+The `Footer` element remains the same between renders, allowing React to skip rendering that subtree when appropriate.
 
-#  Memoize JSX with `useMemo`
+### 4. Memoize Dynamic JSX with `useMemo`
 
-When JSX depends on state:
+When JSX depends on values that can change, `useMemo` can preserve the element object while its dependencies remain unchanged.
 
 ```tsx
-const memoFooter = useMemo(() => <Footer name={name} />, [name])
+function App({ name }) {
+  const [count, setCount] = useState(0);
+
+  const memoFooter = useMemo(
+    () => <Footer name={name} />,
+    [name]
+  );
+
+  return (
+    <>
+      <button onClick={() => setCount(c => c + 1)}>
+        Count: {count}
+      </button>
+
+      {memoFooter}
+    </>
+  );
+}
 ```
 
-Re-renders only when `name` changes.
+The element is reused when `count` changes but `name` remains the same.
 
-# Memoize Components with `React.memo`
+Note that `useMemo` is a performance optimization, not a semantic guarantee. React may discard its cached value.
+
+### 5. Alternative: `React.memo`
+
+You can also memoize the component itself.
 
 ```tsx
 const Footer = memo(function Footer({ color, name }) {
-  return <footer style={{ color }}>Hello {name}</footer>
-})
+  return <footer style={{ color }}>Hello {name}</footer>;
+});
 ```
+
+React can skip rendering `Footer` when its props are unchanged, even if its parent re-renders.
+
+However, `memo` does not prevent renders caused by the component's own state or consumed context changing.

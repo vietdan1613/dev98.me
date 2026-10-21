@@ -1,5 +1,5 @@
 ---
-title: "React Suspense: useTransition()"
+title: "Suspense: useTransition()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactSuspense']
@@ -7,57 +7,78 @@ date: 2025-08-09
 thumbnailText: React Suspense
 ---
 
-> `useTransition` lets you mark certain state updates as **non-urgent**, allowing React to keep the UI responsive while those updates are processed in the background.
+`useTransition` lets you mark state updates as non-urgent, allowing React to prioritize interactions while preparing less urgent UI updates.
+
+### 1. The Problem: Expensive Updates
+
+Imagine filtering thousands of items while a user types into a search input.
 
 ```tsx
-const [isPending, startTransition] = useTransition()
+setFilter(value);
 ```
 
-It returns:
+If updating the filter triggers expensive rendering, the input may become sluggish because React has to process a large amount of UI work.
 
-* `startTransition` → wraps low-priority updates
-* `isPending` → tells you if a transition is in progress
-
-# The Problem 
-
-Without transitions, every update blocks rendering:
+### 2. The Solution: `useTransition`
 
 ```tsx
-setFilter(value) // slow update blocks typing
+const [isPending, startTransition] = useTransition();
 ```
 
-If filtering is expensive, the input lags — bad UX.
+- `startTransition`: Marks state updates inside its callback as non-urgent.
+- `isPending`: Indicates that the transition is still pending.
 
-# The Solution: useTransition
+### 3. Practical Example: Search Filtering
 
 ```tsx
-const [isPending, startTransition] = useTransition()
+function SearchPage({ items }) {
+  const [input, setInput] = useState("");
+  const [filter, setFilter] = useState("");
+  const [isPending, startTransition] = useTransition();
 
-function onChange(e) {
-  const value = e.target.value
-  startTransition(() => {
-    setFilter(value)
-  })
+  function handleChange(event) {
+    const value = event.target.value;
+
+    setInput(value); // Urgent update
+
+    startTransition(() => {
+      setFilter(value); // Non-urgent update
+    });
+  }
+
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  return (
+    <>
+      <input value={input} onChange={handleChange} />
+
+      {isPending && <span>Updating results...</span>}
+
+      <ul>
+        {filteredItems.map(item => (
+          <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
+    </>
+  );
 }
 ```
 
-✔ Typing stays smooth.    
-✔ Heavy updates run in the background.    
-✔ UI feels faster.    
+The input updates urgently, while the filter state update is marked as a transition. React can prioritize typing over rendering the updated results.
 
-# Takeaway
+For very large datasets, consider memoizing the expensive list or using virtualization as well.
 
-`useTransition` doesn’t make your code faster —
-it makes your UI **feel** faster.
+### 4. What `useTransition` Does Not Do
 
-Use it wisely, and your React apps will feel:
+- It does not make CPU-intensive JavaScript execute faster.
+- It does not move rendering to a separate thread.
+- It does not debounce input or reduce network requests.
+- It cannot interrupt a long-running synchronous function in the middle of execution.
 
-* Smoother
-* More responsive
+Instead, it allows React to schedule rendering work according to priority.
 
-Use `useTransition` for:
+### 5. When Should You Use It?
 
-* Filtering and sorting large lists
-* Data-driven navigation
-* Switching views or tabs
-* Rendering expensive components
+Use `useTransition` for expensive filtering, switching tabs, navigating between views, or rendering data-heavy UI where an update can wait while urgent interactions remain responsive.

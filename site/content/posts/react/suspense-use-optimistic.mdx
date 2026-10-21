@@ -1,5 +1,5 @@
 ---
-title: "React Suspense: useOptimistic()"
+title: "Suspense: useOptimistic()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactSuspense']
@@ -7,100 +7,133 @@ date: 2025-08-09
 thumbnailText: React Suspense
 ---
 
-> Most user actions succeed, so update the UI first and confirm later.
+Optimistic UI updates the interface before the server confirms a change, making interactions feel faster and more responsive.
 
-Example: When a user checks a todo item, we mark it as complete instantly and sync with the server in the background.
+### 1. The Problem: Waiting for the Server
 
-✔ Faster feedback.   
-✔ Better perceived performance.   
-✔ More responsive apps
+Imagine a user checks a todo item. If the UI waits for the server response before marking it complete, the interaction feels slow.
 
-# Optimism During Transitions
+Instead, update the UI immediately and synchronize the change with the server in the background.
 
-React provides `useOptimistic` to override UI state **while a transition or form action is in progress**.
+Benefits:
+- Immediate feedback.
+- Better perceived performance.
+- More responsive interactions.
 
-It behaves like `useState`, but is scoped to a pending transition — perfect for optimistic updates.
+### 2. How `useOptimistic` Works
 
-### Example: Optimistic Todo Toggle
+React's `useOptimistic` lets you display a temporary optimistic state while an Action is pending.
 
 ```tsx
-function Todo({ todo }) {
-  const [isComplete, setIsComplete] = useOptimistic(todo.isComplete)
+const [optimisticState, setOptimisticState] =
+  useOptimistic(currentState);
+```
+
+The optimistic value can temporarily differ from the underlying state. When the Action finishes, React returns to the current value supplied by the parent unless that underlying state has also been updated.
+
+### 3. Example: Optimistic Todo Toggle
+
+```tsx
+import { useOptimistic } from "react";
+
+function Todo({ todo, updateTodo }) {
+  const [optimisticComplete, setOptimisticComplete] =
+    useOptimistic(todo.isComplete);
 
   return (
     <form
       action={async () => {
-        setIsComplete(!isComplete)           // Optimistic update
-        await updateTodo(todo.id, !isComplete) // Server sync
+        const nextComplete = !optimisticComplete;
+
+        setOptimisticComplete(nextComplete);
+        await updateTodo(todo.id, nextComplete);
       }}
     >
-      <label>
-        <input type="checkbox" checked={isComplete} />
-        {todo.text}
-      </label>
+      <button type="submit">
+        {optimisticComplete ? "✓" : "○"} {todo.text}
+      </button>
     </form>
-  )
+  );
 }
 ```
 
-✔ UI updates instantly.   
-✔ Rolls back automatically if props change.    
-✔ No manual error handling required for basic cases
+The button provides immediate visual feedback, while the form Action synchronizes the change with the server.
 
-# Optimistic Form Submission
+When the Action finishes, the optimistic value stops being active. The parent must update `todo.isComplete` with the confirmed server state so the UI remains consistent.
 
-Problem: After submitting a form, users wait before seeing the new data — which feels slow.
+**Important:** If the request fails, the optimistic UI reverts when the Action ends, provided the underlying state was never changed to the optimistic value. You should still handle the error and inform the user.
 
-Solution:
-Render an **optimistic version** of the data instantly.
+### 4. Optimistic Form Submission
 
-```tsx
-action={async (formData) => {
-  const optimisticPokemon = createOptimisticPokemon(formData)
-  setOptimisticPokemon(optimisticPokemon)
-
-  const realPokemon = await updatePokemon(formData)
-  setSelectedPokemon(realPokemon.name)
-  setOptimisticPokemon(null)
-}}
-```
-
-✔ Shows immediate feedback.    
-✔ Replaces with real data later.    
-
-# Multi-Step Optimistic
-
-For actions with multiple steps, `useOptimistic` enables progressive feedback:
+When creating a record, you can display a temporary version before the server returns the real one.
 
 ```tsx
-function CreateForm() {
-  const [message, setMessage] = useOptimistic('Create')
+function PokemonForm({ createPokemon }) {
+  const [optimisticPokemon, setOptimisticPokemon] =
+    useOptimistic(null);
 
   return (
     <form
       action={async (formData) => {
-        setMessage('Creating...')
-        const pokemon = await updatePokemon(formData)
+        const name = String(formData.get("name") ?? "");
 
-        setMessage('Saving...')
-        await savePokemon(pokemon)
+        setOptimisticPokemon({ name, pending: true });
 
-        setMessage('Finalizing...')
-        await notifyFleet(pokemon)
+        await createPokemon(formData);
       }}
     >
-      <SubmitButton message={message} />
+      <input name="name" required placeholder="Pokémon name" />
+      <button type="submit">Create Pokémon</button>
+
+      {optimisticPokemon && (
+        <p>
+          {optimisticPokemon.name}
+          {optimisticPokemon.pending ? " (Saving...)" : ""}
+        </p>
+      )}
     </form>
-  )
+  );
 }
 ```
 
-✔ Clear progress feedback.   
-✔ Keeps users informed.   
+This is a simplified example. A production implementation should reconcile the optimistic item with the returned record and handle failures. If the parent owns the list of Pokémon, update that underlying list after the server confirms the creation.
 
-# Takeaways
+### 5. Multi-Step Progress
 
-* Use **Optimistic UI** to make apps feel instant
-* `useOptimistic` overrides UI state during transitions
-* Combine both for smooth, professional UX
-* Use placeholders (`"..."`) for fields not yet loaded
+For a workflow with multiple steps, such as creating, saving, and notifying, ordinary state is often clearer for progress messages.
+
+```tsx
+function CreateForm() {
+  const [status, setStatus] = useState("Create");
+
+  async function handleCreate(formData) {
+    try {
+      setStatus("Creating...");
+      const pokemon = await createPokemon(formData);
+
+      setStatus("Saving...");
+      await savePokemon(pokemon);
+
+      setStatus("Finalizing...");
+      await notifyFleet(pokemon);
+
+      setStatus("Complete");
+    } catch {
+      setStatus("Failed. Please try again.");
+    }
+  }
+
+  return (
+    <form action={handleCreate}>
+      <input name="name" required />
+      <button type="submit">{status}</button>
+    </form>
+  );
+}
+```
+
+Here, `useState` is appropriate because the status represents actual workflow progress, not merely a temporary optimistic version of the data.
+
+### 6. When Should You Use `useOptimistic`?
+
+Use it for actions where immediate feedback is valuable, such as liking a post, toggling a todo, adding a comment, or creating a list item.

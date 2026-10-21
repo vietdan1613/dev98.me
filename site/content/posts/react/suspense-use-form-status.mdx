@@ -1,5 +1,5 @@
 ---
-title: "React Suspense: useFormStatus()"
+title: "Suspense: useFormStatus()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactSuspense']
@@ -7,78 +7,97 @@ date: 2025-08-09
 thumbnailText: React Suspense
 ---
 
-> `useFormStatus` is a React hook that lets you read the **submission state of a form**.
+`useFormStatus` is a React DOM hook that exposes the submission status of a parent form, making it easier to build responsive form interactions.
 
-# Problems
+### 1. The Problem: Managing Submission State
 
-Without `useFormStatus`, you often write:
+Without `useFormStatus`, you might manually manage submission state:
 
 ```tsx
-const [isSubmitting, setIsSubmitting] = useState(false)
+const [isSubmitting, setIsSubmitting] = useState(false);
 ```
 
-And manually manage:
+You then need to coordinate loading indicators, disabled buttons, and state cleanup.
 
-* Button disabled states.   
-* Loading labels.   
-* State cleanup.   
+When using React form Actions, `useFormStatus` provides this status directly.
 
-With `useFormStatus`, React handles this for you — declaratively.
-
-# Disable Submit Button
+### 2. Disable the Submit Button
 
 ```tsx
-import { useFormStatus } from 'react-dom'
+import { useFormStatus } from "react-dom";
 
 function SubmitButton() {
-  const { pending } = useFormStatus()
+  const { pending } = useFormStatus();
 
   return (
     <button type="submit" disabled={pending}>
-      {pending ? 'Submitting...' : 'Submit'}
+      {pending ? "Submitting..." : "Submit"}
     </button>
-  )
+  );
 }
 ```
 
-✔ No prop drilling.    
-✔ Always in sync with form state.    
-✔ Prevents duplicate submissions
+The button automatically reflects the pending state of its parent form.
 
-# How It Works
+### 3. How Does It Work?
 
-`useFormStatus` reads the status of the **nearest parent `<form>`**.
+`useFormStatus` reads the status of the nearest parent form.
 
-That means:
+Its returned object includes:
 
-* It only works inside a form.   
-* It automatically updates when the form submits.   
-* It resets when the submission finishes
+- `pending`: whether the form submission is pending.
+- `data`: the submitted form data, or `null`.
+- `method`: the submission method.
+- `action`: the form Action being invoked, or `null`.
 
-# Real Example: Login Form UX
+The hook must run in a component rendered inside the form. Calling it in the component that creates the form won't track that form.
+
+### 4. Real Example: Login Form
 
 ```tsx
+import { useFormStatus } from "react-dom";
+
+async function login(formData: FormData) {
+  "use server";
+
+  const email = formData.get("email");
+  const password = formData.get("password");
+
+  // Validate credentials and perform authentication.
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? "Logging in..." : "Login"}
+    </button>
+  );
+}
+
 function LoginForm() {
   return (
     <form action={login}>
-      <input name="email" />
-      <input name="password" type="password" />
+      <label>
+        Email
+        <input name="email" type="email" required />
+      </label>
+
+      <label>
+        Password
+        <input name="password" type="password" required />
+      </label>
+
       <SubmitButton />
     </form>
-  )
-}
-
-function SubmitButton() {
-  const { pending } = useFormStatus()
-
-  return (
-    <button type="submit" disabled={pending}>
-      {pending ? 'Logging in...' : 'Login'}
-    </button>
-  )
+  );
 }
 ```
 
-✔ Clear feedback.   
-✔ Prevents double-clicks.   
-✔ Improves accessibility.   
+**Note:** The `"use server"` directive is for a framework or environment that supports Server Functions. In a client-only React application, the form Action can instead be an appropriate client-side function.
+
+### 5. When Should You Use It?
+
+Use `useFormStatus` when building forms with React Actions and you need submission feedback without manually passing pending state through props.
+
