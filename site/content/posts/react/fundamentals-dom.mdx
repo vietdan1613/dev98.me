@@ -1,25 +1,23 @@
 ---
-title: "React Fundamentals: DOM vs Virtual DOM"
+title: "Fundamentals: DOM vs Virtual DOM"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactFundamentals']
-date: 2025-07-26
+date: 2025-07-23
 thumbnailText: React Fundamentals
 ---
 
-Understanding how React updates the UI starts with understanding the difference between the **DOM** and the **Virtual DOM**. These concepts explain why React apps are fast, scalable, and efficient.
+Understanding how React updates the UI starts with the difference between the **DOM** and the **Virtual DOM**. These concepts explain how React calculates updates and applies them efficiently.
 
-![example](./imgs/dom.png 'example')
+![DOM vs Virtual DOM](./imgs/dom.png 'DOM vs Virtual DOM')
 
-## DOM
+Here are 4 concepts every React developer should understand.
 
-The **DOM (Document Object Model)** is a tree-like structure created by the browser that represents the HTML on your page.
+### 1. DOM vs Virtual DOM
 
-* Every element becomes a node
-* Updating the DOM directly is slow
-* Even small changes can trigger costly reflows and repaints
+**DOM (Document Object Model)**
 
-Example:
+The DOM is a tree-like object representation of an HTML document that the browser uses to expose and manipulate page content.
 
 ```html
 <div>
@@ -27,41 +25,78 @@ Example:
 </div>
 ```
 
-The browser converts this into a live object structure it can render.
+The browser represents this structure as nodes that JavaScript can access and modify.
 
-## Virtual DOM
+**Key points:**
+- Represents the document's structure and content.
+- DOM mutations can trigger style recalculation, layout, or painting.
+- The cost depends on the type and scope of the changes.
 
-The **Virtual DOM** is a lightweight JavaScript representation of the real DOM used by React.
+**Virtual DOM**
 
-* It exists in memory
-* It’s fast to create and compare
-* It allows React to compute changes efficiently before touching the real DOM
+The Virtual DOM is a common term for React's in-memory representation of UI elements. React uses this representation to determine what needs to change in the actual DOM.
 
-Think of it as a blueprint React uses to plan updates.
+```jsx
+function App() {
+  return (
+    <div>
+      <h1>Hello</h1>
+    </div>
+  );
+}
+```
 
----
+React creates element descriptions from JSX and uses reconciliation to determine the necessary updates.
 
-### How React Uses the Virtual DOM
+**Key points:**
+- Represents the UI in JavaScript.
+- Helps React calculate updates declaratively.
+- Does not guarantee that every update is faster than direct DOM manipulation.
 
-When state changes in React:
+### 2. How React Updates the UI
 
-1. React creates a new Virtual DOM tree
-2. Compares it with the previous one (diffing)
-3. Figures out the minimal set of changes
-4. Updates only what’s needed in the real DOM
+When state changes, React typically follows this process:
 
-This process is called **reconciliation**.
+1. **Trigger:** A state update schedules a render.
+2. **Render:** React calls components to calculate the next UI.
+3. **Reconciliation:** React compares the new element tree with the previous one to determine what changed.
+4. **Commit:** React applies the necessary DOM mutations.
 
-### Why Virtual DOM Improves Performance
+```jsx
+import { useState } from "react";
 
-Instead of rewriting the whole DOM, React:
+function Counter() {
+  const [count, setCount] = useState(0);
 
-✔ Updates only changed nodes.    
-✔ Reduces direct DOM operations.    
-✔ Batches updates efficiently.    
-✔ Improves UI consistency.    
+  return (
+    <div>
+      <h1>Count: {count}</h1>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+    </div>
+  );
+}
+```
 
-### Important Clarification
+When the user clicks the button, React recalculates the component's UI and updates the relevant DOM content.
 
-The Virtual DOM itself isn’t faster than the DOM —
-What makes React fast is **how it minimizes DOM operations** by using the Virtual DOM intelligently.
+**Important:** React does not necessarily recreate the entire Virtual DOM tree from scratch, nor does it always update only one node. The actual work depends on the component tree and reconciliation results.
+
+### 3. Why React Doesn't Update the Entire DOM
+
+React uses **reconciliation** to determine which DOM changes are necessary.
+
+For example, if a counter changes from `0` to `1`, React can update the text content without recreating the surrounding elements.
+
+This helps avoid unnecessary DOM mutations.
+
+However, performance also depends on component rendering, JavaScript execution, layout, painting, and the complexity of the UI.
+
+### 4. Is the Virtual DOM Faster Than the Real DOM?
+
+**Not necessarily.** Creating and comparing JavaScript objects also has a cost.
+
+React's advantage is its declarative programming model and its ability to calculate and coordinate UI updates efficiently. Direct DOM manipulation can be faster for certain simple, specialized operations.
+
+React also batches updates in appropriate situations, reducing redundant work.

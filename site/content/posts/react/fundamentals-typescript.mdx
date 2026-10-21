@@ -1,284 +1,205 @@
 ---
-title: "React Fundamentals: TypeScript"
+title: "Fundamentals: TypeScript"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactFundamentals']
-date: 2025-07-26
+date: 2025-07-20
 thumbnailText: React Fundamentals
 ---
 
-> **"TypeScript is not making your life terrible. It's just showing you how terrible your life already is."**
+TypeScript isn't just JavaScript with type annotations. It's a tool that helps you catch mistakes early, model your data correctly, and write safer, more maintainable code.
 
-## 1. TypeScript catches errors at compile time
+Here are 9 TypeScript concepts every developer should understand.
 
-**What it means:**
-TypeScript checks your code before it runs and blocks invalid usage.
+### 1. Catch Errors Before Runtime
+
+TypeScript catches many mistakes during type checking, before your code runs.
 
 ```ts
-function greet(user: { name: string }) {
-  return user.name.toUpperCase()
+function greet(user: { name: string }): string {
+  return user.name.toUpperCase();
 }
 
-greet({ age: 25 }) 
-// ❌ Error: Property 'name' is missing
+greet({ age: 25 });
+// ❌ Error: 'name' is missing
 ```
 
-**Why it matters:**
-Without TypeScript, this crashes at runtime.
-With TypeScript, it never ships.
+**Why it matters:** Catching type errors early reduces avoidable runtime bugs. It doesn't eliminate every possible runtime error.
 
----
+### 2. `type`, `interface`, and `enum`
 
-## 2. `type`, `interface`, `enum`
-
-### `type`
-
-Defines a data shape.
+Use `type` and `interface` to describe data structures.
 
 ```ts
-type User = { id: number; name: string }
-```
+type User = {
+  id: number;
+  name: string;
+};
 
----
-
-### `interface`
-
-Like `type`, but extendable and mergeable.
-
-```ts
-interface User {
-  id: number
-  name: string
+interface Admin extends User {
+  role: "admin";
 }
 ```
 
-Use `interface` for public object APIs.
-
----
-
-### `enum`
-
-Represents a fixed set of named values.
+- `type`: Supports unions, intersections, and type aliases.
+- `interface`: Supports extension and declaration merging.
+- `enum`: Defines named constants, though string unions are often a simpler alternative.
 
 ```ts
-enum Status {
-  Loading,
-  Success,
-  Error,
+type Status = "loading" | "success" | "error";
+```
+
+### 3. Narrowing Types
+
+Union types restrict values to a defined set of options.
+
+```ts
+type Operator = "+" | "-" | "*" | "/";
+
+function calculate(operator: Operator) {
+  // Only the four allowed operators are accepted.
 }
+
+calculate("%"); // ❌ Type error
 ```
 
----
+Narrowing also lets TypeScript determine a more specific type through checks such as `typeof`, `in`, and equality comparisons.
 
-## 3. Narrowing types
+### 4. Derive Types from Values
 
-**What it means:**
-Restricting values to specific allowed options.
-
-```ts
-type Operator = "+" | "-" | "*" | "/"
-```
-
-Now `"%"` is rejected at compile time.
-
----
-
-## 4. Deriving types
-
-**What it means:**
-Creating types automatically from real values.
+Avoid duplicating information that already exists in your code.
 
 ```ts
 const operations = {
   "+": (a: number, b: number) => a + b,
   "-": (a: number, b: number) => a - b,
-}
+};
 
-type Operator = keyof typeof operations
+type Operator = keyof typeof operations;
+// "+" | "-"
 ```
 
-**Why it matters:**
-When you change `operations`, `Operator` updates automatically.
+Add another operation, and the `Operator` type updates automatically.
 
----
+### 5. Understand `keyof` and `typeof`
 
-## 5. `keyof` and `typeof`
-
-### `typeof`
-
-Gets the type of a runtime value.
+These operators help you derive types from existing values and structures.
 
 ```ts
-type Ops = typeof operations
+type Operations = typeof operations;
+type Operator = keyof Operations;
 ```
 
----
+- `typeof`: Gets the type of a variable or value.
+- `keyof`: Extracts an object's keys as a union of property names.
 
-### `keyof`
+Together, they help keep your types synchronized with your implementation.
 
-Extracts keys as a union.
+### 6. Generics
 
-```ts
-type Operator = keyof Ops
-```
-
----
-
-## 6. Generics
-
-**What it means:**
-Write reusable, type-safe code.
+Generics let you write reusable functions without sacrificing type safety.
 
 ```ts
 function identity<T>(value: T): T {
-  return value
+  return value;
 }
+
+const name = identity("Viet"); // string
+const age = identity(25);      // number
 ```
 
-TypeScript infers `T` automatically.
+TypeScript infers `T` from the argument, so you usually don't need to specify it manually.
 
----
+### 7. Utility Types
 
-## 7. Utility types
-
-### `Record<K, T>`
-
-**What it does:**
-Enforces exact keys and consistent value types.
+TypeScript provides built-in utilities to transform existing types.
 
 ```ts
-type OperationFn = (a: number, b: number) => number
+type User = {
+  id: number;
+  name: string;
+  email: string;
+};
 
-const operations: Record<Operator, OperationFn> = { ... }
+type PartialUser = Partial<User>;
+type UserName = Pick<User, "name">;
+type UserWithoutId = Omit<User, "id">;
 ```
 
-Now you can’t miss keys or add wrong ones.
-
----
-
-### `Partial<T>`
-
-**What it does:**
-Makes all fields optional.
+Use `Record` when you need a consistent mapping between keys and values.
 
 ```ts
-type PartialUser = Partial<User>
+type OperationFn = (a: number, b: number) => number;
+type Operator = "+" | "-";
+
+const operations: Record<Operator, OperationFn> = {
+  "+": (a, b) => a + b,
+  "-": (a, b) => a - b,
+};
 ```
 
----
+This checks that all required keys exist and that their values match the expected function type.
 
-### `Pick<T, K>`
+### 8. The `satisfies` Operator
 
-**What it does:**
-Selects specific fields.
-
-```ts
-type UserName = Pick<User, "name">
-```
-
----
-
-### `Omit<T, K>`
-
-**What it does:**
-Removes specific fields.
-
-```ts
-type UserWithoutId = Omit<User, "id">
-```
-
----
-
-## 8. `satisfies` operator
-
-**What it does:**
-Checks shape without losing inference.
+The `satisfies` operator validates a value against a type without replacing its inferred type with that target type.
 
 ```ts
 const operations = {
   "+": (a: number, b: number) => a + b,
   "-": (a: number, b: number) => a - b,
-} satisfies Record<Operator, OperationFn>
+} satisfies Record<"+" | "-", OperationFn>;
 ```
 
-**Why it’s better than `: Record<...>`**
+Compared with a type annotation, `satisfies` can preserve more specific information about the expression while still checking compatibility.
 
-* ✔ Validates structure
-* ✔ Preserves exact key types
-* ✔ Prevents missing keys
+**Use it when you want validation without unnecessarily widening your inferred types.**
 
----
+### 9. `any` vs. `unknown` vs. `never`
 
-## 9. `any` vs `unknown` vs `never`
+These types serve very different purposes.
 
-### `any`
-
-Turns off type safety.
+**`any` — Opt out of type safety**
 
 ```ts
-let v: any = 10
-v.foo.bar() // allowed, unsafe
+let value: any = 10;
+value.foo.bar(); // No compile-time error
 ```
 
----
-
-### `unknown`
-
-Forces validation.
+**`unknown` — Validate before using**
 
 ```ts
-let v: unknown = "hello"
+let value: unknown = "hello";
 
-if (typeof v === "string") {
-  v.toUpperCase() // safe
+if (typeof value === "string") {
+  value.toUpperCase(); // Safe after narrowing
 }
 ```
 
----
-
-### `never`
-
-Represents impossible values.
+**`never` — Represent impossible values**
 
 ```ts
-function fail(): never {
-  throw new Error("Crash")
+function fail(message: string): never {
+  throw new Error(message);
 }
 ```
 
-Also used for exhaustive checks.
+`never` is also useful for exhaustive checks in discriminated unions.
 
-Here’s the **concise version**:
+### Bonus: Safe vs. Unsafe TypeScript
 
-## Safe vs Unsafe in TypeScript
+**Safer patterns:**
+- Prefer `unknown` over `any` for values of uncertain type.
+- Use union types to restrict allowed values.
+- Derive types with `keyof typeof`.
+- Use `satisfies` to validate object shapes.
+- Use `never` to enforce exhaustive checks.
 
-**Safe** = TypeScript can guarantee it won’t crash at runtime.
-**Unsafe** = TypeScript has to trust you.
+**Potentially unsafe patterns:**
+- `any` disables meaningful type checking.
+- `as SomeType` can override the compiler's assumptions without validating the value.
+- `!` can hide a possible `null` or `undefined`.
+- `@ts-ignore` can suppress useful errors.
+- Using `unknown` without narrowing doesn't make an operation safe.
 
-### 🚨 Unsafe
-
-* `any` → disables type checking
-* `as SomeType` (casts) → you might lie to the compiler
-* Using `unknown` without checks
-* `// @ts-ignore`, non-null `!`
-
-```ts
-let v: any = 10
-v.foo.bar() // allowed, unsafe
-```
-
-### ✅ Safe
-
-* `unknown` + runtime checks
-* Union types (`"a" | "b"`)
-* `keyof typeof`
-* `satisfies`
-* Exhaustive checks with `never`
-
-```ts
-let v: unknown = "hi"
-
-if (typeof v === "string") {
-  v.toUpperCase() // safe
-}
-```
+Remember: TypeScript provides **static type safety**, not a guarantee against all runtime failures. Validate external data, handle errors, and test your application.

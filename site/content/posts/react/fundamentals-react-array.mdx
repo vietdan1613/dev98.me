@@ -1,18 +1,17 @@
 ---
-title: "React Fundamentals - Rendering Arrays"
+title: "Fundamentals: Rendering Arrays"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactFundamentals']
-date: 2025-07-26
+date: 2025-07-24
 thumbnailText: React Fundamentals
 ---
 
-> When rendering arrays in React, `key` is how React tracks which item is which between renders.
-> Without a proper `key`, React reuses the wrong DOM nodes when items are removed or reordered.
+When rendering arrays in React, `key` is how React tracks which item is which between renders. Without a proper `key`, React can reuse the wrong DOM nodes when items are removed or reordered.
 
-![React key bug demo](./imgs/array-key.png)
+### 1. The Purpose of `key`
 
-Fix: Add a unique `key` prop to each item in the array.
+The `key` prop helps React identify which items have changed, been added, removed, or reordered between renders.
 
 ```tsx
 const fruits = [
@@ -21,26 +20,99 @@ const fruits = [
   { id: "c3", name: "Cherry" },
 ];
 
-export default function FruitList() {
-  const [items, setItems] = useState(fruits);
-
-  return items.map((fruit) => (
-    <div key={fruit.id}>
-      <input defaultValue={fruit.name} />
-      <button onClick={() => setItems(items.filter((i) => i.id !== fruit.id))}>
-        Remove
-      </button>
-    </div>
+function FruitList() {
+  return fruits.map((fruit) => (
+    <div key={fruit.id}>{fruit.name}</div>
   ));
 }
 ```
 
-# Key Reset
+**Why use stable keys?**
+- Preserve the correct component identity when items move.
+- Prevent state from being associated with the wrong list item.
+- Help React reconcile list changes correctly.
 
-You can also change a `key` on purpose to force React to recreate an element and reset its state.
+**What happens without keys?**
+
+React may use positional matching when keys are missing, which can cause stateful DOM elements to be reused in unexpected ways when items are removed or reordered.
+
+For example, an uncontrolled input may retain the text entered for a different fruit after deleting an item.
+
+**Best practice:** Use a stable, unique ID from your data. Avoid array indexes when the list can be reordered, inserted into, or deleted from.
+
+### 2. Using `key` to Reset State
+
+Changing a component's key tells React to treat it as a different component identity, causing the previous instance to be removed and a new one to be mounted.
 
 ```tsx
-<input key={resetKey} defaultValue="Apple" />
+import { useState } from "react";
+
+function FruitInput() {
+  const [resetKey, setResetKey] = useState(0);
+
+  return (
+    <>
+      <input key={resetKey} defaultValue="Apple" />
+
+      <button onClick={() => setResetKey((key) => key + 1)}>
+        Reset
+      </button>
+    </>
+  );
+}
 ```
 
-Change `resetKey` → React remounts the input → value and focus reset.
+When the button is clicked, React remounts the input with its initial value.
+
+**Important:** Remounting also resets the element's focus and selection and discards its previous DOM state. For controlled inputs, the displayed value is determined by React state, so changing the key alone does not reset that state.
+
+### 3. Index-Key Bug Demo
+
+Try typing different text into each input, then remove the first fruit. Compare index-based keys with stable IDs.
+
+**Bug: Using the array index as the key**
+
+```tsx
+{items.map((fruit, index) => (
+  <div key={index}>
+    <input defaultValue={fruit.name} />
+    <button
+      onClick={() =>
+        setItems((prev) =>
+          prev.filter((item) => item.id !== fruit.id)
+        )
+      }
+    >
+      Remove
+    </button>
+  </div>
+))}
+```
+
+Reproduce the bug:
+
+1. Type `My Apple` into the Apple input.
+2. Type `My Banana` into the Banana input.
+3. Remove Apple.
+4. The remaining Banana row may display `My Apple` because React reuses the DOM input previously associated with index `0`.
+
+**Fix: Use a stable ID**
+
+```tsx
+{items.map((fruit) => (
+  <div key={fruit.id}>
+    <input defaultValue={fruit.name} />
+    <button
+      onClick={() =>
+        setItems((prev) =>
+          prev.filter((item) => item.id !== fruit.id)
+        )
+      }
+    >
+      Remove
+    </button>
+  </div>
+))}
+```
+
+With stable IDs, React can correctly associate each input with its fruit when the list changes.

@@ -1,77 +1,126 @@
 ---
-title: "React Fundamentals: Component Lifecycle"
+title: "Fundamentals: Component Lifecycle"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactFundamentals']
-date: 2025-07-26
+date: 2025-07-22
 thumbnailText: React Fundamentals
 ---
 
-# UI Update Cycle
+React follows a clear loop from state change to UI update. Understanding trigger, render, commit, and Effects helps you reason about when components mount, update, and clean up.
 
-> React follows a simple but powerful loop. This cycle ensures the UI always reflects the latest state of the application.
+Here are 4 lifecycle concepts every React developer should understand.
 
-![example](./imgs/app-lifecycle.png 'example')
+### 1. How React Updates the UI
 
-### Common React Hooks
+React follows three main steps: **Trigger → Render → Commit**.
 
-| Hook       | Purpose                                  |
-| ---------- | ---------------------------------------- |
-| useState   | Manage component state                   |
-| useReducer | Manage complex state logic               |
-| useRef     | Persist mutable values without re-render |
-| useEffect  | Handle side-effects                      |
-| use        | Consume async resources (experimental)   |
+1. **Trigger:** An initial render or a state update schedules rendering.
+2. **Render:** React calls components to calculate the next UI.
+3. **Commit:** React applies the necessary changes to the DOM.
 
-# Component Lifecycle
+After the commit, Effects run according to their scheduling rules.
 
-React components go through three main phases:
+![UI update cycle](./imgs/app-lifecycle.png 'UI update cycle')
 
-![example](./imgs/hook-flow-diagram.png 'example')
+```jsx
+import { useState } from "react";
 
-```tsx
-useEffect(() => {
-	// your side-effect code here.
-	// this is where you can interact with browser APIs for example
-	doSomeThing()
-	return function cleanup() {
-		// if you need to clean up after your side-effect (like unsubscribe from an
-		// event), you can do it here
-		doSomeCleanup()
-	}
-}, [
-	// this is where dependencies of your useEffect callback go
-	// we'll talk about this in depth in a future exercise.
-	// In this exercise, we'll just leave it as an empty array
-	dep1,
-	dep2,
-])
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
 ```
 
-### 1. Mount
+When the button is clicked, React schedules an update, renders the component with the new state, and commits the DOM changes.
 
-* Lazy initializers run (`useState(() => initialValue)`)
-* Component renders for the first time
+**Key point:** Rendering does not necessarily mean the entire DOM is recreated. React updates only the necessary DOM changes.
 
-### 2. Update
+### 2. Mount, Update, and Unmount
 
-Triggered by:
+In function components, mount, update, and unmount describe the component's lifecycle.
 
-* State changes
-* Parent re-render
-* Context changes
+![Hook flow](./imgs/hook-flow-diagram.png 'Hook flow')
 
-Sequence:
+**Mount**
 
-1. Render phase
-2. React updates DOM
-3. Cleanup previous layout effects
-4. Run `useLayoutEffect`
-5. Browser paints
-6. Cleanup previous effects
-7. Run `useEffect`
+The component is added to the UI for the first time.
 
-### 3. Unmount
+```jsx
+useEffect(() => {
+  console.log("Component mounted");
 
-* Cleanup all effects and layout effects
-* Prevents memory leaks
+  return () => {
+    console.log("Component cleanup");
+  };
+}, []);
+```
+
+**Update**
+
+The component renders again because its state, props, or consumed context changes, or because its parent renders again.
+
+```jsx
+useEffect(() => {
+  console.log("Count changed:", count);
+}, [count]);
+```
+
+**Unmount**
+
+The component is removed from the UI. React runs the cleanup functions of its Effects.
+
+```jsx
+useEffect(() => {
+  const handleResize = () => {
+    console.log(window.innerWidth);
+  };
+
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
+```
+
+**Why is cleanup important?**
+
+It prevents stale subscriptions, unnecessary event listeners, and other resources from remaining active after they are no longer needed.
+
+### 3. `useEffect` vs `useLayoutEffect`
+
+Both Hooks synchronize React components with external systems, but they differ in timing.
+
+| Hook | Purpose |
+|---|---|
+| `useEffect` | Synchronize with external systems, usually without blocking paint |
+| `useLayoutEffect` | Read layout or apply visual changes before the browser repaints |
+
+Example: measuring an element before displaying a tooltip.
+
+```jsx
+import { useLayoutEffect, useRef, useState } from "react";
+
+function Tooltip() {
+  const ref = useRef(null);
+  const [height, setHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    setHeight(ref.current.getBoundingClientRect().height);
+  }, []);
+
+  return (
+    <div ref={ref}>
+      Tooltip height: {height}px
+    </div>
+  );
+}
+```
+
+Use `useEffect` by default. Use `useLayoutEffect` when you need to measure layout or perform a visual update before repainting to avoid flicker.

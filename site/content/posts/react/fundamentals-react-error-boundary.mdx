@@ -1,33 +1,44 @@
 ---
-title: "React Fundamentals: Error Boundaries"
+title: "Fundamentals: Error Boundaries"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactFundamentals']
-date: 2025-07-26
+date: 2025-07-25
 thumbnailText: React Fundamentals
 ---
 
-> In React, if a component throws during render and nothing catches it, React can unmount the whole tree and users may see a blank screen.
-
-> **Error Boundaries** prevent that by catching render-time errors and showing a fallback UI instead.
+In React, if a component throws during render and nothing catches it, React can unmount the affected UI and users may see a blank screen. **Error Boundaries** prevent that by catching render-time errors and showing a fallback UI instead.
 
 ![Error Boundary Diagram](./imgs/react-error-boundary.png)
 
+### 1. What Is an Error Boundary?
 
-# Error Boundaries
+An Error Boundary is a component that catches errors thrown during rendering in its child component tree and displays a fallback UI instead of the failed content.
 
-In real apps, prefer use *react-error-boundary* library.
+Without an Error Boundary, an uncaught rendering error can cause React to remove the affected UI from the screen.
 
-> npm install react-error-boundary
+In real apps, prefer the `react-error-boundary` library:
+
+```bash
+npm install react-error-boundary
+```
 
 ```tsx
 import { ErrorBoundary } from "react-error-boundary";
 
-function Fallback({ error, resetErrorBoundary }) {
+function Fallback({
+  error,
+  resetErrorBoundary,
+}: {
+  error: Error;
+  resetErrorBoundary: () => void;
+}) {
   return (
-    <div>
-      <p>Failed to load data: {error.message}</p>
-      <button onClick={resetErrorBoundary}>Retry</button>
+    <div role="alert">
+      <p>Something went wrong: {error.message}</p>
+      <button onClick={resetErrorBoundary}>
+        Try again
+      </button>
     </div>
   );
 }
@@ -41,39 +52,64 @@ function App() {
 }
 ```
 
-# Handling Async Errors
+If `UserList` throws an error during rendering, the boundary displays the fallback UI.
 
-Error boundaries only catch errors that happen during **rendering**. 
+**Why use Error Boundaries?**
+- Prevent rendering errors from crashing the entire application UI.
+- Provide a better user experience with fallback screens.
+- Allow users to retry failed UI sections.
+- Isolate failures in complex component trees.
 
-Not in:
+### 2. What Errors Can Error Boundaries Catch?
 
-* Event handlers
-* `useEffect`
-* Promises or async code
+Error Boundaries catch errors thrown during rendering, including errors from constructors and lifecycle methods in class components. They also catch errors thrown by descendant components during React-managed rendering.
 
-To handle those, you can manually surface them to an error boundary using `useErrorBoundary()`:
+However, they do not automatically catch errors from:
+
+- Event handlers.
+- Asynchronous callbacks, such as `setTimeout` or Promise rejections.
+- Effects, including errors thrown inside `useEffect`.
+- The Error Boundary itself.
+
+React also has special handling for errors thrown inside transitions and errors from server-side rendering, so these cases should not be treated as ordinary client-side Error Boundary behavior.
+
+### 3. Handling Asynchronous Errors
+
+Use `showBoundary()` from `react-error-boundary` to forward an asynchronous error to the nearest Error Boundary.
 
 ```tsx
-import { ErrorBoundary, useErrorBoundary } from "react-error-boundary";
 import { useEffect } from "react";
+import {
+  ErrorBoundary,
+  useErrorBoundary,
+} from "react-error-boundary";
 
 function Users() {
   const { showBoundary } = useErrorBoundary();
 
   useEffect(() => {
-    fetch("/api/users")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load users");
-        return res.json();
-      })
-      .catch(showBoundary); // send async error to ErrorBoundary
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/users");
+
+        if (!response.ok) {
+          throw new Error("Failed to load users");
+        }
+
+        await response.json();
+      } catch (error) {
+        showBoundary(error);
+      }
+    }
+
+    loadUsers();
   }, [showBoundary]);
 
   return <div>User List</div>;
 }
 
-function Fallback({ error }) {
-  return <div>{error.message}</div>;
+function Fallback({ error }: { error: Error }) {
+  return <div role="alert">{error.message}</div>;
 }
 
 export default function App() {
@@ -84,3 +120,26 @@ export default function App() {
   );
 }
 ```
+
+Here, `showBoundary(error)` forwards the caught error to React's Error Boundary mechanism so the fallback UI can render.
+
+**Important:** Error Boundaries are not a replacement for normal loading and error states. For expected API failures, displaying an inline error message and retry button is often more appropriate than treating every failure as an application error.
+
+### 4. Resetting an Error Boundary
+
+The `resetErrorBoundary()` function resets the boundary after an error so the failed content can render again.
+
+You can also use `resetKeys` to reset the boundary when relevant values change.
+
+```tsx
+<ErrorBoundary
+  FallbackComponent={Fallback}
+  resetKeys={[userId]}
+>
+  <UserProfile userId={userId} />
+</ErrorBoundary>
+```
+
+When `userId` changes, the boundary resets and attempts to render the updated content again.
+
+Resetting the boundary does not automatically fix the underlying error. If the same problem remains, the fallback may appear again.

@@ -1,58 +1,114 @@
 ---
-title: "React Fundamentals: Components"
+title: "Fundamentals: Components"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactFundamentals']
-date: 2025-07-26
+date: 2025-07-21
 thumbnailText: React Fundamentals
 ---
 
-# Controlled Components
+React components are the building blocks of your UI. Understanding how they manage form state, when they re-render, and how to reuse behavior helps you write clearer, more maintainable applications.
 
-> A **controlled component** is one where form data is handled by React state.
+Here are 3 core component concepts every React developer should understand.
+
+### 1. Controlled and Uncontrolled Components
+
+**Controlled components**
+
+A controlled component is a form element whose value is managed by React state.
 
 ```jsx
-const [value, setValue] = useState("");
+import { useState } from "react";
 
-<input value={value} onChange={e => setValue(e.target.value)} />
+function ControlledInput() {
+  const [value, setValue] = useState("");
+
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
+  );
+}
 ```
 
-# Uncontrolled Components
+**Why use controlled components?**
+- Validate input as the user types.
+- Conditionally render UI based on form values.
+- Keep form data synchronized with React state.
 
-> An **uncontrolled component** lets the DOM handle its own state.
+**Uncontrolled components**
+
+An uncontrolled component stores its current value in the DOM. React can access it through a ref when needed.
 
 ```jsx
-const inputRef = useRef();
+import { useRef } from "react";
 
-<input ref={inputRef} />
+function UncontrolledInput() {
+  const inputRef = useRef(null);
+
+  const handleSubmit = () => {
+    console.log(inputRef.current.value);
+  };
+
+  return (
+    <>
+      <input ref={inputRef} defaultValue="" />
+      <button onClick={handleSubmit}>Submit</button>
+    </>
+  );
+}
 ```
 
-# Pure Component
+**When should you use each approach?**
+- **Controlled:** Dynamic forms, validation, and conditional UI.
+- **Uncontrolled:** Simple forms or integrations with non-React libraries.
 
-> A **Pure Component** renders the same output when given the same props and state. Use Pure Components to improve performance by avoiding redundant rendering.
+### 2. Pure Components
+
+A pure component avoids unnecessary updates when its props and state have not changed. In modern React, `React.memo` can memoize a function component based on its props.
 
 ```jsx
-const MyComponent = React.memo(function MyComponent(props) {
-  return <div>{props.name}</div>;
+import { memo } from "react";
+
+const User = memo(function User({ name }) {
+  console.log("Rendering User");
+
+  return <div>{name}</div>;
 });
 ```
 
-# Higher-Order Component
+By default, `React.memo` compares each prop using `Object.is`. If the props are unchanged, React can skip rendering the component.
 
-### Example
+**Important:** `React.memo` is a performance optimization, not a guarantee that the component will never render again. State changes and consumed context updates can still trigger rendering.
 
-> A **Higher-Order Component (HOC)** is a function that takes a component and returns a new component with enhanced behavior.
+### 3. Higher-Order Components (HOCs)
+
+A Higher-Order Component (HOC) is a function that takes a component and returns a new component with additional behavior.
 
 ```jsx
-const withLogger = (WrappedComponent) => {
-  return (props) => {
+function withLogger(WrappedComponent) {
+  return function EnhancedComponent(props) {
     console.log("Rendering", WrappedComponent.name);
+
     return <WrappedComponent {...props} />;
   };
-};
+}
 ```
-### Why use HOCs?
 
-* Code reuse
-* Cross-cutting concerns (auth, logging, permissions)
-* Keeps components clean
+Usage:
+
+```jsx
+function User({ name }) {
+  return <div>{name}</div>;
+}
+
+const UserWithLogger = withLogger(User);
+```
+
+**Common use cases:**
+- Authentication and authorization.
+- Logging and analytics.
+- Reusing cross-cutting behavior across components.
+
+HOCs are less common in modern React code because hooks often provide a simpler way to reuse stateful logic.
