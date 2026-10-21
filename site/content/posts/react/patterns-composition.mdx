@@ -83,5 +83,3 @@ Now, `Child` doesn't need to know about `count` or `onIncrement`. It simply rend
 ### 4. When Should You Use It?
 
 Use composition for layout components, wrappers, modals, and deeply nested UI where intermediate components don't need access to the data.
-
-**Interview takeaway:** Component composition reduces unnecessary prop forwarding by passing elements instead of making every intermediate component understand the data. It doesn't eliminate all prop drilling or replace Context when many components genuinely need shared state.
