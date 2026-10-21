@@ -7,26 +7,11 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-> React now provides a declarative model for async rendering through **Suspense**, **Error Boundaries**, and the new **`use()` hook**.
+React provides a declarative approach to async rendering through **Suspense**, **Error Boundaries**, and the `use()` API.
 
-# The Problem
+### 1. Suspense
 
-```tsx
-const res = await fetch('/api/data')
-const data = await res.json()
-```
-
-You’re forced to manually manage:
-
-* Loading states.   
-* Error states.   
-* Retry logic.   
-
-> React solves this structurally using **Suspense + Error Boundaries**.
-
-# Suspense
-
-Suspense defines what React should render while async data is pending.
+`Suspense` displays fallback UI while a child component is waiting for a resource supported by Suspense.
 
 ```tsx
 import { Suspense } from 'react'
@@ -40,21 +25,23 @@ function App() {
 }
 ```
 
-When `PhoneDetails` suspends:
+When `PhoneDetails` suspends, React displays the fallback and retries rendering when the resource becomes available.
 
-* React renders the fallback.   
-* Automatically retries when data resolves.   
+**Important:** Suspense does not automatically detect ordinary `fetch()` calls or manage every loading state.
 
-# Error Boundaries
+### 2. Error Boundaries
 
-Errors thrown during rendering are caught by Error Boundaries.
+Error Boundaries display fallback UI when a descendant throws an error during rendering.
 
 ```tsx
 import { ErrorBoundary } from 'react-error-boundary'
+import { Suspense } from 'react'
 
 function App() {
   return (
-    <ErrorBoundary fallback={<div>Oops, something went wrong.</div>}>
+    <ErrorBoundary
+      fallback={<div>Oops, something went wrong.</div>}
+    >
       <Suspense fallback={<div>Loading...</div>}>
         <PhoneDetails />
       </Suspense>
@@ -63,92 +50,117 @@ function App() {
 }
 ```
 
-✔ Prevents full app crashes.    
-✔ Localizes failures.    
-✔ Enables recovery UI.    
+- `Suspense` handles pending resources.
+- `ErrorBoundary` handles rendering errors.
+- A recovery UI can let users retry or navigate away.
 
-# `use()` Hook
+### 3. The `use()` API
 
-> React’s new `use()` hook allows components to consume promises synchronously:
+React 19 introduced `use()` for reading resources such as Promises during rendering.
 
 ```tsx
 import { use } from 'react'
 
-function PhoneDetails() {
-  const details = use(phoneDetailsPromise)
-  return <div>{details.name}</div>
+function PhoneDetails({
+  phonePromise,
+}: {
+  phonePromise: Promise<{ name: string }>
+}) {
+  const phone = use(phonePromise)
+
+  return <div>{phone.name}</div>
 }
 ```
 
-The Problem: Re-fetching on Every Render 
+If the Promise is pending, the component suspends. If it rejects, React can propagate the error to the nearest Error Boundary.
 
-### Caching promise
+Unlike ordinary Hooks, `use()` can be called inside conditions and loops, subject to React's rules.
 
-To fetch different users, cache per key:
+**Key distinction:** `use()` reads a Promise; it does not initiate fetching or cache the result.
+
+### 4. Keep Promises Stable
+
+Avoid creating a new Promise on every render:
+
+```tsx
+function ProfileDetails({ username }: { username: string }) {
+  const favorites = use(getFavorites(username))
+  return <div>{favorites.length} favorites</div>
+}
+```
+
+If `getFavorites()` creates a new Promise each time, repeated suspension may occur.
+
+Instead, create the Promise in a supported data-fetching layer or cache it by key:
 
 ```tsx
 const userCache = new Map<string, Promise<User>>()
 
-function fetchUser(id: string) {
+function getUserPromise(id: string) {
   let promise = userCache.get(id)
+
   if (!promise) {
-    promise = fetchUserImpl(id)
+    promise = fetch(`/api/user/${id}`).then((res) => {
+      if (!res.ok) {
+        throw new Error('Failed to fetch user')
+      }
+
+      return res.json() as Promise<User>
+    })
+
     userCache.set(id, promise)
   }
+
   return promise
 }
-
-async function fetchUserImpl(id: string) {
-  const res = await fetch(`/api/user/${id}`)
-  return res.json()
-}
 ```
 
-### Important Rules
+This is a simplified example. Production caches should also consider rejected Promises, retries, invalidation, and user-specific data isolation.
 
-* The promise must be created **outside render**
-* `use()` does not fetch — it only consumes
-* Works only with Suspense + Error Boundaries
+### 5. Avoid Async Waterfalls
 
-# Waterfalls
-
-> Suspense pauses rendering as soon as a Promise is used.
-
-If you fetch data like this: 
+Consider two independent requests:
 
 ```tsx
-function ProfileDetails({ username }) {
+function ProfileDetails({ username }: Props) {
   const favorites = use(getFavorites(username))
   const friends = use(getFriends(username))
+
+  return <Profile favorites={favorites} friends={friends} />
 }
 ```
 
-Request A --------> Response A
-                     Request B --------> Response B
-                                          Request C ---------> Response C
+If each function starts a request, rendering may suspend on the first Promise before starting the second request. Recreating Promises on retries can make this even worse.
 
-### Fix: Start Promises Before use()
+Start both requests before rendering the component that consumes them:
 
 ```tsx
-function ProfileDetails({ username }) {
+function ProfilePage({ username }: Props) {
   const favoritesPromise = getFavorites(username)
   const friendsPromise = getFriends(username)
 
+  return (
+    <Suspense fallback={<div>Loading profile...</div>}>
+      <ProfileDetails
+        favoritesPromise={favoritesPromise}
+        friendsPromise={friendsPromise}
+      />
+    </Suspense>
+  )
+}
+
+function ProfileDetails({
+  favoritesPromise,
+  friendsPromise,
+}: {
+  favoritesPromise: Promise<Favorite[]>
+  friendsPromise: Promise<Friend[]>
+}) {
   const favorites = use(favoritesPromise)
   const friends = use(friendsPromise)
+
+  return <Profile favorites={favorites} friends={friends} />
 }
 ```
 
-Request A --------> Response A
-Request B --------> Response B
-Request C ---------> Response C
-
-# Summary
-
-| Tool             | Role                            |
-| ---------------- | ------------------------------- |
-| `Suspense`       | Declarative loading UI          |
-| `ErrorBoundary`  | Declarative error handling      |
-| `use()`          | Reads promises synchronously    |
-| Promise throwing | Drives async rendering          |
-| Status tracking  | Prevents inconsistent UI states |
+Both requests start before `ProfileDetails` reads either Promise. In production, ensure the parent or data-fetching layer preserves Promise identity across rerenders.

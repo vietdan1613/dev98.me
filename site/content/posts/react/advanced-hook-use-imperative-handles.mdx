@@ -7,72 +7,104 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-Sometimes you need to step outside and interact with components **imperatively**, for example:
+Sometimes, a parent component needs to trigger a specific action inside a child component, such as focusing an input or scrolling a container.
 
-* Focusing an input.   
-* Scrolling a container
+React provides `useImperativeHandle` to expose a **controlled imperative API** instead of exposing the underlying DOM element directly.
 
-This is where **imperative handles** come in.
+### 1. Basic Concept
 
-### Core Idea
-
-React provides `useImperativeHandle` to expose imperative APIs safely.
-
-In **React 19**, you can access `ref` directly from props — no more `forwardRef`.
+In React 19, function components can receive `ref` as a prop without using `forwardRef`.
 
 ```tsx
-type InputAPI = { focusInput: () => void }
+import {
+  useImperativeHandle,
+  useRef,
+  type ComponentPropsWithRef,
+  type Ref,
+} from 'react'
 
-function MyInput({
-  ref,
-  ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  ref: React.RefObject<InputAPI>
-}) {
+type InputAPI = {
+  focusInput: () => void
+}
+
+type MyInputProps = Omit<
+  ComponentPropsWithRef<'input'>,
+  'ref'
+> & {
+  ref?: Ref<InputAPI>
+}
+
+function MyInput({ ref, ...props }: MyInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useImperativeHandle(
     ref,
     () => ({
-      focusInput: () => inputRef.current?.focus(),
+      focusInput() {
+        inputRef.current?.focus()
+      },
     }),
-    []
+    [],
   )
 
-  return <input ref={inputRef} {...props} />
+  return <input {...props} ref={inputRef} />
 }
 ```
 
-### Example Usage
+The parent receives only the `focusInput()` method, not direct access to the child's internal input ref.
+
+### 2. Using the Custom API
 
 ```tsx
 function App() {
   const myInputRef = useRef<InputAPI>(null)
 
   return (
-    <div>
-      <MyInput ref={myInputRef} placeholder="Enter your name" />
+    <>
+      <MyInput
+        ref={myInputRef}
+        placeholder="Enter your name"
+      />
+
       <button onClick={() => myInputRef.current?.focusInput()}>
         Focus input
       </button>
-    </div>
+    </>
   )
 }
 ```
 
-### Dependencies
+Clicking the button calls the child component's exposed method, which focuses the actual input element.
 
-Even though we’re using `inputRef` inside the callback, we don’t need to add it to the dependency array.
+### 3. Understanding Dependencies
 
-Why?
+The dependency array determines when React recreates the exposed handle.
 
-* React refs are stable
-* They don’t change across renders
-* Including them is unnecessary
+```tsx
+useImperativeHandle(
+  ref,
+  () => ({
+    focusInput: () => inputRef.current?.focus(),
+  }),
+  [],
+)
+```
 
-### Summary
+Why is an empty array appropriate here?
 
-* `useImperativeHandle` lets child components expose custom APIs to parents
-* React 19 allows direct access to `ref` via props (no `forwardRef`)
-* It is safe, future-proof, and concurrent-friendly
-* Prefer declarative patterns — use imperative handles only when needed
+- `inputRef` is created by `useRef`, so its identity is stable.
+- The exposed method reads `inputRef.current` when called, rather than capturing the current DOM element.
+- The handle does not depend on changing props or state.
+
+If the exposed methods depend on reactive values, include those values in the dependency array to avoid stale closures.
+
+### 4. When Should You Use It?
+
+Common use cases include:
+
+- Focusing or selecting an input.
+- Scrolling a child container.
+- Controlling a media element.
+- Exposing a small, intentional API from a reusable component.
+
+Prefer declarative props when possible. For example, use an `isOpen` prop to control a dialog instead of exposing `open()` and `close()` methods unless an imperative interface is genuinely needed.

@@ -1,5 +1,5 @@
 ---
-title: "Advanced Hook - useLayoutEffect()"
+title: "Advanced Hook: useLayoutEffect()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactAdvancedHooks']
@@ -7,50 +7,65 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-> The `useLayoutEffect` hook runs after the DOM has been updated but before the browser has had 
-> a chance to paint the screen. This means you can make your measurements and then render the 
-> UI with the correct measurements before the user sees anything.
+`useLayoutEffect` runs after React commits DOM changes but before the browser repaints the screen.
 
-![example](./imgs/hook-flow-diagram.png 'example')
+It lets you measure layout and synchronously update the UI before the user sees the result, helping prevent visual flicker.
 
-## useLayoutEffect
+![Hook flow](./imgs/hook-flow-diagram.png 'Hook flow')
+
+### 1. Syntax
 
 ```tsx
 useLayoutEffect(() => {
-  // your layout-effect code here.
-  // this is where you read/write layout synchronously
-  // e.g. measure DOM, set position, prevent flicker
-  doLayoutThing()
+  // Read or update layout synchronously
 
-  return function cleanup() {
-    // clean up layout-related side-effects
-    // e.g. remove observers, cancel animations
-    doSomeCleanup()
+  return () => {
+    // Clean up layout-related side effects
   }
-}, [
-  // this is where dependencies of your useLayoutEffect callback go
-  // any value used inside the effect should be listed here
-  dep1,
-  dep2,
-])
+}, [dependencies])
 ```
 
-## Use `useLayoutEffect`?
+The effect runs after the initial commit and after subsequent commits when its dependencies change. The cleanup runs before the effect reruns and when the component unmounts.
 
-Use it when you need to:
+### 2. Measure DOM Before Paint
 
-### 1. Measure DOM before paint
+Suppose a tooltip needs to know its height before determining its final position.
 
-```jsx
+```tsx
+import { useLayoutEffect, useRef, useState } from 'react'
+
+function Tooltip() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState(0)
+
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!element) return
+
+    setHeight(element.getBoundingClientRect().height)
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      style={{ transform: `translateY(-${height}px)` }}
+    >
+      Tooltip content
+    </div>
+  )
+}
+```
+
+React can measure the element and process the resulting state update before the browser paints, avoiding a visible intermediate position.
+
+### 3. Synchronize Scroll Position
+
+You can restore a scroll position before paint when that behavior is required.
+
+```tsx
 useLayoutEffect(() => {
-  const height = ref.current.offsetHeight;
-  setHeight(height);
-}, []);
+  window.scrollTo(0, savedPosition)
+}, [savedPosition])
 ```
-### 2. Synchronize scroll or position
 
-```jsx
-useLayoutEffect(() => {
-  window.scrollTo(0, savedPosition);
-}, []);
-```
+Use this carefully: restoring scroll position can affect the user's current interaction, and the correct timing depends on the application.

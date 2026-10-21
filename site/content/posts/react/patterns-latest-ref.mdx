@@ -1,5 +1,5 @@
 ---
-title: "Advanced React Patterns: Latest Ref Patterns"
+title: "Patterns: Latest Ref"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactPatterns']
@@ -7,59 +7,73 @@ date: 2025-08-04
 thumbnailText: Advanced React Patterns
 ---
 
-> The **Latest Ref Pattern** lets you access the newest state/props inside a stable function **without** adding them to a `useEffect` dependency list.
+The Latest Ref Pattern stores the latest callback or value in a ref, allowing a long-lived function to access current data without being recreated on every render.
 
-### The Problem: Stale Closures
+### 1. Problem: Stale Closures
 
-Hooks capture values at the time a function is created.
-If a callback doesn’t update when state/props change → it may use **old values**.
+A callback can capture outdated values when it is created and then reused without updating its dependencies.
 
 ```tsx
-const feedPet = useCallback(async () => {
-  pet.eat(selectedPetFood)
-}, []) // stale closure
+const feedPet = useCallback(() => {
+  pet.eat(selectedPetFood);
+}, []); // Incorrect: captures initial values
 ```
 
-### The Solution: Latest Ref Pattern
+Because the dependency array is empty, `feedPet` continues to reference the values captured by its original closure.
 
-Store the latest values in refs and read from them inside stable functions.
+### 2. Solution: Store the Latest Values in Refs
 
 ```tsx
-const petRef = useRef(pet)
-const foodRef = useRef(selectedPetFood)
+const petRef = useRef(pet);
+const foodRef = useRef(selectedPetFood);
 
 useEffect(() => {
-  petRef.current = pet
-  foodRef.current = selectedPetFood
-}, [pet, selectedPetFood])
+  petRef.current = pet;
+  foodRef.current = selectedPetFood;
+}, [pet, selectedPetFood]);
 
-const feedPet = async () => {
-  petRef.current.eat(foodRef.current)
-}
+const feedPet = useCallback(() => {
+  petRef.current.eat(foodRef.current);
+}, []);
 ```
 
-Now `feedPet` is stable but always uses **fresh values**.
+Now `feedPet` has a stable identity and reads the latest values stored in the refs.
 
-Use it when you need:
+The refs update after each committed render where the dependencies change.
 
-* Stable callbacks with **up-to-date values**
-* Long-lived logic: debouncing, throttling, timers, event listeners
+### 3. Real Use Case: Debounced Callbacks
 
-### Real Use Case: Debounce
+A debounced function should retain its identity across renders while invoking the latest callback.
 
 ```tsx
-function useDebounce(callback, delay) {
-  const ref = useRef(callback)
+function useDebouncedCallback<T extends (...args: any[]) => void>(
+  callback: T,
+  delay: number
+) {
+  const callbackRef = useRef(callback);
 
   useEffect(() => {
-    ref.current = callback
-  }, [callback])
+    callbackRef.current = callback;
+  }, [callback]);
 
-  return useMemo(
-    () => debounce(() => ref.current(), delay),
+  const debounced = useMemo(
+    () =>
+      debounce((...args: Parameters<T>) => {
+        callbackRef.current(...args);
+      }, delay),
     [delay]
-  )
+  );
+
+  useEffect(() => {
+    return () => debounced.cancel();
+  }, [debounced]);
+
+  return debounced;
 }
 ```
 
-> Now the debounced function stays stable but always runs the **latest callback**.
+This example assumes `debounce` is a utility that supports `.cancel()`, such as Lodash's implementation.
+
+- The ref keeps the latest callback.
+- `useMemo` preserves the debounced function while `delay` remains unchanged.
+- Cleanup cancels pending invocations when the debounced function is replaced or the component unmounts.

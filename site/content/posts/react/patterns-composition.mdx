@@ -1,5 +1,5 @@
 ---
-title: "Advanced React Patterns: Composition Patterns"
+title: "Patterns: Composition"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactPatterns']
@@ -7,67 +7,81 @@ date: 2025-08-04
 thumbnailText: Advanced React Patterns
 ---
 
-> Use component composition to avoid passing props through layers that don’t need them. It makes components cleaner, more reusable, and easier to maintain.
+Use component composition to avoid passing props through components that don't need them. It makes your code cleaner, more reusable, and easier to maintain.
 
-### Problem: Prop Drilling
+### 1. Problem: Prop Drilling
 
-Prop drilling happens when you pass data through components that don’t actually use it — just to reach deeper ones.
-
-Example (problematic):
+Prop drilling happens when data passes through intermediate components that don't use it.
 
 ```tsx
 function App() {
-  const [count, setCount] = useState(0)
-  return <Child count={count} increment={() => setCount(c => c + 1)} />
-}
-
-function Child({ count, increment }) {
-  return <GrandChild count={count} onIncrementClick={increment} />
-}
-```
-
-> Here, `Child` doesn’t use `count` or `increment` — it just forwards them.
-
-### Solution: Composition Pattern
-
-Instead of passing data, pass **elements**.
-
-```tsx
-function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <Child
-      grandChild={
-        <GrandChild
-          button={<button onClick={() => setCount(c => c + 1)}>{count}</button>}
-        />
-      }
+      count={count}
+      increment={() => setCount(c => c + 1)}
     />
-  )
+  );
 }
 
-function Child({ grandChild }) {
-  return <div>{grandChild}</div>
+function Child({ count, increment }) {
+  return (
+    <GrandChild
+      count={count}
+      increment={increment}
+    />
+  );
 }
 
-function GrandChild({ button }) {
-  return <div>{button}</div>
+function GrandChild({ count, increment }) {
+  return <button onClick={increment}>{count}</button>;
 }
 ```
 
-Now:
+`Child` only forwards props to `GrandChild`. It doesn't need to know about the counter.
 
-* State stays at the top
-* Layout components just arrange UI
-* No unnecessary prop forwarding
+### 2. Solution: Component Composition
 
-### When to Use
+Instead of passing data through every layer, pass a React element using `children`.
 
-Great for:
+```tsx
+function App() {
+  const [count, setCount] = useState(0);
 
-* Deep component trees
-* Layout/container components
-* UI where only parents manage logic
+  return (
+    <Child>
+      <GrandChild
+        count={count}
+        onIncrement={() => setCount(c => c + 1)}
+      />
+    </Child>
+  );
+}
 
-Avoid overusing it — apply when it improves clarity.
+function Child({ children }) {
+  return <div className="container">{children}</div>;
+}
+
+function GrandChild({ count, onIncrement }) {
+  return (
+    <button onClick={onIncrement}>
+      {count}
+    </button>
+  );
+}
+```
+
+Now, `Child` doesn't need to know about `count` or `onIncrement`. It simply renders its children.
+
+### 3. Why Does This Work?
+
+- **Less prop drilling:** Intermediate components don't forward unnecessary props.
+- **Better reusability:** `Child` can render different content without knowing its implementation.
+- **Clearer responsibilities:** `App` manages state, `Child` handles layout, and `GrandChild` handles interaction.
+
+### 4. When Should You Use It?
+
+Use composition for layout components, wrappers, modals, and deeply nested UI where intermediate components don't need access to the data.
+
+**Interview takeaway:** Component composition reduces unnecessary prop forwarding by passing elements instead of making every intermediate component understand the data. It doesn't eliminate all prop drilling or replace Context when many components genuinely need shared state.

@@ -7,40 +7,36 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-> `useReducer` it follows the same concept as Redux — but locally, inside a component.
+`useReducer` follows a similar concept to Redux, but it manages state locally within a component.
 
-# Idea
+Instead of updating state directly, you dispatch an action and let a reducer determine the next state.
 
-Instead of directly setting state, you:
-
-1. Dispatch an action
-2. Let a reducer function decide how state changes
-
-### Signature
+### 1. The Core Idea
 
 ```tsx
 const [state, dispatch] = useReducer(reducer, initialState)
 ```
 
-Where:
+- `state`: The current state.
+- `dispatch`: Dispatches an action to request a state transition.
+- `reducer`: A pure function that calculates the next state.
 
-* `state` → current value
-* `dispatch` → function to trigger updates
-* `reducer` → pure function describing how state changes
-
-### Example
+**Example: Counter**
 
 ```tsx
-function counterReducer(state, action) {
+type Action =
+  | { type: 'increment' }
+  | { type: 'decrement' }
+  | { type: 'reset' }
+
+function counterReducer(state: number, action: Action): number {
   switch (action.type) {
-    case "increment":
+    case 'increment':
       return state + 1
-    case "decrement":
+    case 'decrement':
       return state - 1
-    case "reset":
+    case 'reset':
       return 0
-    default:
-      return state
   }
 }
 
@@ -50,34 +46,98 @@ function Counter() {
   return (
     <>
       <p>Count: {count}</p>
-      <button onClick={() => dispatch({ type: "increment" })}>+</button>
-      <button onClick={() => dispatch({ type: "decrement" })}>-</button>
-      <button onClick={() => dispatch({ type: "reset" })}>Reset</button>
+      <button onClick={() => dispatch({ type: 'increment' })}>
+        +
+      </button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>
+        -
+      </button>
+      <button onClick={() => dispatch({ type: 'reset' })}>
+        Reset
+      </button>
     </>
   )
 }
 ```
 
-# Where `useReducer` Really Shines
+The reducer must be pure: it should calculate the next state without mutating the current state or performing side effects.
 
-You’ll benefit most from `useReducer` when:
+### 2. When Should You Use `useReducer`?
 
-### 1. State Has Multiple Related Fields
+**Multiple related state fields**
+
+Consider a data-fetching component:
 
 ```tsx
-const initialState = {
-  loading: false,
-  data: null,
-  error: null
+const [loading, setLoading] = useState(false)
+const [data, setData] = useState<User[] | null>(null)
+const [error, setError] = useState<string | null>(null)
+```
+
+These fields represent related states, but independent updates can accidentally create inconsistent combinations.
+
+For example, `loading` might be `true` while an old error remains visible.
+
+A reducer centralizes the transitions.
+
+**Model state transitions explicitly**
+
+```tsx
+type State =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: User[] }
+  | { status: 'error'; message: string }
+
+type Action =
+  | { type: 'fetch' }
+  | { type: 'success'; data: User[] }
+  | { type: 'error'; message: string }
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'fetch':
+      return { status: 'loading' }
+
+    case 'success':
+      return { status: 'success', data: action.data }
+
+    case 'error':
+      return { status: 'error', message: action.message }
+  }
 }
 ```
 
-Managing this with multiple `useState` calls becomes messy.
+This uses a discriminated union to make invalid state combinations harder to represent.
 
-### 2. State Transitions Are Complex
+For example, a `success` state must contain data, while an `error` state must contain a message.
 
-For example:
+### 3. Keep Side Effects Outside the Reducer
 
-* Loading → Success.   
-* Loading → Error.   
-* Reset → Idle
+Reducers must remain pure. API requests belong in event handlers, effects, or a dedicated data-fetching layer.
+
+```tsx
+async function loadUsers() {
+  dispatch({ type: 'fetch' })
+
+  try {
+    const response = await fetch('/api/users')
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users')
+    }
+
+    const users: User[] = await response.json()
+
+    dispatch({ type: 'success', data: users })
+  } catch (error) {
+    dispatch({
+      type: 'error',
+      message:
+        error instanceof Error ? error.message : 'Unknown error',
+    })
+  }
+}
+```
+
+The reducer handles state transitions; the asynchronous function handles the side effect.

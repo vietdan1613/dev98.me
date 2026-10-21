@@ -672,6 +672,782 @@ const handleFocus = () => {
 
 ---
 
+## Suspense & `use()`
+
+### 1. How does React handle asynchronous rendering with `Suspense`, Error Boundaries, and `use()`?
+
+**Expectations:** Suspense fallback · Error Boundary · `use()` reads Promises · Declarative async UI
+
+**Example answer:**
+
+> React provides a declarative way to handle pending resources and rendering errors.
+>
+> - **Suspense:** Displays fallback UI while a child suspends.
+> - **Error Boundaries:** Display fallback UI when a descendant throws a rendering error.
+> - **`use()`:** Reads a resource such as a Promise during rendering. If the Promise is pending, React suspends; if it rejects, the error can propagate to an Error Boundary.
+
+```jsx
+<ErrorBoundary fallback={<div>Something went wrong.</div>}>
+  <Suspense fallback={<div>Loading...</div>}>
+    <PhoneDetails phonePromise={phonePromise} />
+  </Suspense>
+</ErrorBoundary>
+```
+
+---
+
+### 2. Does Suspense automatically handle every `fetch()` call?
+
+**Expectations:** Suspense-enabled resources only · Not ordinary `useEffect` fetch · Framework/library integration
+
+**Example answer:**
+
+> No. Suspense only responds to supported Suspense-enabled resources. Ordinary `fetch()` calls inside `useEffect` do not automatically activate Suspense.
+>
+> For example, React frameworks and supported data-fetching libraries can integrate their data loading with Suspense.
+
+---
+
+### 3. What does the React `use()` API do?
+
+**Expectations:** Read Promise during render · Suspend when pending · Error Boundary on reject · Conditions/loops allowed
+
+**Example answer:**
+
+> The `use()` API reads a resource, such as a Promise, during rendering.
+>
+> If the Promise is pending, React can show the nearest Suspense fallback. If it rejects, the error can reach the nearest Error Boundary.
+>
+> Unlike ordinary Hooks, `use()` can be called inside conditions and loops, subject to its API rules.
+
+```jsx
+function PhoneDetails({ phonePromise }) {
+  const phone = use(phonePromise);
+
+  return <div>{phone.name}</div>;
+}
+```
+
+---
+
+### 4. Why should Promise identity remain stable?
+
+**Expectations:** Avoid repeated suspension · Pass from parent/data layer · Reuse across re-renders
+
+**Example answer:**
+
+> Creating a new Promise during every render can cause repeated suspension and unnecessary requests.
+>
+> Instead, create the Promise in a parent or supported data-fetching layer and pass it to the component. Reuse the same Promise across re-renders until the resource needs to change.
+
+---
+
+### 5. How can you avoid async waterfalls?
+
+**Expectations:** Start requests before `use()` · Concurrent fetching · Preserve identity
+
+**Example answer:**
+
+> Start independent requests before reading their results, so they can run concurrently rather than one after another.
+>
+> The important detail is that both requests start before the child reads either Promise. In production, the data-fetching layer must also preserve Promise identity across re-renders.
+
+```jsx
+const favoritesPromise = getFavorites(username);
+const friendsPromise = getFriends(username);
+
+return (
+  <Suspense fallback={<div>Loading...</div>}>
+    <ProfileDetails
+      favoritesPromise={favoritesPromise}
+      friendsPromise={friendsPromise}
+    />
+  </Suspense>
+);
+```
+
+---
+
+## Custom Hooks & Memoization
+
+### 1. What is a Custom Hook, and how can you optimize it with `useCallback` and `useMemo`?
+
+**Expectations:** Reuse logic · Independent state · `useCallback` · `useMemo`
+
+**Example answer:**
+
+> A Custom Hook is a JavaScript function whose name starts with `use` and that reuses stateful logic across components.
+>
+> Each call has its own independent state unless the Hook connects to a shared store or Context.
+
+```jsx
+function useCount() {
+  const [count, setCount] = useState(0);
+
+  const increment = () => setCount(c => c + 1);
+
+  return { count, increment };
+}
+```
+
+---
+
+### 2. Do Custom Hooks share state between components?
+
+**Expectations:** Share logic · Not state · Parent · Context · Store
+
+**Example answer:**
+
+> No. Custom Hooks share logic, not state. Each component calling `useCount()` gets its own `count` state.
+>
+> To share state, use a common parent, Context, or a shared state store.
+
+---
+
+### 3. Why can a function inside a Custom Hook cause unnecessary Effect executions?
+
+**Expectations:** New reference each render · Effect deps · `useCallback` · Functional updates
+
+**Example answer:**
+
+> A function declared inside a Hook is recreated on every render. If an Effect depends on that function, React detects a changed dependency and re-runs the Effect.
+>
+> For example, an interval might be repeatedly cleared and restarted.
+>
+> Here, `useCallback` preserves the function reference between renders while its dependencies remain unchanged. The functional state update means `count` does not need to be a dependency.
+
+```jsx
+const increment = useCallback(() => {
+  setCount(c => c + 1);
+}, []);
+```
+
+---
+
+### 4. What is the difference between `useCallback` and `useMemo`?
+
+**Expectations:** Function identity · Calculated value · `Object.is`
+
+**Example answer:**
+
+> - **`useCallback`** caches a function reference.
+> - **`useMemo`** caches the result of a calculation.
+>
+> Both compare dependencies using `Object.is`.
+
+```jsx
+const total = useMemo(() => calculateTotal(items), [items]);
+
+const handleClick = useCallback(() => {
+  submitForm(formData);
+}, [formData]);
+```
+
+---
+
+### 5. When should you use memoization?
+
+**Expectations:** Expensive work · Stable identity · Not everywhere · Optimization only
+
+**Example answer:**
+
+> Use `useMemo` for expensive calculations and `useCallback` when stable function identity matters, such as passing callbacks to memoized child components or using functions as Effect dependencies.
+>
+> Avoid memoizing everything because memoization adds complexity and overhead. It should be a performance optimization, not a requirement for correctness.
+
+---
+
+## useImperativeHandle
+
+### 1. What is `useImperativeHandle`, and when should you use it?
+
+**Expectations:** Custom ref API · Limited methods · Focus/scroll · Not full DOM access
+
+**Example answer:**
+
+> `useImperativeHandle` is a React Hook that lets a child component expose a custom API through a ref. Instead of giving the parent direct access to the child's DOM element, you can expose only specific methods, such as `focusInput()` or `scrollToTop()`.
+
+---
+
+### 2. How does `useImperativeHandle` work?
+
+**Expectations:** Child exposes methods · Parent calls via ref · React 19 `ref` prop · `forwardRef` earlier
+
+**Example answer:**
+
+> The child defines the methods it wants to expose, and the parent calls them through a ref.
+>
+> In React 19, `ref` can be received as a prop. In earlier React versions, function components typically use `forwardRef`.
+
+```jsx
+import { useImperativeHandle, useRef } from "react";
+
+function MyInput({ ref }) {
+  const inputRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focusInput() {
+      inputRef.current?.focus();
+    },
+  }), []);
+
+  return <input ref={inputRef} />;
+}
+```
+
+---
+
+### 3. Why not expose the DOM element directly?
+
+**Expectations:** Controlled API · Encapsulation · Limit parent access
+
+**Example answer:**
+
+> Exposing a custom API gives the parent controlled access to specific actions without revealing the child's internal implementation.
+>
+> For example, a reusable input can expose `focusInput()` without allowing the parent to manipulate every property of the underlying DOM element.
+
+---
+
+### 4. When should you use `useImperativeHandle` instead of props?
+
+**Expectations:** Imperative actions · Prefer declarative props · Dialog `isOpen` vs `open()`
+
+**Example answer:**
+
+> Use it when a parent needs to trigger an imperative action, such as focusing an input, scrolling a container, or controlling media playback.
+>
+> Prefer props for declarative behavior, such as showing or hiding a dialog. For example, an `isOpen` prop is usually better than an imperative `open()` method when the parent owns the dialog's state.
+
+---
+
+## flushSync
+
+### 1. What is `flushSync()`, and when should you use it?
+
+**Expectations:** Synchronous flush · Immediate DOM commit · Sparingly · Performance cost
+
+**Example answer:**
+
+> `flushSync()` is an API from `react-dom` that forces React to synchronously flush updates inside its callback, ensuring the relevant DOM updates are committed before the next line executes.
+>
+> It's useful when an external integration or imperative operation requires the DOM to be updated immediately. However, it can hurt performance and should be used sparingly.
+
+---
+
+### 2. Why doesn't calling `setState()` immediately update the DOM?
+
+**Expectations:** Schedules update · Batching · Ref may still be `null`
+
+**Example answer:**
+
+> Calling a state setter schedules an update. React may batch updates and commit them later, so the DOM may not reflect the new state immediately.
+>
+> For example, if an input is conditionally rendered, its ref may still be `null` immediately after calling `setShow(true)`.
+
+---
+
+### 3. How can you focus a conditionally rendered input without `flushSync()`?
+
+**Expectations:** `useEffect` after commit · Preferred approach
+
+**Example answer:**
+
+> Use `useEffect` to focus the input after React commits the update.
+>
+> This is usually the preferred solution because focus management generally doesn't require forcing a synchronous update.
+
+```jsx
+useEffect(() => {
+  if (show) {
+    inputRef.current?.focus();
+  }
+}, [show]);
+```
+
+---
+
+### 4. When would you actually use `flushSync()`?
+
+**Expectations:** Third-party/browser APIs · Immediate DOM access · Performance warning
+
+**Example answer:**
+
+> Use it when a third-party library or browser API requires the DOM to reflect a React update before the next statement executes.
+>
+> After `flushSync` returns, the relevant DOM update has been committed, so the input ref can be accessed.
+>
+> Important: `flushSync()` can flush other pending work and Effects, and it may hurt performance. Prefer normal state updates and Effects unless synchronous DOM access is genuinely necessary.
+
+```jsx
+flushSync(() => {
+  setShow(true);
+});
+
+inputRef.current?.focus();
+```
+
+---
+
+## Portals
+
+### 1. What are React Portals, and why do we use them?
+
+**Expectations:** Different DOM node · Same React tree · Modals · Tooltips · Escape CSS clipping
+
+**Example answer:**
+
+> React Portals let you render JSX into a different DOM node while keeping the component inside the same React tree.
+>
+> They're commonly used for modals, tooltips, and dropdowns that need to escape CSS constraints such as `overflow: hidden`.
+
+```jsx
+import { createPortal } from "react-dom";
+
+function Modal({ children }) {
+  return createPortal(children, document.body);
+}
+```
+
+---
+
+### 2. Why use a Portal instead of rendering a modal normally?
+
+**Expectations:** `overflow: hidden` · `transform` · Render into `document.body`
+
+**Example answer:**
+
+> A modal rendered inside a parent with `overflow: hidden` may be clipped. CSS properties such as `transform` can also affect the positioning of fixed elements.
+>
+> Rendering the modal into `document.body` can avoid these ancestor-related layout constraints.
+
+---
+
+### 3. Do events and Context still work inside a Portal?
+
+**Expectations:** DOM placement vs React tree · Context from ancestors · Event bubbling in React tree
+
+**Example answer:**
+
+> Yes. A Portal changes the DOM placement, not the component's position in the React tree.
+>
+> - **Context:** The portal can access Context from its React ancestors.
+> - **Events:** React events can bubble through the React tree, even when the DOM elements aren't direct ancestors.
+
+---
+
+### 4. What should you consider when using Portals in production?
+
+**Expectations:** Focus · Escape · Accessibility · SSR · Tooltip positioning
+
+**Example answer:**
+
+> For modals, consider managing keyboard focus and restoring it when the modal closes, supporting Escape to close when appropriate, providing accessible dialog labels, and ensuring the portal target exists, especially in server-rendered applications.
+>
+> For tooltips, also consider positioning, scrolling, viewport boundaries, and keyboard accessibility.
+
+---
+
+## useLayoutEffect
+
+### 1. What is `useLayoutEffect`, and how is it different from `useEffect`?
+
+**Expectations:** After commit · Before paint · Measure layout · Prefer `useEffect` by default
+
+**Example answer:**
+
+> `useLayoutEffect` is a React Hook that runs after React commits DOM changes but before the browser repaints. It's useful when you need to measure layout or make visual adjustments before the user sees the result.
+>
+> By contrast, `useEffect` is generally preferred for synchronization that doesn't need to block painting.
+
+---
+
+### 2. When should you use `useLayoutEffect`?
+
+**Expectations:** Measure dimensions · Position before paint · Avoid flicker
+
+**Example answer:**
+
+> Use it when you need to measure an element's dimensions or adjust its position before the browser paints, such as positioning a tooltip without visible flicker.
+
+```jsx
+useLayoutEffect(() => {
+  const height = ref.current?.getBoundingClientRect().height;
+  if (height !== undefined) {
+    setHeight(height);
+  }
+}, []);
+```
+
+---
+
+### 3. What is the main difference between `useLayoutEffect` and `useEffect`?
+
+**Expectations:** Before vs after paint · Blocking · Cleanup · Dependencies
+
+**Example answer:**
+
+> - **`useLayoutEffect`:** Runs before repaint and can block painting while its code and synchronous state updates are processed.
+> - **`useEffect`:** Generally allows the browser to paint first for updates not caused by an interaction, making it suitable for most effects.
+>
+> Both support cleanup functions and dependency arrays.
+
+---
+
+### 4. Why shouldn't you use `useLayoutEffect` everywhere?
+
+**Expectations:** Blocks paint · Performance · Prefer `useEffect` for most work
+
+**Example answer:**
+
+> Because it can block browser painting and hurt performance. Use it only when the timing of a visual update matters.
+>
+> For fetching data, subscriptions, and most other external synchronization, prefer `useEffect`.
+
+---
+
+## useReducer
+
+### 1. What is `useReducer`, and when should you use it instead of `useState`?
+
+**Expectations:** Reducer · Actions · Complex transitions · Related values
+
+**Example answer:**
+
+> `useReducer` is a React Hook that manages state through a reducer function and dispatched actions.
+>
+> It's useful for complex state logic, especially when multiple related values need predictable state transitions.
+>
+> - **state:** The current state.
+> - **dispatch:** Sends an action to update state.
+> - **reducer:** A pure function that calculates the next state.
+
+```tsx
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+---
+
+### 2. What is the difference between `useState` and `useReducer`?
+
+**Expectations:** Simple vs complex · Centralized transitions · Local state
+
+**Example answer:**
+
+> - **`useState`:** Best for simple, independent state values.
+> - **`useReducer`:** Better for complex state logic involving multiple related values or actions.
+>
+> Both manage local component state, but `useReducer` centralizes state transitions in a reducer function.
+
+---
+
+### 3. Why must a reducer be a pure function?
+
+**Expectations:** No mutation · No side effects · Predictable · Testable
+
+**Example answer:**
+
+> A reducer must produce the next state based only on the current state and action, without mutating existing state or performing side effects.
+>
+> Pure reducers make state transitions predictable, easier to test, and compatible with React's rendering behavior.
+
+```tsx
+function reducer(state, action) {
+  switch (action.type) {
+    case "increment":
+      return { ...state, count: state.count + 1 };
+
+    default:
+      return state;
+  }
+}
+```
+
+---
+
+### 4. Can you perform API calls inside a reducer?
+
+**Expectations:** No · Keep pure · Dispatch from handlers/effects
+
+**Example answer:**
+
+> No. Reducers should remain pure and synchronous.
+>
+> Perform API requests in event handlers, Effects, or a dedicated data-fetching layer, then dispatch actions to update state.
+
+```tsx
+async function loadUsers() {
+  dispatch({ type: "fetch" });
+
+  try {
+    const response = await fetch("/api/users");
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch users");
+    }
+
+    const users = await response.json();
+    dispatch({ type: "success", data: users });
+  } catch (error) {
+    dispatch({ type: "error" });
+  }
+}
+```
+
+---
+
+### 5. What is the difference between `useReducer` and Redux?
+
+**Expectations:** Local vs global · Middleware · DevTools · App-wide store
+
+**Example answer:**
+
+> - **`useReducer`:** Manages state locally within a component or a shared subtree when combined with Context.
+> - **Redux:** Provides a centralized state store with features such as middleware, DevTools, and application-wide state management.
+>
+> Both use reducers and actions, but Redux is designed for more extensive state management needs.
+
+---
+
+## useSyncExternalStore
+
+### 1. What is `useSyncExternalStore`, and why was it introduced?
+
+**Expectations:** External stores · Concurrent-safe · Subscribe · Snapshot · SSR
+
+**Example answer:**
+
+> `useSyncExternalStore` is a React Hook introduced in React 18 that lets components subscribe to external stores and read their state safely during concurrent rendering.
+>
+> It's useful when the source of truth lives outside React, such as a Redux store, a browser API, or a custom store.
+>
+> - **`subscribe`:** Registers a change listener and returns an unsubscribe function.
+> - **`getSnapshot`:** Reads the current store state.
+> - **`getServerSnapshot`:** Provides the snapshot for server rendering and hydration.
+
+```jsx
+const snapshot = useSyncExternalStore(
+  subscribe,
+  getSnapshot,
+  getServerSnapshot
+);
+```
+
+---
+
+### 2. Why not use `useEffect` and `useState` instead?
+
+**Expectations:** Timing issues · Tearing · Standard subscription API
+
+**Example answer:**
+
+> You can use `useEffect` and `useState` for simple subscriptions, but manually synchronizing them can introduce timing issues between rendering and subscription setup.
+>
+> `useSyncExternalStore` provides a standard subscription mechanism that helps React avoid inconsistent snapshots, also known as tearing, during concurrent rendering.
+
+---
+
+### 3. What are the requirements for `getSnapshot`?
+
+**Expectations:** Stable reference · No new object every call · New snapshot on change
+
+**Example answer:**
+
+> `getSnapshot` must return a cached, stable value while the store hasn't changed.
+>
+> For example, returning a newly created object on every call can cause unnecessary re-renders or an infinite-loop warning.
+>
+> The store should provide a new snapshot reference when its state changes.
+
+```jsx
+// ❌ Returns a new object every time
+const getSnapshot = () => ({ ...store.state });
+
+// ✅ Returns the existing immutable snapshot
+const getSnapshot = () => store.getSnapshot();
+```
+
+---
+
+### 4. What is `getServerSnapshot` used for?
+
+**Expectations:** SSR · Hydration · Matching initial snapshots · Browser fallbacks
+
+**Example answer:**
+
+> It provides the initial snapshot during server rendering and client hydration.
+>
+> The server and client must produce matching initial snapshots for hydration to work correctly. If the store is browser-specific, the server snapshot should use a suitable fallback value.
+
+---
+
+### 5. When should you use `useSyncExternalStore` instead of `useState`?
+
+**Expectations:** React-owned vs external · CSS for visual media queries
+
+**Example answer:**
+
+> Use `useState` when React owns the state. Use `useSyncExternalStore` when the source of truth exists outside React and components need to subscribe to its changes.
+>
+> For purely visual responsiveness, CSS media queries are often simpler than subscribing to `window.matchMedia`.
+
+---
+
+## Context
+
+### 1. What is React Context, and when should you use it?
+
+**Expectations:** Share values · Avoid prop drilling · Provider · `useContext` · Theme/auth
+
+**Example answer:**
+
+> React Context lets components share values without passing props through every intermediate component. It's useful for data such as themes, authentication information, and shared application state.
+>
+> A Provider supplies the value, and descendant components access it using `useContext`.
+
+```jsx
+const ThemeContext = createContext("light");
+
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Profile />
+    </ThemeContext.Provider>
+  );
+}
+
+function Profile() {
+  const theme = useContext(ThemeContext);
+  return <div>Theme: {theme}</div>;
+}
+```
+
+---
+
+### 2. Do Custom Hooks share state between components?
+
+**Expectations:** Share logic · Not state · Lift state · Context Provider
+
+**Example answer:**
+
+> No. Custom Hooks share logic, not state. Each call creates its own independent state unless the Hook connects to a shared state source, such as Context.
+>
+> To share state, you can lift it to a common parent or use Context with a Provider that owns the state.
+
+---
+
+### 3. What happens when a Context value changes?
+
+**Expectations:** Consumers re-render · `Object.is` · New object identity · `useMemo` / split Contexts
+
+**Example answer:**
+
+> Components that consume that Context receive the updated value and re-render when the Provider's value changes according to `Object.is`.
+>
+> For example, if a Provider supplies a new object on every render, its consumers may re-render even if the object's properties are unchanged.
+>
+> You can use `useMemo`, split Contexts, or restructure components when profiling identifies unnecessary work.
+
+---
+
+### 4. Is Context a replacement for Redux?
+
+**Expectations:** Value sharing vs store · Middleware · DevTools · Complexity tradeoff
+
+**Example answer:**
+
+> Not necessarily.
+>
+> - **Context:** Shares values across a component tree.
+> - **Redux:** Provides centralized state management and additional capabilities such as middleware, DevTools, and structured update patterns.
+>
+> Context works well for relatively simple shared state. Redux or another state-management library may be more suitable for complex application-wide state.
+
+---
+
+## Component Patterns
+
+### 1. How do you design reusable React components without making their APIs difficult to maintain?
+
+**Expectations:** Composition · Shared state · Reusable behavior · Pattern choice
+
+**Example answer:**
+
+> React provides several patterns for improving component composition, sharing state, and reusing interaction logic. The right choice depends on whether components need shared state, flexible composition, or reusable behavior.
+
+---
+
+### 2. What is the Compound Components pattern?
+
+**Expectations:** Shared parent state · Context · Flexible declarative API
+
+**Example answer:**
+
+> Compound Components let related components share state through a common parent, usually using Context.
+>
+> This provides a flexible, declarative API without requiring consumers to pass state and callbacks to every child.
+
+```jsx
+<Toggle>
+  <Toggle.On>ON</Toggle.On>
+  <Toggle.Off>OFF</Toggle.Off>
+  <Toggle.Button />
+</Toggle>
+```
+
+---
+
+### 3. How can component composition prevent prop drilling?
+
+**Expectations:** Pass `children` · Layout wrappers · Context when many need the value
+
+**Example answer:**
+
+> Instead of passing props through intermediate components, pass elements using `children`.
+>
+> The container doesn't need to know what its children render or which props they need.
+>
+> Composition is especially useful for layout components, wrappers, and modals. Context is more suitable when many descendants genuinely need the same shared value.
+
+```jsx
+function Container({ children }) {
+  return <div className="container">{children}</div>;
+}
+```
+
+---
+
+### 4. What is the Latest Ref pattern, and when is it useful?
+
+**Expectations:** Stable callback · Latest values in refs · Debounce/timers · Not for UI state
+
+**Example answer:**
+
+> The Latest Ref pattern stores the latest callback or value in a ref so a long-lived function can access current data without changing its identity.
+>
+> It's useful for debounced callbacks, timers, and event subscriptions that need the latest callback without repeatedly restarting.
+>
+> However, update refs carefully. If the value must trigger rendering, use state instead.
+
+---
+
+### 5. What are Prop Collections and Prop Getters?
+
+**Expectations:** Ready-made props · Getter merges custom props · Accessibility · Flexibility
+
+**Example answer:**
+
+> Both patterns let a custom Hook expose props needed to operate a component.
+>
+> - **Prop collection:** Returns a ready-made props object.
+> - **Prop getter:** Returns a function that generates props and can incorporate consumer customization.
+>
+> For example, a toggle Hook can provide `aria-pressed` and `onClick` so consumers don't have to implement the interaction logic themselves.
+>
+> Prop getters are more flexible when consumers need to add custom handlers, classes, or accessibility attributes.
+
+---
+
 ## TypeScript
 
 ### 1. How does TypeScript improve code quality, and which features do you use to make applications type-safe?

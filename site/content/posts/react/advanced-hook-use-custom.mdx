@@ -1,5 +1,5 @@
 ---
-title: "Advanced Hook: customHooks()"
+title: "Advanced Hook: Custom Hooks"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactAdvancedHooks']
@@ -7,84 +7,89 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-# What
+### 1. What Is a Custom Hook?
 
-> A custom hook is simply a **function that uses other hooks**.
+A custom Hook is a JavaScript function that uses React Hooks to reuse stateful logic across components.
+
+Its name must start with `use`, and it must follow the Rules of Hooks.
 
 ```tsx
 function useCount() {
   const [count, setCount] = useState(0)
-  const increment = () => setCount(c => c + 1)
+
+  const increment = () => {
+    setCount(c => c + 1)
+  }
+
   return { count, increment }
 }
 ```
 
-Use it like any other hook:
+Use it like any other Hook:
 
 ```tsx
 function Counter() {
   const { count, increment } = useCount()
+
   return <button onClick={increment}>{count}</button>
 }
 ```
 
-# The Issue
+Each call to `useCount()` has its own state. Custom Hooks share logic, not state, unless they connect to a shared store or Context.
 
-Consider using a hook function inside `useEffect`:
+### 2. The Problem: Function References Change
+
+Consider this effect:
 
 ```tsx
 useEffect(() => {
   const id = setInterval(increment, 1000)
+
   return () => clearInterval(id)
 }, [increment])
 ```
 
-Problem: Even if `increment` does the same thing, its **reference changes every render**, causing:
+If `increment` is declared directly inside a custom Hook, a new function is created on each render.
 
-* Effect cleanup & re-run.    
-* Performance overhead
+Because its reference changes, React cleans up the previous effect and runs it again after each render.
 
-### Fix with `useCallback`
+For an interval, that means repeatedly resetting the timer.
 
-`useCallback` preserves the same function reference unless dependencies change:
+### 3. Fix with `useCallback`
 
 ```tsx
 function useCount() {
   const [count, setCount] = useState(0)
-  const increment = useCallback(() => setCount(c => c + 1), [])
-  return { count,    }
+
+  const increment = useCallback(() => {
+    setCount(c => c + 1)
+  }, [])
+
+  return { count, increment }
 }
 ```
 
-> Now `increment` is **stable across renders**.
+The functional state update `setCount(c => c + 1)` means the callback does not need to capture `count`, so the empty dependency array is correct.
 
-# Memoization
+Now `increment` retains the same reference between renders, allowing effects that depend on it to avoid unnecessary resynchronization.
 
-Memoization stores results so they can be reused instead of recalculated.
+**Important:** `useCallback` is useful when function identity matters. It is not necessary for every event handler.
 
-```ts
-const cache = {}
-function addOne(num) {
-  if (!cache[num]) cache[num] = num + 1
-  return cache[num]
-}
-```
+### 4. Memoization
 
-In React:
+Memoization reuses a previously calculated result while its dependencies remain unchanged.
 
-* `useMemo` memoizes values
-* `useCallback` memoizes functions
+React provides two related Hooks:
 
-# `useCallback` vs `useMemo`
-
-| Hook                       | Memoizes |
-| -------------------------- | -------- |
-| useCallback(fn, deps)      | Function |
-| useMemo(() => value, deps) | Value    |
-
-Equivalent:
+- `useMemo` caches a calculated value.
+- `useCallback` caches a function reference.
 
 ```tsx
-useCallback(fn, deps)
-useMemo(() => fn, deps)
+const total = useMemo(() => calculateTotal(items), [items])
+
+const handleClick = useCallback(() => {
+  submitForm(formData)
+}, [formData])
 ```
+
+These Hooks can help avoid expensive calculations or unnecessary re-renders when passed to memoized child components.

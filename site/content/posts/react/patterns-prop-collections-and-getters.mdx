@@ -1,5 +1,5 @@
 ---
-title: "Advanced React Patterns: Prop Collections and Getters Pattern"
+title: "Patterns: Prop Collections and Getters"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactPatterns']
@@ -7,85 +7,103 @@ date: 2025-08-04
 thumbnailText: Advanced React Patterns
 ---
 
-> The **Prop Collections & Getters** pattern helps hooks expose flexible, accessible, and easy-to-use APIs for UI interactions.
+Prop Collections and Prop Getters help reusable hooks expose interaction logic through flexible, accessible APIs.
 
-### The Problem
+### 1. Problem: Repetitive Wiring
 
-When building reusable hooks, users must remember to wire things correctly:
+A reusable hook may require consumers to manually connect state, event handlers, and accessibility attributes.
 
 ```tsx
-<button aria-pressed={on} onClick={toggle}>On</button>
+<button
+  aria-pressed={on}
+  onClick={toggle}
+>
+  Toggle
+</button>
 ```
 
-This becomes error-prone with:
+As the component grows, consumers must remember to wire every required prop correctly.
 
-* Accessibility (`aria-*`)
-* Event handling
-* Custom logic
-
-### Prop Collections
+### 2. Prop Collections
 
 A **prop collection** is a ready-made props object returned by a hook.
 
 ```tsx
 function useCounter() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
   return {
     count,
     counterProps: {
       children: count,
       onClick: () => setCount(c => c + 1),
     },
-  }
+  };
 }
 ```
 
 Usage:
 
 ```tsx
-<button {...counterProps} />
+const { counterProps } = useCounter();
+
+<button {...counterProps} />;
 ```
 
-✅ Easy for common cases.    
-❌ Hard to customize safely
+**Advantages:** Simple and convenient for common use cases.
 
-### Prop Getters
+**Limitation:** Customizing individual props or event handlers can be awkward.
 
-A **prop getter** is a function that merges user props with internal logic.
+### 3. Prop Getters
+
+A **prop getter** is a function that generates props while allowing consumers to supply custom values and handlers.
 
 ```tsx
 function useToggle() {
-  const [on, setOn] = useState(false)
-  const toggle = () => setOn(o => !o)
+  const [on, setOn] = useState(false);
 
-  const getTogglerProps = ({ onClick, ...props } = {}) => ({
-    'aria-pressed': on,
-    onClick: e => {
-      onClick?.(e)
-      toggle()
-    },
-    ...props,
-  })
+  const toggle = () => setOn(value => !value);
 
-  return { on, getTogglerProps }
+  function getTogglerProps({
+    onClick,
+    ...props
+  }: React.ComponentPropsWithoutRef<"button"> = {}) {
+    return {
+      ...props,
+      "aria-pressed": on,
+      onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event);
+
+        if (!event.defaultPrevented) {
+          toggle();
+        }
+      },
+    };
+  }
+
+  return { on, getTogglerProps };
 }
 ```
 
 Usage:
 
 ```tsx
-<button {...getTogglerProps({ onClick: () => console.log('custom') })} />
+const { getTogglerProps } = useToggle();
+
+<button
+  {...getTogglerProps({
+    onClick: () => console.log("Custom logic"),
+    className: "toggle-button",
+  })}
+>
+  Toggle
+</button>;
 ```
 
-Now:
+The getter combines the consumer's custom props with the hook's internal behavior.
 
-* Both toggle logic & custom logic run
-* Accessibility is preserved
+- **Custom logic:** The consumer's click handler runs first.
+- **Default prevention:** Calling `event.preventDefault()` prevents the toggle.
+- **Accessibility:** The hook supplies the current `aria-pressed` value.
 
-### When to Use
-
-Use Prop Collections/Getters when:
-
-* Building reusable UI hooks
-* Designing component libraries
-* You want APIs that are **easy to use and hard to misuse**
+The order of prop spreading is intentional: internal `aria-pressed` and `onClick` behavior take precedence over conflicting consumer props.

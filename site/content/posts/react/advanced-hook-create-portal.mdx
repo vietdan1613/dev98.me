@@ -7,41 +7,52 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-> React Portals let you render a component’s subtree **into a different part of the DOM**, while still keeping it logically inside the same React component tree.
-
-React exposes this through:
+React Portals let you render JSX into a different DOM node while keeping the component logically inside the same React tree.
 
 ```tsx
-import { createPortal } from "react-dom";
+import { createPortal } from 'react-dom'
+
+createPortal(children, domNode)
 ```
 
-`createPortal` accepts:
+- `children`: The JSX to render.
+- `domNode`: The target DOM node where the content will be mounted.
 
-1. **What** to render (JSX)
-2. **Where** to render it (a DOM node, e.g. `document.body`)
+### 1. Why Do We Need Portals?
 
-# Modal
+Some UI elements, such as modals, dropdowns, and tooltips, can be affected by their ancestors' CSS.
+
+For example, a parent with `overflow: hidden` may clip a tooltip. Properties such as `transform` can also create containing blocks that affect the positioning of fixed elements.
+
+A portal lets you render the UI elsewhere in the DOM, often directly inside `document.body`.
+
+### 2. Example: Modal
 
 ```tsx
-import { createPortal } from "react-dom";
+import { createPortal } from 'react-dom'
 
-function Modal({
-  title,
-  content,
-  handleClose,
-}: {
-  title: string;
-  content: string;
-  handleClose: () => void;
-}) {
+type ModalProps = {
+  title: string
+  content: string
+  handleClose: () => void
+}
+
+function Modal({ title, content, handleClose }: ModalProps) {
   return createPortal(
-    <div className="modal">
-      <h1>{title}</h1>
-      <p>{content}</p>
-      <button onClick={handleClose}>Close</button>
+    <div className="modal-backdrop">
+      <div
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <h2 id="modal-title">{title}</h2>
+        <p>{content}</p>
+        <button onClick={handleClose}>Close</button>
+      </div>
     </div>,
     document.body
-  );
+  )
 }
 ```
 
@@ -49,66 +60,76 @@ Usage:
 
 ```tsx
 function App() {
-  const [showModal, setShowModal] = React.useState(false);
+  const [showModal, setShowModal] = React.useState(false)
 
   return (
-    <div>
-      <button onClick={() => setShowModal(true)}>Show Modal</button>
+    <>
+      <button onClick={() => setShowModal(true)}>
+        Show Modal
+      </button>
+
       {showModal && (
         <Modal
           title="My Modal"
-          content="This is the content of the modal"
+          content="This is the modal content."
           handleClose={() => setShowModal(false)}
         />
       )}
-    </div>
-  );
+    </>
+  )
 }
 ```
 
-> Even though the modal renders into `document.body`, it behaves as part of the same React tree — preserving state, context, and event handling.
+This illustrates portal rendering. A production modal should also manage keyboard interaction, focus trapping, focus restoration, and closing with Escape where appropriate.
 
-# Tooltip
+For server-rendered applications, ensure the portal is only created on the client because `document.body` is unavailable during server rendering.
 
-Initial implementation:
+### 3. Example: Tooltip
 
-```tsx
-<div className="card">
-  <button className="icon-button">
-    ❤️
-    <Tooltip text="Add to favorites" />
-  </button>
-</div>
-```
+A tooltip inside a card may be clipped by `overflow: hidden`.
 
-Problem: The tooltip is clipped or misaligned because it lives inside the card’s DOM hierarchy.
-
-### Portal-based Tooltip
+A portal can render it outside the card:
 
 ```tsx
-import { createPortal } from "react-dom";
+import { createPortal } from 'react-dom'
 
-function Tooltip({
-  text,
-  position,
-}: {
-  text: string;
-  position: { top: number; left: number };
-}) {
+type TooltipProps = {
+  text: string
+  position: { top: number; left: number }
+}
+
+function Tooltip({ text, position }: TooltipProps) {
   return createPortal(
-    <div className="tooltip" style={{ top: position.top, left: position.left }}>
+    <div
+      role="tooltip"
+      className="tooltip"
+      style={{
+        position: 'fixed',
+        top: position.top,
+        left: position.left,
+      }}
+    >
       {text}
     </div>,
     document.body
-  );
+  )
 }
 ```
 
-You can calculate `position` using `useLayoutEffect` by measuring the trigger element.
+The trigger's position can be calculated using `getBoundingClientRect()`.
 
-# Recap
+Remember that the positioning strategy matters: `getBoundingClientRect()` returns viewport-relative coordinates, which pair naturally with `position: fixed`. For `position: absolute` relative to the document, scroll offsets must be considered.
 
-* React Portals render components outside the normal DOM tree.    
-* Perfect for modals, tooltips, dropdowns, and overlays.    
-* Preserve React state, context, and events.    
-* Created with `createPortal(ui, container)`
+A robust tooltip must also account for scrolling, resizing, viewport boundaries, and keyboard accessibility.
+
+### 4. How Do Events Work Through Portals?
+
+Although a portal changes where elements appear in the DOM, React still treats them as part of the original React tree.
+
+This means:
+
+- **State:** Component state is preserved while the component remains mounted.
+- **Context:** Context values remain available from React ancestors.
+- **Events:** React events can bubble to React ancestors, even when those ancestors are not DOM ancestors.
+
+For example, clicking inside a portal may trigger an `onClick` handler on a React parent outside the portal's DOM container.

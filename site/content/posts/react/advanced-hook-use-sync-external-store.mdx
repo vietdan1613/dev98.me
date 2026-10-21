@@ -7,104 +7,165 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-> It provides a safe and concurrent-friendly way to subscribe to external mutable sources and keep React in sync.
+`useSyncExternalStore` is a React Hook introduced in React 18 that lets components subscribe to external stores and read their current state safely during concurrent rendering.
 
-# Why?
+It is useful when the source of truth lives outside React, such as browser APIs, Redux stores, or custom event-based stores.
 
-Before React 18, we often used:
+### 1. Why Do We Need It?
+
+A common approach before React 18 was to combine `useEffect` and `useState`:
 
 ```tsx
-useEffect + useState
+useEffect(() => {
+  return store.subscribe(() => {
+    setValue(store.getValue())
+  })
+}, [])
 ```
 
-But that approach:
+This can work, but it requires manual synchronization and may miss changes between rendering and subscription setup.
 
-* Is not concurrency-safe
-* Can cause tearing (inconsistent reads)
+`useSyncExternalStore` provides a standard subscription mechanism that helps React avoid inconsistent snapshots, also known as tearing.
 
-> `useSyncExternalStore` solves these by ensuring React always reads a consistent snapshot of external state.
-
-# `useSyncExternalStore` API
+### 2. The API
 
 ```tsx
-const value = useSyncExternalStore(
-  subscribe,        // tells React when to update
-  getSnapshot,      // reads the current value
-  getServerSnapshot // optional: for SSR
+const snapshot = useSyncExternalStore(
+  subscribe,
+  getSnapshot,
+  getServerSnapshot, // optional
 )
 ```
 
-Use it whenever state:
+- `subscribe`: Registers a callback and returns an unsubscribe function.
+- `getSnapshot`: Reads the current snapshot of the external store.
+- `getServerSnapshot`: Supplies the snapshot used during server rendering and hydration.
 
-* Lives outside React
-* Must integrate with React rendering safely
+React checks the snapshot and schedules updates when the external store notifies subscribers.
 
-# Example: `geolocation`
+### 3. Example: Geolocation
+
+Geolocation is an external browser API. A small store can keep the latest position and notify React when it changes.
 
 ```tsx
 import { useSyncExternalStore } from 'react'
 
 let location: GeolocationPosition | null = null
+const listeners = new Set<() => void>()
+let watchId: number | null = null
+
+function emitChange() {
+  listeners.forEach(listener => listener())
+}
 
 function subscribe(callback: () => void) {
-  const id = navigator.geolocation.watchPosition(pos => {
-    location = pos
-    callback()
-  })
-  return () => navigator.geolocation.clearWatch(id)
+  listeners.add(callback)
+
+  if (listeners.size === 1 && navigator.geolocation) {
+    watchId = navigator.geolocation.watchPosition(
+      position => {
+        location = position
+        emitChange()
+      },
+      () => {
+        location = null
+        emitChange()
+      },
+    )
+  }
+
+  return () => {
+    listeners.delete(callback)
+
+    if (listeners.size === 0 && watchId !== null) {
+      navigator.geolocation.clearWatch(watchId)
+      watchId = null
+    }
+  }
 }
 
 function getSnapshot() {
   return location
 }
 
-function MyLocation() {
-  const location = useSyncExternalStore(subscribe, getSnapshot)
+function getServerSnapshot() {
+  return null
+}
 
-  if (!location) return 'Location unavailable'
-  return `${location.coords.latitude}, ${location.coords.longitude}`
+function MyLocation() {
+  const position = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  )
+
+  if (!position) return <p>Location unavailable</p>
+
+  return (
+    <p>
+      {position.coords.latitude}, {position.coords.longitude}
+    </p>
+  )
 }
 ```
 
-✔ React now re-renders whenever location updates.   
-✔ No tearing, no stale values
+This example shares one subscription across consumers and cleans it up when no consumers remain. A production implementation should also expose loading and permission-denied states separately.
 
----
+**Important:** The browser requires permission to access geolocation. The server snapshot is `null` because location is unavailable during server rendering.
 
-# Example: `matchMedia`
+### 4. Example: `matchMedia`
+
+You can use `useSyncExternalStore` to subscribe to browser media-query changes.
 
 ```tsx
-import { useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+} from 'react'
 
-function makeMediaQueryStore(query: string) {
-  const mql = window.matchMedia(query)
+function useMediaQuery(query: string) {
+  const mediaQuery = useMemo(
+    () =>
+      typeof window !== 'undefined'
+        ? window.matchMedia(query)
+        : null,
+    [query],
+  )
 
-  return () =>
-    useSyncExternalStore(
-      (cb) => {
-        mql.addEventListener('change', cb)
-        return () => mql.removeEventListener('change', cb)
-      },
-      () => mql.matches,
-      () => false // SSR fallback
-    )
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      if (!mediaQuery) return () => {}
+
+      mediaQuery.addEventListener('change', callback)
+
+      return () =>
+        mediaQuery.removeEventListener('change', callback)
+    },
+    [mediaQuery],
+  )
+
+  const getSnapshot = useCallback(
+    () => mediaQuery?.matches ?? false,
+    [mediaQuery],
+  )
+
+  const getServerSnapshot = useCallback(() => false, [])
+
+  return useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  )
 }
 
-const useNarrowScreen = makeMediaQueryStore('(max-width: 600px)')
-
 function App() {
-  const isNarrow = useNarrowScreen()
+  const isNarrow = useMediaQuery('(max-width: 600px)')
+
   return <div>{isNarrow ? 'Narrow' : 'Wide'}</div>
 }
 ```
 
-✔ React updates when the media query changes.    
-✔ Works correctly with concurrent rendering
+The media query is created only in the browser. React subscribes to its `change` event and reads the current `matches` value.
 
-# Use when?
-
-Use `useSyncExternalStore` when:
-
-* Integrating browser APIs (media, sensors, visibility, location).   
-* Connecting to non-React stores (Redux, Zustand, custom pub/sub).   
-* Building libraries that expose external state
+The server snapshot returns `false` as a fallback. If the actual browser value differs, React updates after hydration. For SSR applications, consider whether CSS media queries would be a better solution for purely visual responsiveness.

@@ -7,14 +7,11 @@ date: 2025-07-29
 thumbnailText: Advanced Hook
 ---
 
-> When building interactive UIs with forms and dynamic components, **focus management** is critical—not just for UX, but also for accessibility and keyboard navigation.
+Focus management is essential for interactive React UIs, especially forms, modals, and dynamically rendered components.
 
-Good focus management ensures:
+Proper focus management improves keyboard navigation, accessibility, and user experience.
 
-* Smooth keyboard navigation.   
-* A predictable and seamless user experience.   
-
-# Problem
+### 1. The Problem: Focusing an Element Before It Exists
 
 ```tsx
 function MyComponent() {
@@ -31,19 +28,61 @@ function MyComponent() {
       >
         Show
       </button>
+
       {show && <input ref={inputRef} />}
     </div>
   )
 }
 ```
 
-You expect the input to receive focus when it appears — but it doesn’t.
+Why doesn't this work?
 
-### Why?
+Calling `setShow(true)` requests a state update. React has not yet committed the new input to the DOM when the next line executes, so `inputRef.current` is still `null`.
 
-Because React **batches state updates**, the DOM is not updated immediately after calling `setShow(true)`.
+### 2. Recommended Solution: `useEffect`
 
-# Fix: `flushSync`
+Focus the input after React commits the DOM update.
+
+```tsx
+function MyComponent() {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [show, setShow] = useState(false)
+
+  useEffect(() => {
+    if (show) {
+      inputRef.current?.focus()
+    }
+  }, [show])
+
+  return (
+    <div>
+      <button onClick={() => setShow(true)}>
+        Show
+      </button>
+
+      {show && <input ref={inputRef} />}
+    </div>
+  )
+}
+```
+
+When `show` becomes `true`, React renders the input, attaches the ref, and then runs the effect.
+
+This is usually sufficient for focus management because focusing an input does not generally require a synchronous DOM update within the click handler.
+
+### 3. Alternative: `autoFocus`
+
+For a simple conditionally rendered input, you can also use:
+
+```tsx
+{show && <input autoFocus />}
+```
+
+React will attempt to focus the input when it mounts. For more complex focus behavior, an explicit ref and effect provide greater control.
+
+### 4. When Should You Use `flushSync`?
+
+`flushSync` forces React to flush updates synchronously so the DOM is updated before the next statement executes.
 
 ```tsx
 import { flushSync } from 'react-dom'
@@ -56,29 +95,22 @@ function MyComponent() {
     <div>
       <button
         onClick={() => {
-          flushSync(() => setShow(true))
+          flushSync(() => {
+            setShow(true)
+          })
+
           inputRef.current?.focus()
         }}
       >
         Show
       </button>
+
       {show && <input ref={inputRef} />}
     </div>
   )
 }
 ```
 
-### Why This Works
+This works because the input has been committed to the DOM before `focus()` executes.
 
-`flushSync` forces React to commit the DOM update synchronously, so the input exists when `focus()` is called.
-
-> ⚠️ Use sparingly — `flushSync` is a performance trade-off and should only be used for UX-critical cases like focus management.
-
-# Key Takeaways
-
-* React batches updates → new elements aren’t immediately focusable.    
-* Use `ref + focus()` to control focus explicitly.    
-* Prefer `useEffect` when focus isn’t urgent.    
-* Use `flushSync` only when DOM must update synchronously.    
-* Always support keyboard interactions.    
-* Focus management is a core accessibility requirement.    
+However, `flushSync` can hurt performance and may force pending work or effects to run synchronously. Use it only when an integration or imperative operation genuinely requires the DOM to be updated immediately.
