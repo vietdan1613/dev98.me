@@ -1,5 +1,5 @@
 ---
-title: "React Testing: React Testing Library"
+title: "Testing: React Testing Library"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactTesting']
@@ -7,94 +7,145 @@ date: 2025-08-10
 thumbnailText: React Testing
 ---
 
-> React Testing Library is built on top of DOM Testing Library and encourages testing the app **the way users interact with it**.
+React Testing Library (RTL) encourages testing React components through their observable behavior rather than their internal implementation.
 
-It helps you:
+Built on DOM Testing Library, it helps you write readable, maintainable tests that resemble real user interactions.
 
-* Avoid manual DOM setup and cleanup
-* Write more readable, user-focused tests
-* Reduce boilerplate
-* Get better error messages and assertions
+### 1. Example: Testing a Multi-Step Form
 
-## The Same Test with React Testing Library
+```tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import MultiStepForm from "./MultiStepForm";
 
-```js
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import MultiStepForm from './MultiStepForm'
+test("completes the multi-step form successfully", async () => {
+  const user = userEvent.setup();
+  const handleSubmit = jest.fn();
 
-test('completes the multi-step form successfully', async () => {
-  const handleSubmit = jest.fn()
-  render(<MultiStepForm onSubmit={handleSubmit} />)
+  render(<MultiStepForm onSubmit={handleSubmit} />);
 
   // Step 1
-  expect(screen.getByText(/step 1/i)).toBeInTheDocument()
+  expect(
+    screen.getByRole("heading", { name: /step 1/i })
+  ).toBeInTheDocument();
 
-  await userEvent.type(screen.getByLabelText(/email/i), 'test@mail.com')
-  await userEvent.click(screen.getByRole('button', { name: /next/i }))
+  await user.type(
+    screen.getByRole("textbox", { name: /email/i }),
+    "test@mail.com"
+  );
+
+  await user.click(
+    screen.getByRole("button", { name: /next/i })
+  );
 
   // Step 2
-  expect(screen.getByText(/step 2/i)).toBeInTheDocument()
+  expect(
+    screen.getByRole("heading", { name: /step 2/i })
+  ).toBeInTheDocument();
 
-  await userEvent.type(screen.getByLabelText(/password/i), '123456')
-  await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+  await user.type(
+    screen.getByLabelText(/password/i),
+    "123456"
+  );
+
+  await user.click(
+    screen.getByRole("button", { name: /submit/i })
+  );
 
   expect(handleSubmit).toHaveBeenCalledWith({
-    email: 'test@mail.com',
-    password: '123456',
-  })
-})
+    email: "test@mail.com",
+    password: "123456",
+  });
+});
 ```
 
-# Query Priority
+This example assumes the form uses accessible headings and labels and calls `onSubmit` with the specified object.
 
-| Query API                     | When to Use                                     |
-| ----------------------------- | ----------------------------------------------- |
-| `getByRole`                   | Most elements (buttons, inputs, headings, etc.) |
-| `getByLabelText`              | Form fields                                     |
-| `getByPlaceholderText`        | Inputs without labels                           |
-| `getByText`                   | Static text and simple elements                 |
-| `getByDisplayValue`           | Pre-filled form values                          |
+### 2. Query Priority
 
+Choose queries that reflect how users and assistive technologies identify elements.
 
-## Quick Reference
+| Query | When to use |
+|---|---|
+| `getByRole` | Buttons, headings, checkboxes, and other accessible elements |
+| `getByLabelText` | Form fields associated with labels |
+| `getByPlaceholderText` | Inputs when a placeholder is the relevant identifier |
+| `getByText` | Visible text that isn't better queried by role |
+| `getByDisplayValue` | Inputs with a specific current value |
 
-| Assertion              | Use Case                         |
-| ---------------------- | -------------------------------- |
-| `toBeInTheDocument`    | Exists in DOM                    |
-| `toHaveTextContent`    | Text rendering                   |
-| `toBeDisabled/Enabled` | Form and button states           |
-| `toHaveValue`          | Input values                     |
-| `toBeChecked`          | Checkbox / radio                 |
-| `toHaveAttribute`      | Links, aria, images              |
+Use `getByRole` where practical because it also encourages accessible markup.
 
+**Query variants**
 
-## Test a Form
+- `getBy...`: Expects one matching element immediately.
+- `queryBy...`: Returns `null` when no element matches; useful for asserting absence.
+- `findBy...`: Returns a Promise and waits for an element to appear asynchronously.
 
-| Use Case                | Why It Matters              |
-| ----------------------- | --------------------------- |
-| Happy path              | Confirms base functionality |
-| Required validation     | Prevents bad submissions    |
-| Invalid formats         | Data correctness            |
-| Field-level errors      | UX clarity                  |
-| Server errors           | Robust failure handling     |
-| Loading states          | Prevents duplicate submits  |
-| Reset behavior          | State consistency           |
-| Keyboard interaction    | Accessibility               |
+### 3. Common Assertions
 
-## Custom render
+These matchers are provided by `@testing-library/jest-dom`.
 
-```js
-import { render as rtlRender } from '@testing-library/react'
-import { ThemeProvider } from '../context/theme'
+| Assertion | Use case |
+|---|---|
+| `toBeInTheDocument()` | Element exists in the DOM |
+| `toHaveTextContent()` | Element contains expected text |
+| `toBeDisabled()` / `toBeEnabled()` | Control interaction state |
+| `toHaveValue()` | Form field value |
+| `toBeChecked()` | Checkbox or radio state |
+| `toHaveAttribute()` | HTML or accessibility attributes |
 
-function render(ui, options) {
-  return rtlRender(ui, {
-    wrapper: ({ children }) => <ThemeProvider>{children}</ThemeProvider>,
-    ...options,
-  })
+### 4. What Should You Test in a Form?
+
+- **Happy path:** Valid data submits successfully.
+- **Required validation:** Missing required fields are rejected.
+- **Invalid formats:** Email or other input formats are validated.
+- **Field-level errors:** Error messages are displayed clearly.
+- **Server errors:** Failed requests are handled gracefully.
+- **Loading states:** Users receive feedback during submission.
+- **Reset behavior:** Fields return to the expected state.
+- **Keyboard interaction:** Users can navigate and submit using the keyboard.
+
+Focus on behavior that matters to users rather than testing every implementation detail.
+
+### 5. Create a Custom Render Helper
+
+If your application requires shared providers, wrap RTL's `render` function.
+
+```tsx
+// test-utils.tsx
+import {
+  render as rtlRender,
+  type RenderOptions,
+} from "@testing-library/react";
+import type { ReactElement, ReactNode } from "react";
+import { ThemeProvider } from "../context/theme";
+
+function Providers({ children }: { children: ReactNode }) {
+  return <ThemeProvider>{children}</ThemeProvider>;
 }
 
-export * from '@testing-library/react'
-export { render }
+function render(
+  ui: ReactElement,
+  options?: Omit<RenderOptions, "wrapper">
+) {
+  return rtlRender(ui, {
+    ...options,
+    wrapper: Providers,
+  });
+}
+
+export * from "@testing-library/react";
+export { render };
+```
+
+Now tests can use your custom `render` without manually adding `ThemeProvider` every time.
+
+```tsx
+import { render, screen } from "./test-utils";
+
+test("renders the themed component", () => {
+  render(<MyComponent />);
+
+  expect(screen.getByRole("heading")).toBeInTheDocument();
+});
 ```

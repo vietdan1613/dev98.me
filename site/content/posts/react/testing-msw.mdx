@@ -1,5 +1,5 @@
 ---
-title: "React Testing: MSW"
+title: "Testing: MSW"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactTesting']
@@ -7,68 +7,135 @@ date: 2025-08-10
 thumbnailText: React Testing
 ---
 
-> **How do we test network behavior without calling real servers?**
+MSW lets you test API interactions by intercepting network requests and returning controlled responses, without calling real servers.
 
-Perfect for testing:
+### 1. Why Use MSW?
 
-* Server errors
-* Timeouts
-* Invalid responses
+MSW is useful for testing:
 
-Unlike mocking `fetch` or Axios directly, MSW works at the **network layer**, so your app behaves exactly as it would in production.
+- Successful API requests.
+- Server errors and invalid responses.
+- Loading and empty states.
+- Network failures and retry behavior.
 
-### Setup
+Unlike mocking `fetch` or Axios directly, MSW intercepts requests at the network boundary. Your application can continue using its normal API client.
 
-Example: testing a component that calls `/greeting`
+### 2. Setup
 
-```js
-import { http, HttpResponse } from 'msw'
-import { setupServer } from 'msw/node'
-import { render, screen, waitForElementToBeRemoved } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import Fetch from '../Fetch'
+Install MSW:
 
-const server = setupServer(
-  http.post('/greeting', async ({ request }) => {
-    const { username } = await request.json()
-    return HttpResponse.json({ username })
-  })
-)
-
-beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
-afterAll(() => server.close())
-
-test('loads and displays greeting', async () => {
-  render(<Fetch url="/greeting" />)
-
-  await userEvent.click(screen.getByText('Load Greeting'))
-  await waitForElementToBeRemoved(() => screen.getByText('Loading...'))
-
-  expect(screen.getByRole('heading')).toHaveTextContent('hello there')
-})
+```bash
+npm install -D msw
 ```
 
-### Why This Is Better
+Create a test server:
 
-With MSW you get:
+```tsx
+// src/mocks/server.ts
+import { http, HttpResponse } from "msw";
+import { setupServer } from "msw/node";
 
-* 🎯 Real request interception (not stubbing functions)
-* 🚀 Faster tests without network calls
-* 🧪 Easy testing of success & error states
-* 🤝 Shared mocks between dev and tests
+export const server = setupServer(
+  http.post("/greeting", async ({ request }) => {
+    const { username } = (await request.json()) as {
+      username: string;
+    };
 
----
-
-### Test Failure Cases Too
-
-Use `server.use()` to override behavior per test:
-
-```js
-server.use(
-  http.post('/greeting', () => {
-    return HttpResponse.json({ message: 'Error' }, { status: 500 })
+    return HttpResponse.json({
+      message: `Hello, ${username}!`,
+    });
   })
-)
+);
 ```
 
+Configure the test lifecycle:
+
+```tsx
+// src/setupTests.ts
+import { beforeAll, afterEach, afterAll } from "vitest";
+import { server } from "./mocks/server";
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
+
+afterAll(() => {
+  server.close();
+});
+```
+
+This setup uses Vitest. With Jest, use Jest's lifecycle functions instead.
+
+### 3. Test a Successful Request
+
+```tsx
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { expect, test } from "vitest";
+import Fetch from "../Fetch";
+
+test("loads and displays a greeting", async () => {
+  const user = userEvent.setup();
+
+  render(<Fetch url="/greeting" />);
+
+  await user.click(
+    screen.getByRole("button", { name: /load greeting/i })
+  );
+
+  expect(
+    await screen.findByRole("heading", {
+      name: "Hello, Alice!",
+    })
+  ).toBeInTheDocument();
+});
+```
+
+This assumes the component submits `{ username: "Alice" }` and renders the returned `message` as a heading. Adjust the expected text to match your component's actual behavior.
+
+### 4. Test Server Errors
+
+Use `server.use()` to override a handler for one test:
+
+```tsx
+import { http, HttpResponse } from "msw";
+import { server } from "../mocks/server";
+
+test("displays an error when the server fails", async () => {
+  server.use(
+    http.post("/greeting", () =>
+      HttpResponse.json(
+        { message: "Something went wrong" },
+        { status: 500 }
+      )
+    )
+  );
+
+  const user = userEvent.setup();
+
+  render(<Fetch url="/greeting" />);
+
+  await user.click(
+    screen.getByRole("button", { name: /load greeting/i })
+  );
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    /something went wrong/i
+  );
+});
+```
+
+This assumes `Fetch` displays a suitable error message in an element with `role="alert"` when the request fails.
+
+`server.resetHandlers()` restores the initial handlers after each test, preventing overrides from leaking into other tests.
+
+### 5. Why Is MSW Better?
+
+- **Realistic behavior:** Your application uses its normal network client.
+- **Deterministic tests:** Responses are controlled and repeatable.
+- **Easy failure simulation:** Test HTTP errors, network failures, and malformed data.
+- **Reusable handlers:** Share API mocks across component tests and development.

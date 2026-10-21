@@ -1,5 +1,5 @@
 ---
-title: "React Testing: JSDOM Mocks"
+title: "Testing: JSDOM Mocks"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactTesting']
@@ -7,114 +7,188 @@ date: 2025-08-10
 thumbnailText: React Testing
 ---
 
-> **jsdom** is a JavaScript implementation of the browser environment that runs in Node.js.
+`jsdom` is a JavaScript implementation of many web standards that provides a browser-like DOM environment inside Node.js.
 
-It provides:
+It supports APIs such as:
 
-* `document`, `window`, and DOM APIs
-* Element creation and manipulation
-* Event handling
-* Basic browser behavior
+- `window` and `document`
+- DOM element creation and manipulation
+- Basic event handling
+- Many standard HTML and DOM interfaces
 
-It allows you to test UI logic **without launching a real browser**, making tests:
+This allows you to test React components without launching a real browser.
 
-# jsdom Doesn’t Support
+### 1. What Doesn't jsdom Fully Support?
 
-Here are some APIs that are either missing or partially implemented:
+jsdom is not a complete browser engine. Some browser APIs are missing or have limited behavior.
 
-| API                     | Why It’s a Problem in jsdom |
-| ----------------------- | --------------------------- |
-| `navigator.geolocation` | Not implemented             |
-| `window.matchMedia`     | Not implemented             |
-| `window.resizeTo`       | Not implemented             |
-| `HTMLCanvasElement`     | Limited / missing           |
-| `IntersectionObserver`  | Not implemented             |
-| `ResizeObserver`        | Not implemented             |
-| Media APIs              | No video/audio rendering    |
+| API | Common limitation |
+|---|---|
+| `navigator.geolocation` | Browser geolocation is not implemented |
+| `window.matchMedia` | May be unavailable without a mock |
+| `window.resizeTo` | Does not perform real browser resizing |
+| Canvas | Limited support without additional packages |
+| `IntersectionObserver` | Requires a mock in common setups |
+| `ResizeObserver` | Requires a mock in common setups |
+| Audio and video | No real media playback or rendering |
 
-When your component depends on these, tests will fail — unless you mock them.
+When a component depends on these APIs, mock them or use a real-browser testing tool when actual browser behavior matters.
 
-# Example: `matchMedia`
+### 2. Example: Mock `matchMedia`
 
-Let’s say you have a hook that uses media queries:
+Suppose a component uses a media query:
 
-```js
-const isMobile = window.matchMedia('(max-width: 768px)').matches
+```tsx
+const isMobile = window.matchMedia(
+  "(max-width: 768px)"
+).matches;
 ```
 
-In jsdom, this throws:
+If `matchMedia` is unavailable, the test fails with:
 
-> ❌ `TypeError: window.matchMedia is not a function`
+```text
+TypeError: window.matchMedia is not a function
+```
 
-### Fix: Mock `matchMedia`
+For Jest, you can provide a mock:
 
-```js
+```tsx
 beforeAll(() => {
-  window.matchMedia = jest.fn().mockImplementation(query => ({
-    matches: query.includes('768'),
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  }))
-})
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+});
 ```
 
-Now your tests can safely use media queries.
+This supplies the expected API shape. Set `matches` to `true` or `false` in individual tests to verify different responsive behaviors.
 
-# Example: Geolocation
+**Note:** This mock does not simulate viewport changes or automatically notify listeners.
 
-```js
-navigator.geolocation.getCurrentPosition(...)
+### 3. Example: Mock Geolocation
+
+Consider a component that retrieves the user's location when a button is clicked.
+
+```tsx
+import { useState } from "react";
+
+export default function Location() {
+  const [location, setLocation] = useState(null);
+  const [error, setError] = useState("");
+
+  function getLocation() {
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      error => {
+        setError(error.message);
+      }
+    );
+  }
+
+  return (
+    <div>
+      <button onClick={getLocation}>Get location</button>
+
+      {location && (
+        <p>
+          Lat: {location.lat}, Lng: {location.lng}
+        </p>
+      )}
+
+      {error && <p role="alert">{error}</p>}
+    </div>
+  );
+}
 ```
 
-jsdom ❌ doesn’t support this either.
+Since jsdom doesn't provide real geolocation, mock the API in your tests.
 
-### Mock Geolocation
+**Test successful location retrieval**
 
-```js
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import Location from './Location'
+```tsx
+import { beforeEach, expect, jest, test } from "@jest/globals";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import Location from "./Location";
 
-describe('Location component', () => {
-  beforeEach(() => {
-    const mockGeolocation = {
-      getCurrentPosition: jest.fn(success =>
-        success({
-          coords: { latitude: 10, longitude: 20 },
-        })
-      ),
-    }
+const mockGetCurrentPosition = jest.fn();
 
-    Object.defineProperty(navigator, 'geolocation', {
-      value: mockGeolocation,
-      configurable: true,
-    })
-  })
+beforeEach(() => {
+  mockGetCurrentPosition.mockReset();
 
-  test('displays user location after clicking button', async () => {
-    render(<Location />)
+  Object.defineProperty(navigator, "geolocation", {
+    configurable: true,
+    value: {
+      getCurrentPosition: mockGetCurrentPosition,
+    },
+  });
+});
 
-    await userEvent.click(screen.getByRole('button', { name: /get location/i }))
+test("displays the user's location", async () => {
+  mockGetCurrentPosition.mockImplementation(success => {
+    success({
+      coords: {
+        latitude: 10,
+        longitude: 20,
+      },
+    });
+  });
 
-    expect(screen.getByText(/lat: 10/i)).toBeInTheDocument()
-    expect(screen.getByText(/lng: 20/i)).toBeInTheDocument()
-  })
+  const user = userEvent.setup();
 
-  test('shows error when permission is denied', async () => {
-    navigator.geolocation.getCurrentPosition = jest.fn((_, error) =>
-      error({ message: 'Permission denied' })
-    )
+  render(<Location />);
 
-    render(<Location />)
+  await user.click(
+    screen.getByRole("button", { name: /get location/i })
+  );
 
-    await userEvent.click(screen.getByRole('button', { name: /get location/i }))
-
-    expect(screen.getByRole('alert')).toHaveTextContent(/permission denied/i)
-  })
-})
+  expect(screen.getByText(/lat: 10/i)).toBeInTheDocument();
+  expect(screen.getByText(/lng: 20/i)).toBeInTheDocument();
+});
 ```
+
+**Test permission denial**
+
+```tsx
+test("displays an error when location access is denied", async () => {
+  mockGetCurrentPosition.mockImplementation((success, error) => {
+    error({
+      code: 1,
+      message: "Permission denied",
+    });
+  });
+
+  const user = userEvent.setup();
+
+  render(<Location />);
+
+  await user.click(
+    screen.getByRole("button", { name: /get location/i })
+  );
+
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    /permission denied/i
+  );
+});
+```
+
+These tests verify how the component responds to success and failure without requiring actual device permissions or GPS access.
+
+### 4. When Should You Use jsdom vs. a Real Browser?
+
+- **jsdom + React Testing Library:** Component rendering, user interactions, state updates, and error handling.
+- **Playwright or Cypress:** Actual browser behavior, layout, responsive rendering, scrolling, media queries, and end-to-end workflows.

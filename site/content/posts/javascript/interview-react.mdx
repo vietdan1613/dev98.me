@@ -1653,6 +1653,121 @@ async function handleLike() {
 
 ---
 
+## Testing
+
+### 1. How do you test React components effectively?
+
+**Expectations:** RTL · Observable behavior · `user-event` · MSW · Accessibility
+
+**Example answer:**
+
+> React Testing Library (RTL) encourages testing components through observable user behavior rather than implementation details. Combined with `user-event`, `jest-dom`, and MSW, it helps test interactions, accessibility, asynchronous updates, and API behavior.
+
+```jsx
+const user = userEvent.setup();
+
+render(<LoginForm />);
+
+await user.type(
+  screen.getByRole("textbox", { name: /email/i }),
+  "test@mail.com"
+);
+
+await user.click(
+  screen.getByRole("button", { name: /login/i })
+);
+
+expect(await screen.findByText(/welcome/i))
+  .toBeInTheDocument();
+```
+
+---
+
+### 2. What is the difference between `getBy`, `queryBy`, and `findBy`?
+
+**Expectations:** Immediate · Absence · Async wait · Prefer `getByRole`
+
+**Example answer:**
+
+> - **`getBy...`:** Finds an element immediately or throws an error.
+> - **`queryBy...`:** Returns `null` if no element matches; useful for checking absence.
+> - **`findBy...`:** Returns a Promise and waits for an element to appear.
+>
+> Prefer `getByRole` when possible because it encourages accessible markup.
+
+```jsx
+expect(screen.getByRole("button")).toBeInTheDocument();
+
+expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
+
+expect(await screen.findByText(/loaded/i)).toBeInTheDocument();
+```
+
+---
+
+### 3. Why use `user-event` instead of `fireEvent`?
+
+**Expectations:** Realistic interactions · Event sequences · Prefer for most tests
+
+**Example answer:**
+
+> `user-event` simulates user interactions more realistically, including the sequence of events involved in typing and clicking. `fireEvent` dispatches individual DOM events directly.
+>
+> Use `user-event` for most interaction tests and `fireEvent` when you specifically need to dispatch a particular event.
+
+---
+
+### 4. What is jsdom, and what are its limitations?
+
+**Expectations:** Node DOM · No real layout · Mock browser APIs · Playwright for E2E
+
+**Example answer:**
+
+> `jsdom` provides a browser-like DOM environment in Node.js, allowing component tests without launching a real browser.
+>
+> However, it doesn't fully implement browser behavior such as actual layout, scrolling, media playback, or geolocation.
+>
+> - **RTL + jsdom:** Test component behavior and DOM interactions.
+> - **Playwright or Cypress:** Test real-browser rendering, responsive layouts, and end-to-end workflows.
+>
+> Browser APIs such as `matchMedia` or `IntersectionObserver` may need mocks in jsdom tests.
+
+---
+
+### 5. How do you test API requests without calling a real server?
+
+**Expectations:** MSW · Network boundary · Success/error · Loading states
+
+**Example answer:**
+
+> Use Mock Service Worker (MSW) to intercept network requests and return controlled responses while the application uses its normal API client.
+>
+> You can test successful responses, HTTP errors and network failures, loading and empty states, and retry behavior.
+>
+> Unlike mocking `fetch` directly, MSW intercepts requests at the network boundary, making tests more representative of real application behavior.
+
+---
+
+### 6. How do you test components that require Context or other providers?
+
+**Expectations:** Custom render · Shared providers · Less boilerplate
+
+**Example answer:**
+
+> Create a custom `render` helper that wraps components with shared providers, such as `ThemeProvider`, `QueryClientProvider`, or a router.
+>
+> This avoids repeating provider setup in every test and keeps tests focused on component behavior.
+
+```jsx
+function renderWithProviders(ui: React.ReactElement) {
+  return render(ui, {
+    wrapper: AppProviders,
+  });
+}
+```
+
+---
+
 ## TypeScript
 
 ### 1. How does TypeScript improve code quality, and which features do you use to make applications type-safe?
