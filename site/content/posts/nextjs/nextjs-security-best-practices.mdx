@@ -1,0 +1,144 @@
+---
+title: "Next.js: Security Best Practices"
+slug: nextjs-security-best-practices
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS', '#Security']
+date: 2026-10-20
+thumbnailText: Next.js
+---
+
+Security is an essential part of building a production-ready Next.js application. As a Senior Frontend Developer, I focus on protecting user accounts, validating incoming data, securing API endpoints, and preventing common web attacks.
+
+### 1. Authentication and Authorization
+
+Authentication verifies who the user is, while authorization determines what the user is allowed to do.
+
+Use a trusted authentication solution and check permissions on the server before accessing protected resources.
+
+```ts
+const session = await auth();
+
+if (!session?.user) {
+  return Response.json(
+    { message: "Unauthorized" },
+    { status: 401 }
+  );
+}
+
+if (session.user.role !== "admin") {
+  return Response.json(
+    { message: "Forbidden" },
+    { status: 403 }
+  );
+}
+```
+
+**Best practices:**
+
+- Use a trusted authentication library.
+- Verify permissions on every protected operation.
+- Check resource ownership before accessing user data.
+- Never rely only on client-side checks or `proxy.ts`.
+
+### 2. Input Validation and API Protection
+
+Never trust data received from the client. Users can bypass frontend validation and send requests directly to your server.
+
+Use Zod to validate incoming data and protect Route Handlers and Server Actions with authentication and authorization checks.
+
+```ts
+import { z } from "zod";
+
+const schema = z.object({
+  email: z.string().email(),
+  name: z.string().trim().min(1).max(100),
+});
+
+const result = schema.safeParse(body);
+
+if (!result.success) {
+  return Response.json(
+    { message: "Invalid input" },
+    { status: 400 }
+  );
+}
+```
+
+**Best practices:**
+
+- Validate request bodies, query parameters, and route parameters.
+- Reject invalid input before processing it.
+- Check permissions before modifying sensitive data.
+- Return only the data the client is allowed to access.
+
+### 3. Secure Cookies, XSS and CSRF Protection
+
+Protect authentication sessions and prevent malicious scripts or cross-site requests from compromising users.
+
+Configure cookies with appropriate security attributes:
+
+```ts
+response.cookies.set("session", sessionToken, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+});
+```
+
+For XSS protection, avoid rendering untrusted HTML using `dangerouslySetInnerHTML`. If HTML rendering is necessary, sanitize the content first.
+
+For CSRF protection, use appropriate `SameSite` settings, validate request origins where suitable, and implement CSRF tokens when required by your authentication architecture.
+
+**Best practices:**
+
+- Use `HttpOnly`, `Secure`, and appropriate `SameSite` cookie settings.
+- Avoid unsafe HTML rendering.
+- Apply CSRF defenses to cookie-authenticated state-changing requests.
+- Remember that `HttpOnly` does not prevent malicious scripts from making requests using an active session.
+
+### 4. Secrets and Rate Limiting
+
+Keep sensitive credentials on the server and prevent excessive requests to critical endpoints.
+
+In Next.js, environment variables prefixed with `NEXT_PUBLIC_` can be exposed to browser code.
+
+```env
+DATABASE_URL=...
+API_SECRET=...
+NEXT_PUBLIC_API_URL=https://api.example.com
+```
+
+Keep database credentials and private API keys in server-only code. Never expose them through client components.
+
+Rate limiting helps prevent brute-force login attempts, password-reset abuse, and excessive API usage. For applications running multiple instances, use a shared solution such as Redis.
+
+**Best practices:**
+
+- Keep private environment variables server-side.
+- Use a secret manager when appropriate.
+- Apply stricter rate limits to authentication endpoints.
+- Return HTTP `429 Too Many Requests` when a rate limit is exceeded.
+- Configure trusted proxies correctly when identifying client IP addresses.
+
+### 5. Security Headers, Testing and Monitoring
+
+Security headers provide additional browser-level protection, while automated tests and monitoring help identify security problems over time.
+
+Common security headers include:
+
+- `Content-Security-Policy`: Restricts permitted sources for scripts and other resources.
+- `X-Content-Type-Options: nosniff`: Helps prevent MIME-type sniffing.
+- `Strict-Transport-Security`: Enforces HTTPS after the browser receives the policy.
+- `Referrer-Policy`: Controls how much referrer information is shared.
+
+In addition, test security boundaries and monitor suspicious activity.
+
+**Best practices:**
+
+- Configure security headers in `next.config.ts` or your deployment infrastructure.
+- Test unauthorized access and insufficient permissions.
+- Verify that users cannot access other users' resources.
+- Audit dependencies and apply security updates.
+- Log security events without exposing passwords, tokens, or other sensitive information.

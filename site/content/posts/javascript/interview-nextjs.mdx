@@ -725,11 +725,25 @@ Playwright automatically waits for elements and assertions, which helps reduce f
 
 Finally, I run E2E tests against a dedicated test environment and keep them independent to ensure reliable results in CI/CD pipelines.
 
-### 10. How do you review a Next.js PR?
+### 10. How do you handle security in a Next.js application?
+
+As a Senior Frontend Developer, I follow a defense-in-depth approach to secure a Next.js application.
+
+First, I implement authentication using a trusted library and enforce authorization on the server for every protected operation.
+
+Second, I validate all incoming data with Zod and protect Route Handlers and Server Actions against unauthorized access.
+
+Third, I secure authentication cookies with `HttpOnly`, `Secure`, and appropriate `SameSite` settings, while applying XSS and CSRF protections.
+
+I also keep API secrets on the server, implement rate limiting for sensitive endpoints, and configure security headers such as CSP.
+
+Finally, I write automated security tests, audit dependencies, and monitor suspicious activity to maintain security in production.
+
+### 11. How do you review a Next.js PR?
 
 Check whether secrets stay on the server, client boundaries are small, route states are handled, metadata is correct, caching is explicit where freshness matters, and loading/error/not-found states match the product requirement.
 
-### 11. What is a good final interview answer pattern?
+### 12. What is a good final interview answer pattern?
 
 Use this structure:
 
