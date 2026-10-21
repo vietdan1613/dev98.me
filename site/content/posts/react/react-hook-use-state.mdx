@@ -1,5 +1,5 @@
 ---
-title: "React Hook - useState()"
+title: "React Hook: useState()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactHook']
@@ -7,74 +7,90 @@ date: 2025-07-27
 thumbnailText: React Hook
 ---
 
-> `useState` is the most fundamental React Hook. It allows function components to store and update state, making UIs dynamic and interactive.
+`useState` is a fundamental React Hook that allows function components to store values between renders and update the UI when those values change.
 
-# What?
+### 1. What Is `useState`?
 
-`useState` lets a component remember values between renders.
-
-It returns:
-
-* The current state value.   
-* A function to update it
+`useState` returns an array containing the current state and a setter function.
 
 ```tsx
-const [state, setState] = useState(initialValue)
+const [state, setState] = useState(initialValue);
 ```
 
-### Example
-
-> Clicking the button updates the state and re-renders the UI.
+**Example:**
 
 ```tsx
 function Counter() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
 
   return (
     <button onClick={() => setCount(count + 1)}>
-      {count}
+      Count: {count}
     </button>
-  )
+  );
 }
 ```
 
-# Updates
+When the button is clicked, React updates `count` and re-renders the component.
 
-### Functional
+### 2. Functional Updates
 
-When new state depends on previous state. This avoids bugs when updates happen quickly or in batches.
-
-```tsx
-setCount(prev => prev + 1)
-```
-
-### Objects and Arrays
-
-Always copy state instead of mutating it:
+When the next state depends on the previous state, use a functional update to ensure React calculates the new value from the previous state.
 
 ```tsx
-const [user, setUser] = useState({ name: "Daniel" })
-
-setUser(prev => ({ ...prev, name: "Alex" }))
+setCount((prev) => prev + 1);
 ```
+
+This is especially useful when performing multiple updates in the same event handler.
 
 ```tsx
-setItems(prev => [...prev, newItem])
+setCount((prev) => prev + 1);
+setCount((prev) => prev + 1);
+setCount((prev) => prev + 1);
 ```
 
-# Lazy Initialization
+React processes these updates in sequence, increasing the count by three.
 
-> For expensive initial state. This runs only once, not on every render.
+### 3. Updating Objects and Arrays
+
+React state should be treated as immutable. Create new objects or arrays instead of modifying existing state directly.
+
+**Objects:**
 
 ```tsx
-const [value, setValue] = useState(() => computeInitial())
+const [user, setUser] = useState({ name: "Daniel" });
+
+setUser((prev) => ({
+  ...prev,
+  name: "Alex",
+}));
 ```
 
-# Colocate State
+**Arrays:**
 
-> Rule of thumb: if only one component needs it, keep it local -> fewer unnecessary re-renders.
+```tsx
+const [items, setItems] = useState<string[]>([]);
 
-```jsx
+setItems((prev) => [...prev, "React"]);
+```
+
+Creating new references allows React to detect state changes correctly.
+
+### 4. Lazy Initialization
+
+If computing the initial state is expensive, pass a function to `useState` instead of calculating the value on every render.
+
+```tsx
+const [value, setValue] = useState(() => computeInitial());
+```
+
+React uses the function's return value to initialize the state. The initializer may run twice in development Strict Mode, so it should be pure.
+
+### 5. Colocate State
+
+Keep state in the component that needs it whenever possible. This reduces unnecessary state sharing and keeps components easier to maintain.
+
+```tsx
 function SearchInput() {
   const [query, setQuery] = useState("");
 
@@ -88,11 +104,11 @@ function SearchInput() {
 }
 ```
 
-# Lift State
+### 6. Lift State Up
 
-> Rule of thumb: if multiple components need it, lift it up.
+When multiple components need the same state, move it to their closest common parent and pass the value and update function through props.
 
-```jsx
+```tsx
 function App() {
   const [query, setQuery] = useState("");
 
@@ -104,3 +120,5 @@ function App() {
   );
 }
 ```
+
+Now both components share the same source of truth.

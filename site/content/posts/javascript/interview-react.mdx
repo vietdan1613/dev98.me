@@ -378,6 +378,300 @@ If `UserList` throws an error during rendering, the fallback UI is displayed.
 
 ---
 
+## useState
+
+### 1. What is `useState`, and how does it work in React?
+
+**Expectations:** Store state · Setter · Re-render on change
+
+**Example answer:**
+
+> `useState` is a React Hook that lets function components store state between renders. It returns the current state value and a setter function that schedules an update and triggers a re-render when the state changes.
+
+```jsx
+const [count, setCount] = useState(0);
+
+setCount(count + 1);
+```
+
+---
+
+### 2. Why use a functional state update?
+
+**Expectations:** Next depends on previous · Sequential updaters · Batching
+
+**Example answer:**
+
+> Use a functional update when the next state depends on the previous state. React processes updater functions in sequence, so multiple updates work correctly.
+>
+> These updates increase the count by three.
+
+```jsx
+setCount((prev) => prev + 1);
+setCount((prev) => prev + 1);
+setCount((prev) => prev + 1);
+```
+
+---
+
+### 3. Why should we not mutate objects or arrays in state directly?
+
+**Expectations:** Immutability · New references · Detect changes
+
+**Example answer:**
+
+> React state should be treated as immutable. Create a new object or array when updating state so React can detect the change correctly.
+>
+> Mutating an existing object and passing the same reference back may cause React to skip the update.
+
+```jsx
+setUser((prev) => ({
+  ...prev,
+  name: "Alex",
+}));
+```
+
+---
+
+### 4. What is lazy initialization in `useState`?
+
+**Expectations:** Expensive initial value · Run once · Pure · Strict Mode
+
+**Example answer:**
+
+> Lazy initialization lets you avoid recalculating an expensive initial value on every render. Pass a function instead of calling it directly.
+>
+> React uses the function's return value for the initial state. The initializer should be pure because Strict Mode may call it twice in development.
+
+```jsx
+const [value, setValue] = useState(() => computeInitial());
+```
+
+---
+
+### 5. What is the difference between colocating state and lifting state up?
+
+**Expectations:** Local ownership · Shared parent · Closest common ancestor
+
+**Example answer:**
+
+> - **Colocating state:** Keep state close to the component that uses it to simplify ownership and reduce unnecessary sharing.
+> - **Lifting state up:** Move state to the closest common parent when multiple components need to read or update the same value.
+>
+> For example, a search input and its results component can share a `query` state owned by their parent.
+
+---
+
+## useEffect
+
+### 1. What is `useEffect`, and when should you use it?
+
+**Expectations:** External systems · After commit · Dependency array · Cleanup
+
+**Example answer:**
+
+> `useEffect` is a React Hook used to synchronize a component with external systems, such as APIs, timers, event listeners, and subscriptions.
+>
+> It runs after React commits a render. Its dependency array determines when the Effect needs to run again.
+
+```jsx
+useEffect(() => {
+  // Synchronize with an external system
+
+  return () => {
+    // Cleanup
+  };
+}, [dependencies]);
+```
+
+---
+
+### 2. What is the difference between `useEffect` with and without a dependency array?
+
+**Expectations:** Every commit · Mount/`[]` · Specific deps · `Object.is` · Strict Mode
+
+**Example answer:**
+
+> - **No dependency array:** Runs after every commit.
+> - **Empty array `[]`:** Runs after the initial commit, with an extra setup-and-cleanup cycle in development Strict Mode.
+> - **With dependencies `[count]`:** Runs after the initial commit and again when `count` changes.
+>
+> React compares dependencies using `Object.is`.
+
+---
+
+### 3. Why is cleanup important in `useEffect`?
+
+**Expectations:** Timers · Listeners · Subscriptions · Before re-run · Unmount
+
+**Example answer:**
+
+> Cleanup stops ongoing work created by an Effect, such as timers, event listeners, or subscriptions.
+>
+> React runs cleanup before re-running the Effect with changed dependencies and when the component unmounts.
+>
+> Without cleanup, timers or subscriptions can continue running unnecessarily.
+
+```jsx
+useEffect(() => {
+  const id = setInterval(() => {
+    console.log("tick");
+  }, 1000);
+
+  return () => clearInterval(id);
+}, []);
+```
+
+---
+
+### 4. What happens if you forget to include a dependency?
+
+**Expectations:** Stale closures · Include all reactive values · Don't suppress warnings
+
+**Example answer:**
+
+> The Effect may use a stale value from an earlier render because React doesn't know that the Effect needs to re-run when that value changes.
+>
+> Include all reactive values used by the Effect in its dependency array. If an Effect runs too often, review its dependencies and restructure the logic rather than suppressing the dependency warning.
+
+---
+
+## useId
+
+### 1. What is `useId`, and when should you use it?
+
+**Expectations:** Unique IDs · Labels · Accessibility · Avoid duplicates
+
+**Example answer:**
+
+> `useId` is a React Hook that generates a unique ID for a component instance. It's primarily used to connect form elements with labels, hints, and accessibility attributes.
+>
+> When multiple `EmailInput` instances render, each receives its own ID, avoiding duplicate IDs in the document.
+
+```jsx
+import { useId } from "react";
+
+function EmailInput() {
+  const id = useId();
+
+  return (
+    <>
+      <label htmlFor={id}>Email</label>
+      <input id={id} />
+    </>
+  );
+}
+```
+
+---
+
+### 2. Why is `useId` useful for accessibility?
+
+**Expectations:** `htmlFor` · `aria-describedby` · Screen readers
+
+**Example answer:**
+
+> It helps connect related elements using attributes such as `htmlFor` and `aria-describedby`.
+>
+> Screen readers can use this relationship to associate the input with its description.
+
+```jsx
+const id = useId();
+
+<input id={id} aria-describedby={`${id}-hint`} />
+<p id={`${id}-hint`}>Enter your email address.</p>
+```
+
+---
+
+### 3. Can you use `useId` to generate list keys?
+
+**Expectations:** No · Stable data IDs · Top-level Hooks only
+
+**Example answer:**
+
+> No. `useId` is not designed for list keys. Use stable IDs from your data instead.
+>
+> Also, Hooks must be called at the top level of a component or custom Hook, not inside loops or callbacks.
+
+```jsx
+items.map((item) => (
+  <Row key={item.id} item={item} />
+))
+```
+
+---
+
+### 4. Is the ID generated by `useId` stable across re-renders and server rendering?
+
+**Expectations:** Stable across re-renders · SSR hydration · Matching trees
+
+**Example answer:**
+
+> Yes. The ID remains stable across re-renders and supports consistent server-rendered and client-rendered IDs during hydration, provided the component trees match.
+
+---
+
+## useRef
+
+### 1. What is `useRef`, and how is it different from `useState`?
+
+**Expectations:** Mutable `.current` · No re-render · DOM access · Persist values
+
+**Example answer:**
+
+> `useRef` is a React Hook that stores a mutable value in a persistent object across renders. Updating its `.current` property does not trigger a re-render.
+>
+> It's commonly used to access DOM elements, manage timers, and store values that don't directly affect the UI.
+
+```jsx
+const inputRef = useRef(null);
+
+<input ref={inputRef} />
+```
+
+---
+
+### 2. What are the common use cases for `useRef`?
+
+**Expectations:** Focus inputs · Timer IDs · Third-party libraries
+
+**Example answer:**
+
+> Three common use cases are accessing DOM elements, such as focusing an input; storing timer IDs or other mutable values between renders; and integrating third-party libraries that need direct access to DOM elements.
+
+```jsx
+const handleFocus = () => {
+  inputRef.current?.focus();
+};
+```
+
+---
+
+### 3. Why doesn't changing `ref.current` trigger a re-render?
+
+**Expectations:** Not tracked as state · Persist without scheduling render
+
+**Example answer:**
+
+> React doesn't track changes to `ref.current` as state updates. The ref object persists across renders, but modifying its value doesn't schedule a render.
+>
+> Use `useState` instead when a value must update the UI.
+
+---
+
+### 4. When should you use `useRef` instead of `useState`?
+
+**Expectations:** UI-affecting data → state · Persist without render → ref
+
+**Example answer:**
+
+> Use `useState` for data that affects rendering, such as a counter or form value. Use `useRef` for values that must persist between renders but don't need to trigger UI updates, such as a timer ID.
+>
+> Rule of thumb: If changing a value should update the UI, use state. If you need to remember a value without triggering a render, use a ref.
+
+---
+
 ## TypeScript
 
 ### 1. How does TypeScript improve code quality, and which features do you use to make applications type-safe?

@@ -1,5 +1,5 @@
 ---
-title: "React Hook - useEffect()"
+title: "React Hook: useEffect()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactHook']
@@ -7,23 +7,37 @@ date: 2025-07-27
 thumbnailText: React Hook
 ---
 
-# `useEffect`
+`useEffect` is a React Hook that lets you synchronize a component with external systems, such as APIs, timers, event listeners, or third-party libraries.
 
-> `useEffect` runs side effects after React renders, and you use it when your component needs to sync with something outside React like APIs, timers, or event listeners.
+### 1. What Is `useEffect`?
 
-```jsx id="6h1e8e"
+An effect runs after React commits a render. Its dependency array determines when React re-runs the effect.
+
+```jsx
+useEffect(() => {
+  // Side effect
+}, [dependencies]);
+```
+
+**Example: Timer**
+
+```jsx
 useEffect(() => {
   const id = setInterval(() => {
     console.log("tick");
   }, 1000);
+
+  return () => clearInterval(id);
 }, []);
 ```
 
-# Effect Cleanup
+The timer starts when the component mounts and stops when the component unmounts.
 
-> Some effects start work that keeps running after render, like event listeners or timers. The cleanup function stops that work when it’s no longer needed.
+### 2. Effect Cleanup
 
-```jsx id="m65r6n"
+Some effects create ongoing work, such as timers, event listeners, or subscriptions. Return a cleanup function to stop that work when the effect is re-run or the component unmounts.
+
+```jsx
 useEffect(() => {
   const handleResize = () => {
     console.log(window.innerWidth);
@@ -37,6 +51,28 @@ useEffect(() => {
 }, []);
 ```
 
-In this example, the effect adds a `resize` listener when the component mounts.
+The cleanup function removes the event listener, preventing duplicate subscriptions and unwanted behavior.
 
-The cleanup function removes it when the component unmounts, preventing duplicate listeners, memory leaks, and unexpected behavior caused by stale effects still running.
+### 3. Dependency Array
+
+The dependency array determines when an effect runs again.
+
+```jsx
+// After every commit
+useEffect(() => {
+  console.log("Rendered");
+});
+
+// When the component mounts, and during Strict Mode's
+// extra development setup cycle
+useEffect(() => {
+  console.log("Mounted");
+}, []);
+
+// When count changes
+useEffect(() => {
+  console.log(count);
+}, [count]);
+```
+
+React compares dependencies using `Object.is`. Include every reactive value used by the effect to avoid stale values.

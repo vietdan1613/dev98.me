@@ -1,5 +1,5 @@
 ---
-title: "React Hook - useRef()"
+title: "React Hook: useRef()"
 category: React
 author: Daniel Nguyen
 tags: ['#ReactHook']
@@ -7,16 +7,43 @@ date: 2025-07-27
 thumbnailText: React Hook
 ---
 
-> Sometimes React isn’t enough on its own — you need direct access to the DOM. This usually happens when: integrating a DOM-based library, focusing an input...
+Sometimes, React state isn't enough. You may need direct access to a DOM element, such as focusing an input, managing a video, or integrating a third-party library.
 
-# `useRef`
+`useRef` provides a persistent object that survives re-renders without triggering a re-render when its `.current` property changes.
 
-`useRef` gives you a persistent object whose `.current` points to a DOM element.
+### 1. Accessing the DOM
+
+Attach a ref to a DOM element to access it directly.
+
+```jsx
+import { useRef } from "react";
+
+function SearchInput() {
+  const inputRef = useRef(null);
+
+  const handleFocus = () => {
+    inputRef.current?.focus();
+  };
+
+  return (
+    <>
+      <input ref={inputRef} />
+      <button onClick={handleFocus}>Focus</button>
+    </>
+  );
+}
+```
+
+Clicking the button focuses the input without requiring state.
+
+### 2. Integrating Third-Party Libraries
+
+Refs are useful when a library manages its own DOM elements or rendering lifecycle.
 
 ```jsx
 import { useEffect, useRef } from "react";
 
-export default function Chart() {
+function Chart() {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -29,39 +56,29 @@ export default function Chart() {
 }
 ```
 
-# Avoid overusing `useRef`
+The ref provides the DOM container, while the cleanup function destroys the chart when the effect is no longer needed.
 
-### It bypasses React
+### 3. Avoid Overusing `useRef`
 
-React is built around **state → UI**. When you use `useRef` to manually change the DOM, React doesn’t know about it.
+**It doesn't trigger re-renders**
+
+Unlike state, changing `ref.current` doesn't tell React to update the UI.
 
 ```jsx
 inputRef.current.value = "Hello";
 ```
 
-### It makes components harder to debug
+This directly changes the DOM input value. React doesn't track this change as state, so prefer controlled inputs when the value needs to stay synchronized with React.
 
-State changes are visible in React DevTools. Ref changes are not. That means:
+**It can make debugging harder**
 
-* harder to inspect.  
-* harder to trace.  
-* easier to hide bugs
+Ref mutations aren't tracked as state updates in React DevTools. Overusing refs to store UI-related data can make behavior harder to understand and maintain.
 
-# Primitive Dependencies
+**Rule of thumb:** Use state for data that affects rendering and refs for values that need to persist without triggering a re-render.
 
-> In React, dependency arrays work best with **primitive values** like: strings, numbers, booleans. These values are compared by **value**, which makes them stable and predictable.
+### 4. Primitive Dependencies
 
-Primitive dependencies are safe because they don’t change unless their actual value changes.
-
-For primitives, that means:
-
-```js
-1 === 1 // true
-"hi" === "hi" // true
-true === true // true
-```
-
-So React can reliably tell whether something changed.
+React compares effect dependencies using `Object.is`. Primitive values such as strings, numbers, and booleans are often convenient dependencies because their identity is determined by their value.
 
 ```jsx
 const userId = user.id;
@@ -70,3 +87,17 @@ useEffect(() => {
   fetchUser(userId);
 }, [userId]);
 ```
+
+The effect re-runs when `userId` changes.
+
+By contrast, objects and arrays can have new references even when their contents are equivalent.
+
+```jsx
+const options = { active: true };
+
+useEffect(() => {
+  connect(options);
+}, [options]);
+```
+
+Because `options` is recreated on every render, the effect may re-run unnecessarily. When possible, depend on the specific primitive values the effect needs or create the object inside the effect.
