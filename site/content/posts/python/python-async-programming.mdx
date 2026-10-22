@@ -1,0 +1,79 @@
+---
+title: "Python: Async Programming"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-09-09
+thumbnailText: Python
+---
+
+Asynchronous programming allows Python to handle multiple I/O-bound tasks concurrently without blocking the thread while waiting for operations to complete.
+
+### 1. Synchronous vs. Asynchronous
+
+Synchronous code executes operations sequentially. Asynchronous code allows a task to suspend while waiting for I/O, enabling other tasks to make progress.
+
+```python
+import asyncio
+
+async def fetch_data(item_id: int) -> str:
+    await asyncio.sleep(2)
+    return f"Item {item_id}"
+
+async def main():
+    results = await asyncio.gather(
+        fetch_data(1),
+        fetch_data(2),
+    )
+    print(results)
+
+asyncio.run(main())
+```
+
+Both simulated operations complete in approximately two seconds because their waiting periods overlap.
+
+### 2. Coroutines and the Event Loop
+
+A coroutine is a computation that can suspend and resume execution. An `async def` function creates a coroutine object when called.
+
+The **event loop** coordinates asynchronous tasks, allowing other tasks to run when the current task suspends at an `await`.
+
+```python
+async def fetch_data():
+    await asyncio.sleep(1)
+    return "Data received"
+```
+
+Calling `fetch_data()` alone does not execute the coroutine to completion. It must be awaited or scheduled as a task.
+
+### 3. `create_task()` vs. `gather()`
+
+Use `asyncio.create_task()` to schedule a coroutine as a task:
+
+```python
+async def main():
+    task = asyncio.create_task(fetch_data())
+    result = await task
+    print(result)
+```
+
+Use `asyncio.gather()` to run multiple awaitables concurrently and collect their results in input order:
+
+```python
+async def main():
+    results = await asyncio.gather(
+        fetch_data(),
+        fetch_data(),
+    )
+    print(results)
+```
+
+For related tasks that should share a structured lifetime, `asyncio.TaskGroup` (Python 3.11+) is another option.
+
+### Key Takeaways
+
+- `async` defines coroutine functions; `await` suspends a coroutine until an awaitable completes.
+- The event loop coordinates asynchronous task execution.
+- `create_task()` schedules individual tasks.
+- `gather()` coordinates multiple awaitables and collects their results.
+- Async programming improves I/O concurrency, not automatically CPU-bound execution.

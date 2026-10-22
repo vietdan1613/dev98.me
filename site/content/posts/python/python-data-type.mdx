@@ -1,0 +1,72 @@
+---
+title: "Python: Data Types"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-09-01
+thumbnailText: Python
+---
+
+Python data types define the kind of value a variable holds and the operations that can be performed on it. Python is dynamically typed, so you don't need to declare variable types explicitly.
+
+### 1. Basic Data Types
+
+```python
+name = "Viet"       # str
+age = 25            # int
+price = 99.99       # float
+is_active = True    # bool
+result = None       # NoneType
+```
+
+Use `type()` to inspect a value's type:
+
+```python
+print(type(age))  # <class 'int'>
+```
+
+### 2. Collection Types
+
+Python provides four common collection types:
+
+| Type | Characteristics |
+| --- | --- |
+| `list` | Ordered, mutable, allows duplicates |
+| `tuple` | Ordered, immutable, allows duplicates |
+| `set` | Unordered, unique elements |
+| `dict` | Key-value pairs, mutable, unique keys |
+
+```python
+numbers = [1, 2, 2, 3]              # list
+coordinates = (10, 20)              # tuple
+unique_numbers = {1, 2, 3}          # set
+user = {"name": "Viet", "age": 25}  # dict
+```
+
+### 3. Type Conversion
+
+Convert values using built-in functions such as `int()`, `float()`, `str()`, and `bool()`.
+
+```python
+age = int("25")
+price = float("19.99")
+message = str(100)
+```
+
+Invalid conversions can raise exceptions, such as `ValueError`.
+
+### 4. Dynamic Typing vs. Type Hints
+
+Python allows a variable to reference values of different types.
+
+```python
+value = 10
+value = "hello"
+```
+
+Type hints document expected types and support static analysis, but Python does not enforce them automatically at runtime.
+
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+```

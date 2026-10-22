@@ -1,0 +1,83 @@
+---
+title: "Python: Threading vs. Multiprocessing"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-09-10
+thumbnailText: Python
+---
+
+Python offers different concurrency models for handling I/O-bound and CPU-bound workloads. Choosing the right approach depends on whether tasks spend time waiting or performing computations.
+
+### 1. Concurrency vs. Parallelism
+
+- **Concurrency:** Multiple tasks make progress during overlapping periods of time.
+- **Parallelism:** Multiple tasks execute simultaneously.
+
+An asynchronous application can handle many I/O operations concurrently on a single thread. Multiprocessing can execute CPU-intensive tasks in parallel across CPU cores.
+
+### 2. Threading
+
+Threading runs multiple threads within one process. Threads share memory and are useful for workloads that spend time waiting for network requests, file operations, or other blocking I/O.
+
+```python
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+def fetch_data(item: int) -> str:
+    time.sleep(1)
+    return f"Fetched {item}"
+
+with ThreadPoolExecutor(max_workers=3) as executor:
+    results = list(executor.map(fetch_data, [1, 2, 3]))
+
+print(results)
+```
+
+The tasks can overlap their waiting periods instead of executing sequentially.
+
+### 3. Multiprocessing
+
+Multiprocessing runs tasks in separate processes, each with its own memory space. It is useful for CPU-intensive computations that benefit from parallel execution.
+
+```python
+from concurrent.futures import ProcessPoolExecutor
+
+def square(number: int) -> int:
+    return number * number
+
+if __name__ == "__main__":
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(square, range(5)))
+
+    print(results)
+```
+
+The `__main__` guard is important for portable multiprocessing code.
+
+### 4. The Global Interpreter Lock (GIL)
+
+In conventional CPython builds, the GIL limits multiple threads from executing Python bytecode simultaneously within the same interpreter.
+
+- Threads can still overlap I/O operations.
+- Multiprocessing can use multiple CPU cores.
+- Some native extensions release the GIL during computation.
+- Free-threaded CPython builds have different behavior.
+
+### 5. Choosing the Right Approach
+
+| Workload | Typical approach |
+| --- | --- |
+| Many asynchronous HTTP requests | `asyncio` |
+| Blocking I/O with synchronous libraries | Threading |
+| CPU-intensive Python computations | Multiprocessing |
+
+For blocking I/O inside asynchronous code, `asyncio.to_thread()` can move the operation to a worker thread. It is generally not a solution for speeding up pure Python CPU-bound work under the conventional GIL.
+
+### Key Takeaways
+
+- Concurrency allows overlapping progress; parallelism enables simultaneous execution.
+- Threading is useful for many I/O-bound workloads.
+- Multiprocessing is useful for CPU-bound workloads.
+- The GIL affects conventional CPython threading behavior.
+- Choose a concurrency model based on the workload, library support, and overhead.
