@@ -1,0 +1,122 @@
+---
+title: "Python: PEP 8 - Writing Clean and Readable Code"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-09-02
+thumbnailText: Python
+---
+
+Writing Python code is not just about making it work. Good code should also be easy to read, understand, and maintain. PEP 8 provides style guidelines that help developers write consistent Python code, especially when working on collaborative projects.
+
+### 1. Why PEP 8 Matters
+
+PEP 8 is the official Python style guide focused on code readability and consistency.
+
+Following PEP 8 helps developers:
+
+- Understand code more quickly.
+- Maintain consistent coding styles across a team.
+- Reduce confusion when revisiting old code.
+- Improve code reviews and collaboration.
+
+The goal is not simply to follow formatting rules, but to make code easier to maintain.
+
+### 2. Naming Conventions
+
+Python uses different naming conventions for variables, functions, classes, and constants.
+
+| Element | Convention | Example |
+| --- | --- | --- |
+| Variables | `snake_case` | `user_name` |
+| Functions | `snake_case` | `calculate_total()` |
+| Classes | `PascalCase` | `UserService` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_RETRIES` |
+| Modules | Lowercase | `user_service.py` |
+| Packages | Short, lowercase names | `utils` |
+
+Choose descriptive names that communicate purpose.
+
+```python
+# Not recommended
+def db(x):
+    return x * 2
+
+
+# Recommended
+def multiply_by_two(number):
+    return number * 2
+```
+
+Clear names reduce the need for comments and make code easier to understand.
+
+Avoid ambiguous single-character names such as lowercase `l` and uppercase `O`, which can be confused with `1` and `0`.
+
+### 3. Code Layout and Blank Lines
+
+Proper spacing helps separate logical sections and makes code easier to scan.
+
+PEP 8 recommends:
+
+- Two blank lines around top-level function and class definitions.
+- One blank line between methods inside a class.
+- Blank lines within functions when they help separate logical steps.
+
+```python
+class UserService:
+    def get_user(self, user_id: int):
+        return {"id": user_id}
+
+    def delete_user(self, user_id: int):
+        return True
+
+
+def calculate_total(price: float, quantity: int) -> float:
+    return price * quantity
+```
+
+Use blank lines intentionally. Too few can make code feel crowded, while too many can make it unnecessarily long.
+
+### 4. Line Length and Line Breaks
+
+PEP 8 traditionally recommends limiting code lines to 79 characters to improve readability, particularly when viewing multiple files side by side.
+
+Use parentheses to split long expressions across multiple lines.
+
+```python
+total = (
+    first_variable
+    + second_variable
+    - third_variable
+)
+```
+
+For long function calls, place each argument on its own line when appropriate.
+
+```python
+result = calculate_total(
+    product_price,
+    quantity,
+    discount_rate,
+)
+```
+
+When breaking expressions around binary operators, PEP 8 recommends placing the line break before the operator.
+
+Prefer implicit line continuation inside parentheses over explicit backslashes when possible.
+
+### 5. Practical Best Practices
+
+Beyond formatting, keep these principles in mind:
+
+- **Be consistent:** Follow the conventions used by your project.
+- **Prefer readability:** Choose clear names over unnecessary abbreviations.
+- **Keep code organized:** Separate unrelated logic into functions and classes.
+- **Use formatting tools:** Tools such as Ruff and Black can automate many style checks and formatting tasks.
+- **Follow project conventions:** Existing team rules may supplement or differ from default PEP 8 recommendations.
+
+### Conclusion
+
+PEP 8 provides a foundation for writing clean, consistent Python code. By using descriptive names, organizing code with appropriate spacing, and breaking long expressions into readable sections, developers can make their applications easier to maintain and collaborate on.
+
+Readable code is especially important in backend development, where multiple developers may work on the same APIs, services, and business logic over time.
