@@ -492,3 +492,353 @@ asyncio.run(main())
 ```
 
 ---
+
+## Error Handling & Logging
+
+### 1. How do you make a Python application reliable when errors occur and resources need to be managed?
+
+**Expectations:** Exceptions · Custom errors · Context managers · Logging · Cleanup
+
+**Example answer:**
+
+> Reliable Python applications use exception handling to control failures, custom exceptions to represent business errors, context managers to clean up resources, and logging to record useful diagnostic information.
+
+---
+
+### 2. How do `try`, `except`, `else`, and `finally` work?
+
+**Expectations:** Matching exceptions · `else` on success · `finally` always · Specific catches · Re-raise
+
+**Example answer:**
+
+> - **`try`:** Executes code that may raise an exception.
+> - **`except`:** Handles a matching exception.
+> - **`else`:** Runs only if no exception occurs in `try`.
+> - **`finally`:** Runs when control leaves the construct, whether an exception occurs or not.
+>
+> Catch specific exceptions, avoid silently ignoring errors, and re-raise exceptions when the current layer cannot handle them meaningfully.
+
+```python
+try:
+    result = 10 / 2
+except ZeroDivisionError:
+    print("Cannot divide by zero")
+else:
+    print(f"Result: {result}")
+finally:
+    print("Operation completed")
+```
+
+---
+
+### 3. What are custom exceptions, and why do we need them?
+
+**Expectations:** Application-specific errors · Explicit handling · Exception hierarchy · FastAPI HTTP mapping
+
+**Example answer:**
+
+> Custom exceptions represent application-specific errors, allowing callers to handle different business scenarios explicitly.
+>
+> For larger applications, define an exception hierarchy, such as `InvalidOrderError` and `PaymentFailedError`. In FastAPI, custom exceptions can be translated into HTTP responses using exception handlers—for example, `PlantNotFoundError` can return `404 Not Found`.
+
+```python
+class PlantNotFoundError(Exception):
+    pass
+
+
+def get_plant(plant_id: int) -> dict:
+    plant = None
+
+    if plant is None:
+        raise PlantNotFoundError(
+            f"Plant {plant_id} not found"
+        )
+
+    return plant
+
+
+try:
+    get_plant(10)
+except PlantNotFoundError as error:
+    print(error)
+```
+
+---
+
+### 4. What is a context manager, and why use `with`?
+
+**Expectations:** Lifecycle · Automatic cleanup · `yield` setup · `finally` release · Prefer over manual close
+
+**Example answer:**
+
+> A context manager manages a resource's lifecycle, ensuring cleanup happens when execution leaves a block, even if an exception occurs. Prefer context managers over manual resource cleanup whenever the resource supports them.
+
+```python
+with open("data.txt", encoding="utf-8") as file:
+    content = file.read()
+```
+
+```python
+from contextlib import contextmanager
+
+
+@contextmanager
+def managed_resource():
+    print("Acquire resource")
+    try:
+        yield "resource"
+    finally:
+        print("Release resource")
+
+
+with managed_resource() as resource:
+    print(resource)
+```
+
+---
+
+### 5. What is the difference between `with` and `async with`?
+
+**Expectations:** Sync vs async lifecycle · `await` for I/O · DB sessions · HTTP clients
+
+**Example answer:**
+
+> Both manage resource lifecycles, but `async with` is designed for asynchronous context managers. `async with` manages the session lifecycle, while `await` executes the asynchronous database operation.
+>
+> This pattern is useful when working with asynchronous database sessions or HTTP clients.
+
+```python
+async with session_factory() as session:
+    result = await session.execute(query)
+```
+
+---
+
+### 6. What is the difference between logging and `print()`?
+
+**Expectations:** Levels · Handlers · Formatting · Tracebacks · `logger.exception`
+
+**Example answer:**
+
+> `print()` displays output, while Python's `logging` module supports severity levels, configurable handlers, structured formatting, and exception tracebacks.
+>
+> `logger.exception()` should be used inside an exception handler when you need the traceback.
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    logger.exception("Calculation failed")
+```
+
+---
+
+### 7. What are the five common logging levels?
+
+**Expectations:** `DEBUG` · `INFO` · `WARNING` · `ERROR` · `CRITICAL`
+
+**Example answer:**
+
+> - **`DEBUG`:** Detailed diagnostic information.
+> - **`INFO`:** Normal application events.
+> - **`WARNING`:** Unexpected but potentially recoverable conditions.
+> - **`ERROR`:** An operation failed.
+> - **`CRITICAL`:** A serious application-level failure.
+>
+> Choose the level according to the severity of the event.
+
+---
+
+### 8. What are common logging and exception-handling mistakes?
+
+**Expectations:** Bare `except` · Silent ignore · Wrong layer · Duplicate logs · Secrets · Manual cleanup
+
+**Example answer:**
+
+> Common mistakes include using a bare `except:`, silently ignoring exceptions, handling errors at the wrong layer, logging the same exception repeatedly, logging secrets such as passwords or tokens, and manually managing resources when a context manager is available.
+>
+> In a real application, custom exceptions represent business failures, handlers convert them into API responses, context managers clean up sessions, and logging records failures with enough context to debug them.
+
+---
+
+## Functions
+
+### 1. What are Python functions, and what advanced features make them flexible and reusable?
+
+**Expectations:** `def` · Variable arguments · Closures · Higher-order functions · Type hints · Generators
+
+**Example answer:**
+
+> Python functions encapsulate reusable logic using `def`. Features such as variable arguments, closures, higher-order functions, type hints, and generators help developers build flexible, maintainable, and memory-efficient applications.
+
+---
+
+### 2. What are parameters, arguments, default values, and return values?
+
+**Expectations:** Inputs vs values · Optional defaults · Keyword args · Implicit `None`
+
+**Example answer:**
+
+> Parameters define a function's inputs. Arguments are the actual values passed to the function. Default parameters allow arguments to be omitted. Return values provide results to the caller; without an explicit `return`, a function returns `None`.
+
+```python
+def create_user(name: str, role: str = "user") -> dict:
+    return {"name": name, "role": role}
+
+create_user("Alice")              # Default role: user
+create_user("Bob", role="admin")  # Keyword argument
+```
+
+---
+
+### 3. What are `*args` and `**kwargs`?
+
+**Expectations:** Extra positional tuple · Extra keyword dict · Unpacking · Wrappers/decorators
+
+**Example answer:**
+
+> - **`*args`:** Collects extra positional arguments into a tuple.
+> - **`**kwargs`:** Collects extra keyword arguments into a dictionary.
+>
+> You can also unpack collections when calling a function. These features are useful for wrappers, configurable functions, and decorators.
+
+```python
+def create_user(*args, **kwargs):
+    print(args)
+    print(kwargs)
+
+create_user("Alice", 25, role="admin")
+# ('Alice', 25)
+# {'role': 'admin'}
+
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+add(*(3, 5))             # 8
+add(**{"a": 3, "b": 5})  # 8
+```
+
+---
+
+### 4. What is the LEGB rule in Python?
+
+**Expectations:** Local · Enclosing · Global · Built-in · `global` · `nonlocal`
+
+**Example answer:**
+
+> LEGB describes the order Python uses to resolve variable names: Local, Enclosing, Global, then Built-in.
+>
+> `global` allows reassignment of a module-level variable. `nonlocal` allows reassignment of a variable in an enclosing function. Avoid unnecessary global state because it makes applications harder to test and maintain.
+
+```python
+message = "global"
+
+def outer():
+    message = "enclosing"
+
+    def inner():
+        message = "local"
+        print(message)
+
+    inner()
+
+outer()  # local
+```
+
+---
+
+### 5. What is a closure in Python?
+
+**Expectations:** Inner function · Retained enclosing vars · Callbacks · Private state
+
+**Example answer:**
+
+> A closure is an inner function that retains access to variables from its enclosing scope, even after the outer function has returned.
+>
+> Common use cases include callbacks, configurable functions, and maintaining small amounts of private state.
+
+```python
+def make_multiplier(factor: int):
+    def multiply(number: int) -> int:
+        return number * factor
+
+    return multiply
+
+double = make_multiplier(2)
+print(double(5))  # 10
+```
+
+---
+
+### 6. What are lambda functions and higher-order functions?
+
+**Expectations:** Single expression · Accept/return functions · Sorting/callbacks · Prefer `def` when complex
+
+**Example answer:**
+
+> A lambda is an anonymous function containing a single expression. A higher-order function accepts another function as an argument or returns a function.
+>
+> These concepts are useful in sorting, callbacks, decorators, and functional programming. Use `lambda` for simple expressions and prefer `def` when logic becomes complex or needs a descriptive name.
+
+```python
+square = lambda x: x ** 2
+print(square(5))  # 25
+
+
+def apply_operation(operation, value):
+    return operation(value)
+
+print(apply_operation(square, 4))  # 16
+```
+
+---
+
+### 7. What are type hints, and does Python enforce them at runtime?
+
+**Expectations:** Documentation · Static analysis · Not runtime-enforced · mypy/Pyright · FastAPI
+
+**Example answer:**
+
+> Type hints document the expected parameter and return types, improving readability and enabling static analysis.
+>
+> Python does not normally enforce type annotations at runtime. Tools such as mypy and Pyright can identify type inconsistencies before execution. Type hints are particularly useful in larger applications and FastAPI projects.
+
+```python
+def find_user(user_id: int) -> str | None:
+    if user_id == 1:
+        return "Alice"
+
+    return None
+```
+
+---
+
+### 8. What is a generator, and how does `yield` differ from `return`?
+
+**Expectations:** Lazy values · Suspend/resume · Memory efficiency · Streaming
+
+**Example answer:**
+
+> A generator produces values lazily, one at a time, rather than building an entire collection in memory.
+>
+> - **`return`:** Returns a result and exits the function; that call does not resume.
+> - **`yield`:** Produces a value and suspends execution; the generator resumes when the next value is requested.
+>
+> Common use cases include processing large files, streaming data, and building memory-efficient pipelines.
+
+```python
+def count_up_to(limit: int):
+    for number in range(1, limit + 1):
+        yield number
+
+for number in count_up_to(3):
+    print(number)
+```
+
+---

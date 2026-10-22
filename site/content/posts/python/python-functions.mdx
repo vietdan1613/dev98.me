@@ -1,0 +1,181 @@
+---
+title: "Python Functions: Parameters, Closures, and Generators"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-09-04
+thumbnailText: Python
+---
+
+Functions are fundamental to writing reusable, maintainable Python code. Beyond basic parameters and return values, Python supports closures, higher-order functions, type hints, and generators that help developers build flexible and efficient applications.
+
+### 1. Functions and Parameters
+
+A function encapsulates reusable logic using the `def` keyword.
+
+```python
+def calculate_total(price: float, quantity: int) -> float:
+    return price * quantity
+
+print(calculate_total(100, 3))  # 300
+```
+
+Python supports default parameters and keyword arguments:
+
+```python
+def create_user(name: str, role: str = "user") -> dict:
+    return {"name": name, "role": role}
+
+create_user("Alice")
+create_user("Bob", role="admin")
+```
+
+**Key points:**
+
+- Parameters define a function's inputs; arguments are the values passed to it.
+- Default values make parameters optional.
+- Functions without an explicit `return` statement return `None`.
+
+### 2. `*args` and `**kwargs`
+
+Use `*args` and `**kwargs` when a function needs to accept a variable number of arguments.
+
+```python
+def create_user(*args, **kwargs):
+    print(args)    # Positional arguments as a tuple
+    print(kwargs)  # Keyword arguments as a dictionary
+
+create_user("Alice", 25, role="admin")
+```
+
+You can also unpack existing collections when calling a function:
+
+```python
+def add(a: int, b: int) -> int:
+    return a + b
+
+print(add(*(3, 5)))          # 8
+print(add(**{"a": 3, "b": 5}))  # 8
+```
+
+These features are useful for wrappers, configurable functions, and decorators.
+
+### 3. Variable Scope and the LEGB Rule
+
+Python resolves variable names using four scopes:
+
+- **Local:** Inside the current function.
+- **Enclosing:** Inside an enclosing function.
+- **Global:** At the module level.
+- **Built-in:** Names such as `len()` and `print()`.
+
+```python
+message = "global"
+
+def outer():
+    message = "enclosing"
+
+    def inner():
+        message = "local"
+        print(message)
+
+    inner()
+
+outer()  # local
+```
+
+Use `global` to reassign a module-level variable and `nonlocal` to reassign a variable in an enclosing function.
+
+Avoid unnecessary global state because it makes applications harder to test and maintain.
+
+### 4. Closures
+
+A closure is an inner function that retains access to variables from its enclosing scope, even after the outer function has returned.
+
+```python
+def make_multiplier(factor: int):
+    def multiply(number: int) -> int:
+        return number * factor
+
+    return multiply
+
+double = make_multiplier(2)
+print(double(5))  # 10
+```
+
+Closures are useful for callbacks, configurable functions, and maintaining small amounts of private state.
+
+### 5. Lambda and Higher-Order Functions
+
+A lambda is a small anonymous function containing a single expression.
+
+```python
+square = lambda x: x ** 2
+print(square(5))  # 25
+```
+
+A higher-order function accepts another function as an argument or returns a function.
+
+```python
+def apply_operation(operation, value):
+    return operation(value)
+
+print(apply_operation(square, 4))  # 16
+```
+
+These concepts are commonly used in sorting, callbacks, decorators, and functional programming.
+
+Prefer a regular `def` function when the logic becomes complex or needs a descriptive name.
+
+### 6. Type Hints
+
+Type hints document expected parameter and return types, improving readability and static analysis.
+
+```python
+def find_user(user_id: int) -> str | None:
+    if user_id == 1:
+        return "Alice"
+
+    return None
+```
+
+Python does not normally enforce type annotations at runtime. Tools such as mypy and Pyright can identify type inconsistencies before execution.
+
+Type hints are especially valuable in larger applications and API projects built with FastAPI.
+
+### 7. Generators and `yield`
+
+Generators produce values lazily, one at a time, instead of constructing an entire collection in memory.
+
+```python
+def count_up_to(limit: int):
+    for number in range(1, limit + 1):
+        yield number
+
+for number in count_up_to(3):
+    print(number)
+```
+
+Output:
+
+```text
+1
+2
+3
+```
+
+Unlike `return`, which exits a function, `yield` produces a value and suspends execution. The generator resumes when the next value is requested.
+
+Generators are useful for processing large files, streaming data, and building memory-efficient pipelines.
+
+### Conclusion
+
+Understanding Python functions goes beyond knowing how to define and call them.
+
+- **Parameters and arguments** make functions reusable.
+- **LEGB and closures** explain how variable lookup and retained state work.
+- **Lambda and higher-order functions** enable flexible function composition.
+- **Type hints** improve readability and static checking.
+- **Generators** support lazy, memory-efficient data processing.
+
+These concepts form an important foundation for Python backend development, particularly when building APIs, reusable utilities, and data-processing pipelines.

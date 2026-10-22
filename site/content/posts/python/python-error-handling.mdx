@@ -1,0 +1,158 @@
+---
+title: "Python: Error Handling"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python']
+date: 2026-09-08
+thumbnailText: Python
+---
+
+Reliable Python applications need more than business logic. They must handle failures gracefully, release resources correctly, and provide useful logs for debugging.
+
+This guide covers four essential concepts: exception handling, custom exceptions, context managers, and logging.
+
+### 1. Exception Handling
+
+Python uses `try`, `except`, `else`, and `finally` to control how exceptions are handled.
+
+```python
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("Cannot divide by zero")
+else:
+    print(f"Result: {result}")
+finally:
+    print("Operation completed")
+```
+
+- `try`: Executes code that may raise an exception.
+- `except`: Handles a matching exception.
+- `else`: Executes when no exception occurs.
+- `finally`: Executes when control leaves the construct.
+
+**Best practices:**
+
+- Catch specific exceptions instead of using a bare `except:`.
+- Avoid silently ignoring errors.
+- Handle exceptions at the appropriate layer.
+- Re-raise exceptions when the current layer cannot handle them meaningfully.
+
+### 2. Custom Exceptions
+
+Custom exceptions represent application-specific errors and make error handling more expressive.
+
+```python
+class PlantNotFoundError(Exception):
+    pass
+
+
+def get_plant(plant_id: int) -> dict:
+    plant = None  # Simulate a missing plant
+
+    if plant is None:
+        raise PlantNotFoundError(
+            f"Plant {plant_id} not found"
+        )
+
+    return plant
+```
+
+Callers can handle this error explicitly:
+
+```python
+try:
+    get_plant(10)
+except PlantNotFoundError as error:
+    print(error)
+```
+
+For larger applications, define a hierarchy of exceptions for different business scenarios, such as `InvalidOrderError` or `PaymentFailedError`.
+
+In FastAPI, custom exceptions can be translated into appropriate HTTP responses using exception handlers. For example, `PlantNotFoundError` can become a `404 Not Found` response.
+
+### 3. Context Managers
+
+Resources such as files, database sessions, and HTTP connections need reliable cleanup. Python's `with` statement provides a convenient way to manage their lifecycles.
+
+```python
+with open("data.txt", encoding="utf-8") as file:
+    content = file.read()
+```
+
+The file is automatically closed when execution leaves the block, even if an exception occurs.
+
+For asynchronous resources, Python provides `async with`:
+
+```python
+async with session_factory() as session:
+    result = await session.execute(query)
+```
+
+Here, `async with` manages the session lifecycle, while `await` executes the asynchronous database operation.
+
+You can also implement custom context managers using `contextlib`:
+
+```python
+from contextlib import contextmanager
+
+
+@contextmanager
+def managed_resource():
+    print("Acquire resource")
+    try:
+        yield "resource"
+    finally:
+        print("Release resource")
+
+
+with managed_resource() as resource:
+    print(resource)
+```
+
+The code before `yield` performs setup, while the `finally` block ensures cleanup.
+
+**Key takeaway:** Prefer context managers over manual resource cleanup whenever the resource supports them.
+
+### 4. Logging
+
+Logging records application events, warnings, and errors. Unlike `print()`, Python's `logging` module supports severity levels, configurable handlers, and traceback information.
+
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+
+try:
+    result = 10 / 0
+except ZeroDivisionError:
+    logger.exception("Calculation failed")
+```
+
+Python provides five commonly used logging levels:
+
+- `DEBUG`: Detailed diagnostic information.
+- `INFO`: Normal application events.
+- `WARNING`: Unexpected but potentially recoverable conditions.
+- `ERROR`: An operation failed.
+- `CRITICAL`: A serious failure affecting the application.
+
+Use `logger.exception()` inside an exception handler when you need the traceback.
+
+Avoid logging the same exception at every layer, and never log passwords, access tokens, or other sensitive information.
+
+### Conclusion
+
+These four concepts work together to make Python applications more reliable:
+
+- **Exception handling** controls how failures are handled.
+- **Custom exceptions** represent application-specific errors.
+- **Context managers** manage resource lifecycles and cleanup.
+- **Logging** provides visibility into application behavior and failures.
+
+Understanding these concepts is especially important when building production APIs with FastAPI, managing database sessions with SQLAlchemy, and working with asynchronous HTTP clients.
