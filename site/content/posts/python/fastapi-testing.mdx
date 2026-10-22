@@ -9,35 +9,104 @@ thumbnailText: FastAPI
 
 How do you know your API still works after changing the code? Automated tests help catch bugs before they reach production.
 
-API tests verify the complete request flow:
+API tests verify the request flow, including validation, business logic, database operations, and HTTP responses.
 
 ```text
 Request → Validation → Business Logic → Database → Response
 ```
 
-### 1. Install the Dependencies
+### 1. Install Dependencies
 
 ```bash
 pip install pytest pytest-asyncio httpx
 ```
 
 - **pytest:** Runs automated tests.
-- **pytest-asyncio:** Supports asynchronous tests.
-- **HTTPX:** Sends HTTP requests directly to your FastAPI application without starting a real server.
+- **pytest-asyncio:** Supports asynchronous test functions.
+- **HTTPX:** Sends HTTP requests to your application without starting a real server.
 
 ### 2. Write Your First Test
 
-Suppose your application has a health endpoint:
+Suppose your FastAPI application has a health endpoint:
 
 ```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 ```
 
-Test it with HTTPX:
+Create `tests/test_health.py`:
 
 ```python
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from app.main import app
+
+
+@pytest.mark.asyncio
+async def test_health():
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        response = await client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+```
+
+`ASGITransport` sends requests directly to the ASGI application, allowing you to test the request/response flow without launching Uvicorn.
+
+Run the tests:
+
+```bash
+pytest -v
+```
+
+### 3. Use Fixtures for Reusable Setup
+
+Fixtures provide reusable test resources, such as an HTTP client, database session, or authenticated test user.
+
+Create `tests/conftest.py`:
+
+```python
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from app.main import app
+
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.fixture
+async def client():
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as test_client:
+        yield test_client
+```
+
+Then write a shorter test:
+
+```python
+import pytest
+
+
+@pytest.mark.anyio
 async def test_health(client):
     response = await client.get("/health")
 
@@ -45,35 +114,87 @@ async def test_health(client):
     assert response.json() == {"status": "ok"}
 ```
 
-Run your tests:
+Pytest automatically discovers fixtures in `conftest.py`, so multiple test files can reuse the same setup.
 
-```bash
-pytest -v
-```
-
-### 3. Use Fixtures
-
-A fixture provides reusable test setup, such as an HTTP client, database session, or test user.
-
-Put shared fixtures in `tests/conftest.py`. Pytest discovers them automatically. This avoids repeating setup code in every test and keeps your tests easier to maintain.
+For this example, use AnyIO's `pytest.mark.anyio` consistently with the configured backend. Alternatively, use `pytest-asyncio` and its `pytest.mark.asyncio` marker throughout the project.
 
 ### 4. Use a Separate Test Database
 
-Never run tests against your production database. Use a dedicated test database and override FastAPI dependencies with `app.dependency_overrides`.
+Never run automated tests against your production database. Use a dedicated test database to prevent test operations from modifying real data.
 
-For example, replace `get_db` with a dependency that creates sessions against your test database.
+FastAPI lets you replace dependencies through `app.dependency_overrides`.
 
-### 5. Test Different Scenarios
+For example:
 
-You should test both successful requests and failure cases.
+```python
+app.dependency_overrides[get_db] = override_get_test_db
+```
+
+Here, `override_get_test_db` should yield sessions connected to your test database.
+
+Clean up overrides after testing:
+
+```python
+app.dependency_overrides.clear()
+```
+
+For reliable database tests, create the required schema before tests run and roll back transactions or clean up test data afterward.
+
+### 5. Test Success and Failure Scenarios
+
+A good test suite verifies both successful requests and expected errors.
 
 | Scenario | Expected status |
-|---|---:|
+| --- | ---: |
 | Create a plant successfully | 201 |
 | Retrieve an existing plant | 200 |
 | Request a missing plant | 404 |
-| Submit invalid data | 422 |
+| Submit invalid request data | 422 |
 | Access a protected endpoint without authentication | 401 |
-| Submit a duplicate resource | 409, if defined by your API |
+| Create a duplicate resource | 409, if defined by the API |
 
-Also verify the response body and confirm that database changes were actually saved.
+Example: testing invalid input.
+
+```python
+@pytest.mark.anyio
+async def test_create_plant_with_invalid_price(client):
+    response = await client.post(
+        "/plants",
+        json={"name": "Monstera", "price": -10},
+    )
+
+    assert response.status_code == 422
+```
+
+This test assumes the endpoint validates that the price must be positive.
+
+Don't check only the status code. Also verify the response body, database changes, and relevant side effects.
+
+### 6. Organize Your Tests
+
+As your application grows, separate tests by responsibility.
+
+```text
+tests/
+├── conftest.py
+├── unit/
+│   └── test_plant_service.py
+├── integration/
+│   └── test_plant_api.py
+└── e2e/
+    └── test_plant_workflow.py
+```
+
+- **Unit tests:** Test individual functions or business rules in isolation.
+- **Integration tests:** Verify that components such as routes and database operations work together.
+- **End-to-end tests:** Verify complete workflows across the relevant application components.
+
+### Key Takeaways
+
+- Use pytest to automate test execution.
+- Use HTTPX with `ASGITransport` to test FastAPI without a live server.
+- Use fixtures to share setup and cleanup logic.
+- Use a separate test database and override dependencies when needed.
+- Test success cases, validation errors, authentication failures, and database behavior.
+
+Automated testing gives you confidence that code changes haven't broken existing functionality and helps catch regressions before deployment.

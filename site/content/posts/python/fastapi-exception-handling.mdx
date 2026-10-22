@@ -9,110 +9,218 @@ thumbnailText: FastAPI
 
 Building a production-ready API is not only about handling successful requests. A good API should also handle failures consistently, safely, and predictably.
 
-> Services should raise meaningful exceptions. Global handlers should decide how those exceptions become HTTP responses.
+The key principle is simple:
 
-## Create a Custom `AppException`
+> Services should raise meaningful exceptions. Global handlers should convert those exceptions into consistent HTTP responses.
 
-First, create a base exception for errors that belong to your application.
+### 1. Create a Custom `AppException`
+
+Start with a base exception for application-specific errors.
 
 ```python
+from typing import Any
+
+
 class AppException(Exception):
-    """
-    Custom application exception for standardized error handling.
-
-    Attributes:
-        error_code (int): Custom application-specific error code.
-        error_message (str): Description of the error.
-        error (Any, optional): Additional error details (e.g., stack trace, validation issues).
-        status_code (int): HTTP status code associated with this error (default is 500).
-    """
-
     def __init__(
         self,
         error_code: int,
         error_message: str,
-        error: Union[Any, None] = None,
-        status_code: int = 500
+        error: Any = None,
+        status_code: int = 500,
     ):
-        """
-        Initialize an AppException instance.
-
-        Args:
-            error_code (int): A unique application-defined error code.
-            error_message (str): A human-readable message describing the error.
-            error (Any, optional): Additional context or data about the error.
-            status_code (int, optional): HTTP status code to return (default is 500).
-        """
         self.status_code = status_code
         self.error_code = error_code
         self.error_message = error_message
         self.error = error
-        super().__init__(self.error_message)
+        super().__init__(error_message)
 ```
 
-The exception can contain a few important pieces of information:
+Each exception carries four pieces of information:
 
-- `status_code` — the HTTP status returned to the client.
-- `error_code` — an application-specific error code.
-- `error_message` — a human-readable message.
-- `error` — optional additional information.
+- `status_code`: HTTP status code returned to the client.
+- `error_code`: Application-specific error identifier.
+- `error_message`: Human-readable description.
+- `error`: Optional additional details, such as validation issues.
 
-## Create Global Exception Handlers 
+This separates application error information from the HTTP response format.
 
-Instead of handling errors inside every route, define exception handlers centrally.
+### 2. Create a Standard Error Response
 
-For example, we can have handlers for:
-
-- `HTTPException` — standard HTTP errors.
-- `RequestValidationError` — invalid request data.
-- `AppException` — application-specific errors.
-- `Exception` — unexpected errors.
+A consistent response structure makes errors easier for frontend applications to handle.
 
 ```python
-logger = logging.getLogger(__name__)
+from typing import Any
 
-def generate_error_response(status_code: int, error_code: int, message: str, error: Any = None):
+from fastapi.responses import JSONResponse
+
+
+def generate_error_response(
+    status_code: int,
+    error_code: int,
+    message: str,
+    error: Any = None,
+) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
         content={
-            "status_code": error_code,
+            "status_code": status_code,
+            "error_code": error_code,
             "message": message,
-            "error": error
-        }
+            "error": error,
+        },
     )
+```
 
-# 1. Handle standard HTTPExceptions
-async def http_exception_handler(request: Request, exc: HTTPException):
-    logger.warning(f"HTTPException: {exc.detail}")
+Example response:
+
+```json
+{
+  "status_code": 404,
+  "error_code": 1001,
+  "message": "Client not found",
+  "error": null
+}
+```
+
+The HTTP status communicates the type of failure, while `error_code` identifies the specific application error.
+
+### 3. Implement Global Exception Handlers
+
+Instead of repeating error-handling logic in every route, register handlers centrally.
+
+**Handle `AppException`**
+
+```python
+import logging
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
+
+
+async def app_exception_handler(
+    request: Request,
+    exc: AppException,
+) -> JSONResponse:
+    if exc.status_code >= 500:
+        logger.error(
+            "Application error: %s",
+            exc.error_message,
+        )
+    else:
+        logger.warning(
+            "Application error: %s",
+            exc.error_message,
+        )
+
+    return generate_error_response(
+        status_code=exc.status_code,
+        error_code=exc.error_code,
+        message=exc.error_message,
+        error=exc.error,
+    )
+```
+
+This handler converts application exceptions into the standard response format.
+
+**Handle `HTTPException`**
+
+FastAPI's `HTTPException` represents standard HTTP errors, such as 404 Not Found or 403 Forbidden.
+
+```python
+from fastapi import HTTPException
+
+
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException,
+) -> JSONResponse:
     return generate_error_response(
         status_code=exc.status_code,
         error_code=exc.status_code,
         message="HTTP Exception",
-        error=exc.detail
+        error=exc.detail,
     )
 ```
 
-## Register the Handlers in `main.py`
+For production APIs, consider preserving a safe, human-readable `exc.detail` as the message instead of always returning `"HTTP Exception"`.
 
-Once the handlers are created, register them with FastAPI:
+**Handle Unexpected Exceptions**
 
-```python
-app.add_exception_handler(AppException, app_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
-app.add_exception_handler(Exception, generic_exception_handler)
-```
-
-From this point on, FastAPI knows which handler should process each type of exception. So when a service raises:
+Unexpected errors should be logged internally without exposing stack traces or sensitive details to clients.
 
 ```python
-raise AppException(...)
+async def generic_exception_handler(
+    request: Request,
+    exc: Exception,
+) -> JSONResponse:
+    logger.exception("Unhandled exception")
+
+    return generate_error_response(
+        status_code=500,
+        error_code=5000,
+        message="Internal server error",
+    )
 ```
 
-## Create Specific Exceptions for Different Modules
+The server logs retain diagnostic information, while the client receives a generic error message.
 
-As the application grows, you may want different exception types for different areas.
+**Handle Request Validation Errors**
 
-For example:
+FastAPI raises `RequestValidationError` when incoming request data does not satisfy the declared schema.
+
+```python
+from fastapi.exceptions import RequestValidationError
+
+
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    return generate_error_response(
+        status_code=422,
+        error_code=4220,
+        message="Request validation failed",
+        error=exc.errors(),
+    )
+```
+
+Before returning validation details, ensure they are JSON-serializable and do not expose sensitive input values.
+
+### 4. Register the Handlers
+
+Register the exception handlers when initializing the FastAPI application.
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+app.add_exception_handler(
+    AppException,
+    app_exception_handler,
+)
+app.add_exception_handler(
+    HTTPException,
+    http_exception_handler,
+)
+app.add_exception_handler(
+    RequestValidationError,
+    validation_exception_handler,
+)
+app.add_exception_handler(
+    Exception,
+    generic_exception_handler,
+)
+```
+
+FastAPI will dispatch matching exceptions to their registered handlers. More specific handlers should be registered for exceptions that require specialized behavior.
+
+### 5. Organize Exceptions by Domain
+
+As the application grows, create specialized exceptions for different modules.
 
 ```text
 AppException
@@ -122,21 +230,66 @@ AppException
 └── ExternalAPIException
 ```
 
-A database operation can raise `DBException`, while authentication logic can raise `AuthException`. This makes errors easier to identify and organize without changing the global handling mechanism.
-
-## Use Exceptions in Your Services
-
-The service layer should focus on business logic instead of creating HTTP responses. For example, if a database operation fails:
+For example:
 
 ```python
-try:
-    result = await session.execute(...)
-except SQLAlchemyError as e:
-    await session.rollback()
-    raise DBException(
-        error_code=1001,
-        error_message="Failed to retrieve client."
-    )
+class DBException(AppException):
+    pass
+
+
+class AuthException(AppException):
+    pass
 ```
 
-The service simply detects the problem and raises an appropriate exception.
+These subclasses inherit the common response metadata while making errors easier to identify and handle.
+
+### 6. Raise Exceptions in the Service Layer
+
+The service layer should focus on business logic rather than constructing HTTP responses.
+
+```python
+from sqlalchemy.exc import SQLAlchemyError
+
+
+async def get_client(session, client_id: int):
+    try:
+        result = await session.execute(
+            select(Client).where(Client.id == client_id)
+        )
+        client = result.scalar_one_or_none()
+
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        raise DBException(
+            error_code=1001,
+            error_message="Failed to retrieve client.",
+            status_code=500,
+        ) from exc
+
+    if client is None:
+        raise AppException(
+            error_code=1002,
+            error_message="Client not found.",
+            status_code=404,
+        )
+
+    return client
+```
+
+Here, database failures and missing clients are handled differently:
+
+- Database errors become a server error.
+- A missing client becomes a 404 response.
+- The global handler determines the response format.
+
+The `from exc` clause preserves the original exception as the cause for internal debugging. Avoid returning raw database exception messages to clients.
+
+### Key Takeaways
+
+- **Custom exceptions** represent application-specific failures.
+- **Global exception handlers** centralize HTTP response formatting.
+- **Domain-specific exceptions** organize errors by responsibility.
+- **Services** raise exceptions instead of constructing HTTP responses.
+- **Logging** captures diagnostic information without exposing internal details to clients.
+
+A clean exception-handling architecture keeps business logic independent of HTTP concerns and makes API failures consistent, secure, and easier to debug.

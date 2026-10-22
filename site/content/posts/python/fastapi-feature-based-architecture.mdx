@@ -1,5 +1,5 @@
 ---
-title: "FastAPI: Feature-Based Architecture"
+title: "Feature-Based Architecture in FastAPI: Organizing a Growing Application"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -7,47 +7,36 @@ date: 2026-09-20
 thumbnailText: FastAPI
 ---
 
-As a FastAPI application grows, organizing everything into global folders such as `routers`, `schemas`, `services`, and `models` can become difficult to maintain. A feature-based structure groups code by **business domain** instead.
+As a FastAPI application grows, organizing everything into global folders such as `routers`, `schemas`, `services`, and `models` can become difficult to maintain.
 
-### The Overall Structure
+A **feature-based architecture** groups code by business domain rather than technical responsibility. This makes features easier to understand, develop, test, and maintain independently.
+
+### 1. The Overall Structure
+
+A typical feature-based FastAPI application might look like this:
 
 ```text
 app/
 ├── main.py
 ├── cli.py
-│
 ├── api/
 │   └── router.py
-│
 ├── core/
 │   ├── config.py
 │   ├── database.py
-│   ├── security.py
-│   ├── cookies.py
-│   ├── sse.py
-│   └── text.py
-│
+│   └── security.py
 ├── db/
 │   ├── base.py
 │   └── registry.py
-│
 ├── shared/
 │   └── bot_protection/
-│
 ├── data/
 │   └── faqs.json
-│
 └── features/
     ├── auth/
     ├── admins/
     ├── categories/
     ├── plants/
-    │   ├── router.py
-    │   ├── public_router.py
-    │   ├── service.py
-    │   ├── schemas.py
-    │   ├── models.py
-    │   └── dependencies.py
     ├── customers/
     ├── orders/
     ├── payments/
@@ -58,64 +47,133 @@ app/
     └── chat/
 ```
 
-### Main Components
+Each top-level directory has a clear responsibility, while `features/` contains the application's business functionality.
 
-### `main.py`
+### 2. Application Entry Point: `main.py`
 
-The entry point of the FastAPI application. It creates the app, configures middleware such as CORS, and mounts the main API router.
+`main.py` initializes the FastAPI application and configures application-wide behavior.
 
-### `cli.py`
+Typical responsibilities include:
 
-Contains command-line commands for tasks that are not HTTP requests, such as creating an admin account.
+- Creating the FastAPI instance.
+- Registering middleware such as CORS.
+- Configuring exception handlers.
+- Registering the main API router.
+- Managing application startup and shutdown.
 
-### `api/`
+Keep this file focused on application initialization rather than business logic.
 
-The API layer aggregates routers from all features.
+### 3. API Aggregation: `api/`
+
+The API layer combines routers from individual features into a single application-level router.
 
 ```text
 main.py
    ↓
 api/router.py
    ↓
-feature routers
+Feature routers
+   ├── plants
+   ├── orders
+   ├── customers
+   └── reviews
 ```
-
-### `core/`
-
-Contains application-wide infrastructure that is not specific to a business feature.
 
 For example:
 
-- configuration
-- database sessions
-- authentication/security
-- cookies
-- SSE
-- text normalization
+```python
+# app/api/router.py
+from fastapi import APIRouter
 
-Features can use `core`, but `core` should not depend on business features.
+from app.features.plants.router import router as plants_router
+from app.features.orders.router import router as orders_router
 
-### `db/`
+api_router = APIRouter()
 
-Contains the SQLAlchemy foundation.
+api_router.include_router(
+    plants_router,
+    prefix="/plants",
+    tags=["Plants"],
+)
+api_router.include_router(
+    orders_router,
+    prefix="/orders",
+    tags=["Orders"],
+)
+```
 
-`base.py` defines `Base` and common model mixins, while `registry.py` imports all feature models so SQLAlchemy and Alembic can discover the complete database schema.
+The main application can then register `api_router` once, keeping route registration centralized.
 
-### `shared/`
+### 4. Core Infrastructure: `core/`
 
-Contains reusable application-level logic shared by multiple features.
+The `core/` directory contains application-wide infrastructure that is not specific to a business feature.
 
-For example, bot protection can be used by both orders and reviews without belonging to either feature.
+Examples include:
 
-### `data/`
+- `config.py`: Environment variables and application settings.
+- `database.py`: Database engine and session configuration.
+- `security.py`: Shared security primitives.
+- `cookies.py`: Cookie configuration and utilities.
+- `sse.py`: Shared Server-Sent Events utilities.
+- `text.py`: General text normalization utilities.
 
-Contains static application data, such as the FAQ data used to build the chatbot's knowledge base.
+The dependency direction matters: features can use core infrastructure, but core modules should not import business features. This helps prevent circular imports and keeps foundational code reusable.
 
-### `features/`
+### 5. Database Foundation: `db/`
 
-Contains the actual business domains of the application.
+The `db/` directory contains shared SQLAlchemy infrastructure.
 
-Each feature owns the code related to that domain:
+For example, `base.py` defines the declarative base and common model mixins:
+
+```python
+# app/db/base.py
+from sqlalchemy.orm import DeclarativeBase
+
+
+class Base(DeclarativeBase):
+    pass
+```
+
+A model registry can import models from every feature so that SQLAlchemy and Alembic can discover the complete schema.
+
+```python
+# app/db/registry.py
+from app.features.categories.models import Category
+from app.features.plants.models import Plant
+from app.features.orders.models import Order
+
+__all__ = ["Category", "Plant", "Order"]
+```
+
+This is a simplified example; the registry should import every model that belongs in the database schema.
+
+Keep the distinction clear:
+
+- `db/` contains shared database infrastructure.
+- `features/*/models.py` contains feature-specific ORM models.
+
+### 6. Shared Utilities: `shared/`
+
+The `shared/` directory contains reusable functionality used by multiple business features.
+
+For example, bot protection might be used by both orders and reviews:
+
+```text
+shared/
+└── bot_protection/
+    ├── dependencies.py
+    └── service.py
+```
+
+Neither feature should own this functionality if both depend on it.
+
+However, avoid turning `shared/` into a miscellaneous folder. Move code there when multiple features genuinely need it and its responsibility is clear.
+
+### 7. Business Domains: `features/`
+
+This is the central part of the architecture.
+
+Each feature owns the code related to a particular business domain. For example:
 
 ```text
 features/plants/
@@ -127,16 +185,72 @@ features/plants/
 └── dependencies.py
 ```
 
-The common responsibility is:
+Each module has a distinct responsibility:
+
+| Module | Responsibility |
+| --- | --- |
+| `router.py` | Defines feature endpoints and HTTP behavior |
+| `public_router.py` | Defines public-facing endpoints when separate routing is useful |
+| `service.py` | Implements business logic |
+| `schemas.py` | Defines Pydantic request and response schemas |
+| `models.py` | Defines SQLAlchemy ORM models |
+| `dependencies.py` | Defines reusable feature-specific dependencies |
+
+The typical request flow is:
 
 ```text
-router
-   ↓
-service
-   ↓
-models
-   ↓
-database
+HTTP Request
+     ↓
+Router
+     ↓
+Service
+     ↓
+Database Session / ORM Models
+     ↓
+Database
 ```
 
-`schemas` define the API data contract, while `dependencies` contain reusable dependencies for that feature.
+Schemas define the data contract between the API and its clients, while dependencies provide reusable components such as authenticated users or database sessions.
+
+Not every feature needs every file. Start with the modules a feature actually requires instead of creating empty files for consistency.
+
+### 8. How Features Work Together
+
+Features may need to communicate with one another. For example, the orders feature may need to check plant availability before creating an order.
+
+A maintainable approach is to expose clear service functions or interfaces rather than importing another feature's internal implementation details.
+
+```text
+Orders Feature
+      ↓
+Plants Service Interface
+      ↓
+Plant Availability
+```
+
+For larger applications, explicit interfaces or application-level orchestration can reduce coupling between features.
+
+Avoid circular dependencies such as `plants` importing `orders` while `orders` also imports `plants`. Shared abstractions or a coordinating service can help break these cycles.
+
+### 9. When Should You Use Feature-Based Architecture?
+
+Feature-based organization is especially useful when:
+
+- The application has multiple business domains.
+- Different developers work on different features.
+- Each domain has its own schemas, models, services, and dependencies.
+- The application is growing beyond a small collection of endpoints.
+- You want clearer boundaries for testing and future refactoring.
+
+For a small API, a simple structure with a few modules may be sufficient. Architecture should reduce complexity rather than introduce unnecessary folders and abstractions.
+
+### Key Takeaways
+
+- **Feature-based architecture** organizes code by business domain.
+- **`core/` and `db/`** provide shared infrastructure.
+- **`api/`** aggregates feature routers.
+- **`shared/`** contains genuinely reusable cross-feature functionality.
+- **`features/`** owns business logic, schemas, ORM models, and routes.
+- **Clear dependency boundaries** help prevent circular imports and reduce coupling.
+
+The goal is not to create the most elaborate folder structure. It is to make each business feature easy to locate, understand, test, and change without unnecessarily affecting the rest of the application.

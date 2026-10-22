@@ -1,5 +1,5 @@
 ---
-title: "WebSockets in FastAPI"
+title: "WebSockets in FastAPI: Building Real-Time Applications"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#FastAPI']
@@ -7,152 +7,227 @@ date: 2026-09-22
 thumbnailText: FastAPI
 ---
 
-Modern applications often need real-time communication for **chat, notifications, live dashboards, stock prices, delivery tracking, and collaboration**. Traditional HTTP follows a request-response model:
+Modern applications often need real-time communication for chat, notifications, live dashboards, delivery tracking, and collaborative tools.
+
+Traditional HTTP follows a request-response model:
 
 ```text
 Client → Request → Server
 Client ← Response ← Server
 ```
 
-The client must make a request before receiving new data. **WebSockets** work differently. They create a persistent connection where both the client and server can send data at any time.
+The client typically needs to send another request to retrieve new data. **WebSockets** provide a persistent, bidirectional connection that allows the client and server to send messages at any time.
 
 ```text
 Client ←══════════→ Server
           WebSocket
 ```
 
-This makes WebSockets a good choice when the server needs to continuously push new information to the client.
+This makes WebSockets useful when applications need frequent updates with low latency.
 
-## 1. Creating a WebSocket in FastAPI
+### 1. Creating a WebSocket in FastAPI
 
-FastAPI provides the `@app.websocket()` decorator:
+FastAPI supports WebSocket endpoints through the `@app.websocket()` decorator.
 
 ```python
 from fastapi import FastAPI, WebSocket
 
 app = FastAPI()
 
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
-    while True:
-        message = await websocket.receive_text()
-        await websocket.send_text(f"Server received: {message}")
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await websocket.send_text(
+                f"Server received: {message}"
+            )
+    except WebSocketDisconnect:
+        pass
 ```
 
-The main operations are simple:
+Import `WebSocketDisconnect` from `fastapi` to handle client disconnections.
 
-```text
-accept()       → accept connection
-receive_text() → receive message
-send_text()    → send message
-close()        → close connection
-```
+The main operations are:
 
-The `while True` loop keeps the connection open so the client and server can continue communicating.
+- `accept()`: Accept the WebSocket connection.
+- `receive_text()`: Receive a text message.
+- `send_text()`: Send a text message.
+- `close()`: Close the connection.
 
-## 2. Sending JSON
+The loop allows the client and server to continue communicating without establishing a new connection for every message.
 
-Real applications usually send structured data instead of plain text:
+### 2. Sending JSON Messages
+
+Real applications usually exchange structured data rather than plain text.
 
 ```python
 data = await websocket.receive_json()
 
 await websocket.send_json({
     "username": data["username"],
-    "message": data["message"]
+    "message": data["message"],
 })
 ```
 
-For chat applications, JSON is usually more useful because it gives both sides a predictable data structure.
+A client might send:
 
-## 3. Building a Real-Time Chat
-
-A chat application needs to manage multiple connections:
-
-```text
-User A ─┐
-User B ─┼→ FastAPI → ConnectionManager
-User C ─┘
-```
-
-The `ConnectionManager` keeps track of active WebSocket connections and provides three main operations:
-
-```python
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections = []
-
-    async def connect(self, websocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-```
-
-When User A sends `"Hello"`, the server can **broadcast** that message to Users A, B, and C.
-
-One important limitation is that this connection list lives in memory. It works for a single server process, but if you run multiple servers, you need something like **Redis Pub/Sub** to share messages between them.
-
-## 4. WebSockets with React
-
-On the frontend, React can create a WebSocket connection:
-
-```tsx
-const socket = new WebSocket(
-  "ws://localhost:8000/ws/Viet"
-)
-
-socket.onmessage = (event) => {
-  console.log(event.data)
+```json
+{
+  "username": "Viet",
+  "message": "Hello everyone!"
 }
 ```
 
-A good React pattern is to put the WebSocket logic inside a custom hook:
+JSON provides a predictable structure for chat messages, notifications, and dashboard updates.
+
+In production, validate incoming messages and avoid trusting client-provided fields such as usernames or roles. Derive identity from authenticated connection context instead.
+
+### 3. Building a Real-Time Chat
+
+A chat application needs to manage multiple active connections and distribute messages between them.
+
+```text
+User A ─┐
+User B ─┼──→ FastAPI → ConnectionManager
+User C ─┘
+```
+
+A connection manager can track active WebSocket connections and broadcast messages.
+
+```python
+from fastapi import WebSocket
+
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections.copy():
+            await connection.send_text(message)
+```
+
+Create a manager and use it in an endpoint:
+
+```python
+from fastapi import WebSocket, WebSocketDisconnect
+
+manager = ConnectionManager()
+
+
+@app.websocket("/ws")
+async def chat_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+
+    try:
+        while True:
+            message = await websocket.receive_text()
+            await manager.broadcast(message)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+```
+
+When a user sends a message, the server broadcasts it to all connected users, including the sender.
+
+This is a minimal example. A production manager should also handle send failures, remove broken connections, authenticate users, and authorize access to individual chat rooms.
+
+**Important limitation:** This connection list exists only in the current Python process. It does not automatically share connections across multiple workers or servers. For distributed applications, use a messaging layer such as Redis Pub/Sub to distribute events between processes.
+
+### 4. Connecting WebSockets to React
+
+React can connect to a WebSocket using the browser's built-in `WebSocket` API.
+
+```tsx
+const socket = new WebSocket("ws://localhost:8000/ws");
+
+socket.onmessage = (event) => {
+  console.log(event.data);
+};
+
+socket.onopen = () => {
+  socket.send("Hello from React!");
+};
+```
+
+For a React application, encapsulate connection management in a custom hook rather than creating connections during every render.
+
+A typical lifecycle looks like this:
 
 ```text
 useEffect
-   ↓
+    ↓
 Create WebSocket
-   ↓
-Listen for messages
-   ↓
-Update state
-   ↓
-Cleanup
-   ↓
+    ↓
+Register event handlers
+    ↓
+Update React state
+    ↓
+Cleanup effect
+    ↓
 Close WebSocket
 ```
 
-The cleanup step is important because we don't want old connections to remain open.
+For example:
 
-## 5. Live Data Dashboard
+```tsx
+import { useEffect, useState } from "react";
 
-WebSockets are also useful for live dashboards.
+export function useWebSocket(url: string) {
+  const [messages, setMessages] = useState<string[]>([]);
 
-For example, a server may continuously send sensor data:
+  useEffect(() => {
+    const socket = new WebSocket(url);
+
+    socket.onmessage = (event) => {
+      setMessages((previous) => [...previous, event.data]);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [url]);
+
+  return messages;
+}
+```
+
+The cleanup function closes the connection when the component unmounts or the URL changes. Production hooks should also handle connection status, errors, reconnection, and message parsing.
+
+Use `wss://` instead of `ws://` when connecting securely in production over HTTPS.
+
+### 5. Building a Live Data Dashboard
+
+WebSockets are useful for dashboards that need continuous updates, such as sensor readings, delivery locations, or application metrics.
+
+A typical architecture looks like this:
 
 ```text
 Background Task
       ↓
-Generate Data
+Generate or Retrieve Data
       ↓
-ConnectionManager
+Publish Event
       ↓
-WebSocket
+WebSocket Connection
       ↓
 React Dashboard
 ```
 
-The server can generate data every second and broadcast it to connected clients. React receives the JSON and updates the UI immediately.
+For example, a server can periodically publish sensor readings as JSON, and React can update the displayed values as messages arrive.
 
-Unlike polling:
+With HTTP polling, the client repeatedly requests updates:
 
 ```text
 GET /sensor
@@ -161,7 +236,7 @@ GET /sensor
 GET /sensor
 ```
 
-the server pushes updates directly:
+With WebSockets, the server can push new values as they become available:
 
 ```text
 Server ── data ──→ React
@@ -169,36 +244,49 @@ Server ── data ──→ React
 Server ── data ──→ React
 ```
 
-This is one of the main advantages of WebSockets for live applications.
+WebSockets reduce repeated request overhead when updates are frequent. However, for infrequent updates or simpler applications, ordinary HTTP polling or Server-Sent Events (SSE) may be easier to maintain.
 
-## 6. Reliability
+### 6. Handling Disconnects and Reconnection
 
-A production WebSocket application also needs to handle network failures. Important techniques include:
+Network failures and disconnected clients are normal in real-time applications. The server must remove disconnected clients, while the frontend should recover when connections are interrupted.
 
-```text
-Graceful Disconnect
-Heartbeat
-Reconnection
-Exponential Backoff
-Error Handling
-```
-
-For example, when a client disconnects, FastAPI provides `WebSocketDisconnect`:
+FastAPI raises `WebSocketDisconnect` when a connection closes during normal receive operations.
 
 ```python
+from fastapi import WebSocketDisconnect
+
+
 try:
     while True:
         message = await websocket.receive_text()
+        await manager.broadcast(message)
 except WebSocketDisconnect:
     manager.disconnect(websocket)
 ```
 
-This prevents dead connections from staying in the connection manager.
+Production applications should also consider:
 
-The client should also reconnect when the connection is lost. Instead of retrying every second forever, use **exponential backoff**:
+- **Graceful disconnects:** Remove closed connections from the manager.
+- **Heartbeats:** Detect connections that are no longer responsive.
+- **Reconnection:** Restore connectivity after temporary failures.
+- **Exponential backoff:** Increase the delay between failed reconnection attempts.
+- **Error handling:** Remove connections that fail during message delivery.
+
+A reconnection strategy might use the following delays:
 
 ```text
 1s → 2s → 4s → 8s → 16s → 30s
 ```
 
-This reduces unnecessary load when the server or network is unavailable.
+Add a maximum delay and random jitter to prevent many clients from reconnecting simultaneously. If messages must not be lost, consider message IDs, acknowledgements, and a persistent event store; reconnecting alone does not guarantee delivery.
+
+### Key Takeaways
+
+- **WebSockets** enable persistent, bidirectional communication.
+- **FastAPI** provides WebSocket endpoints for receiving and sending messages.
+- **Connection managers** track clients and broadcast messages.
+- **React hooks** help manage connection lifecycles and incoming messages.
+- **Redis Pub/Sub** can distribute events across multiple server processes.
+- **Reconnection and error handling** improve reliability in production.
+
+WebSockets are a strong choice for applications that need frequent, low-latency updates. A production implementation should combine connection management with authentication, authorization, resource limits, and a clear strategy for handling failures.

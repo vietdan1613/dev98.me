@@ -7,7 +7,9 @@ date: 2026-09-16
 thumbnailText: FastAPI
 ---
 
-FastAPI handles HTTP requests, while SQLAlchemy manages database operations. Together, they provide a simple way to build database-driven APIs using Python.
+FastAPI handles HTTP requests, while SQLAlchemy manages database operations. Together, they provide a practical way to build database-driven APIs using Python and PostgreSQL.
+
+This guide covers asynchronous database configuration, ORM models, dependency injection, and database migrations with Alembic.
 
 ### 1. Install Dependencies
 
@@ -16,14 +18,16 @@ pip install fastapi uvicorn "sqlalchemy[asyncio]" asyncpg alembic
 ```
 
 - **SQLAlchemy:** ORM and database toolkit.
-- **asyncpg:** Async PostgreSQL driver.
-- **Alembic:** Database schema migrations.
+- **asyncpg:** Asynchronous PostgreSQL driver.
+- **Alembic:** Database schema migration tool.
+- **Uvicorn:** ASGI server for running FastAPI.
 
 ### 2. Configure the Database
 
-Create `app/database.py` to configure the engine, session factory, and database dependency.
+Create `app/database.py` to configure the database engine, session factory, and dependency.
 
 ```python
+import os
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
@@ -32,7 +36,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/plant_shop"
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 engine = create_async_engine(DATABASE_URL)
 
@@ -47,15 +51,25 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 ```
 
-- **Engine:** Manages database connections.
-- **Session factory:** Creates database sessions.
-- **`get_db()`:** Provides a session to each request and closes it afterward.
+Configure `DATABASE_URL` through your environment, for example:
 
-Use environment variables to store database credentials in real applications.
+```text
+postgresql+asyncpg://user:password@localhost:5432/plant_shop
+```
 
-### 3. Define a Database Model
+Key components:
 
-A SQLAlchemy model represents a database table.
+- **Engine:** Manages database connectivity and connection pooling.
+- **Session factory:** Creates new database sessions.
+- **`get_db()`:** Provides a session to the request and closes it when the dependency finishes.
+
+The session context manager handles cleanup, but it does not automatically commit transactions.
+
+### 3. Define a SQLAlchemy Model
+
+A SQLAlchemy model maps a Python class to a database table.
+
+Create `app/models.py`:
 
 ```python
 from decimal import Decimal
@@ -77,11 +91,17 @@ class Plant(Base):
     stock: Mapped[int] = mapped_column(Integer, default=0)
 ```
 
-Keep SQLAlchemy models separate from Pydantic schemas, which validate request data and define API responses.
+`Mapped` and `mapped_column()` provide SQLAlchemy 2.x's typed ORM mapping syntax.
 
-### 4. Use the Database in FastAPI
+Use `Decimal` with `Numeric` for monetary values to avoid floating-point precision issues.
+
+Keep SQLAlchemy models separate from Pydantic schemas. ORM models represent database tables, while Pydantic schemas validate API inputs and define response structures.
+
+### 4. Query the Database with FastAPI
 
 Use `Depends()` to inject a database session into an endpoint.
+
+Create `app/main.py`:
 
 ```python
 from fastapi import Depends, FastAPI
@@ -102,26 +122,70 @@ async def get_plants(
     return result.scalars().all()
 ```
 
-To insert a record:
+Here's what happens:
+
+1. FastAPI resolves `get_db()` and provides an `AsyncSession`.
+2. SQLAlchemy executes the query asynchronously.
+3. `scalars().all()` extracts the returned `Plant` objects.
+4. FastAPI serializes the returned data into an HTTP response.
+
+For production APIs, define a Pydantic response schema with `response_model` rather than returning ORM objects directly.
+
+### 5. Insert and Commit Records
+
+Use the session to add a record and persist it to the database.
 
 ```python
-plant = Plant(name="Monstera", price=250000, stock=10)
+plant = Plant(
+    name="Monstera",
+    price=Decimal("250000.00"),
+    stock=10,
+)
 
 db.add(plant)
 await db.commit()
 await db.refresh(plant)
 ```
 
-Use `await` for asynchronous database operations such as queries and commits. Remember to validate input and define response schemas in production APIs.
+- `db.add()`: Adds the object to the session.
+- `await db.commit()`: Commits the transaction.
+- `await db.refresh()`: Reloads database-generated values, such as the assigned ID.
 
-### 5. Manage Database Migrations
+Unlike `execute()` and `commit()`, `add()` is synchronous because it stages the object in the session rather than performing an immediate database operation.
 
-Use Alembic to track schema changes instead of relying on `create_all()` in production.
+In production code, handle failures and roll back an active transaction when necessary.
+
+### 6. Manage Database Migrations with Alembic
+
+Database models can change as an application evolves. Alembic tracks schema changes through versioned migration scripts.
+
+Initialize an asynchronous migration environment:
 
 ```bash
 alembic init -t async migrations
+```
+
+Configure Alembic's `target_metadata` to use `Base.metadata` and ensure the migration environment can import your models.
+
+Generate and apply a migration:
+
+```bash
 alembic revision --autogenerate -m "create plants"
 alembic upgrade head
 ```
 
-Review generated migrations before applying them. Configure Alembic's `target_metadata` to use `Base.metadata`.
+- `revision --autogenerate`: Generates a migration based on differences between your models and database schema.
+- `upgrade head`: Applies migrations up to the latest revision.
+
+Always review autogenerated migrations before applying them. Alembic does not detect every schema change automatically, and model definitions alone do not create or update database tables.
+
+### Key Takeaways
+
+- **Engine:** Manages database connectivity and pooling.
+- **AsyncSession:** Handles database operations and transactions.
+- **Dependency injection:** Provides a session to each request.
+- **SQLAlchemy models:** Map Python classes to database tables.
+- **Pydantic schemas:** Define and validate API data.
+- **Alembic:** Tracks and applies database schema changes.
+
+Combining FastAPI, SQLAlchemy 2.x, and Alembic provides a maintainable foundation for asynchronous PostgreSQL APIs.

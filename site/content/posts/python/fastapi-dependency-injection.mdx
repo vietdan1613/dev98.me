@@ -7,7 +7,7 @@ date: 2026-09-15
 thumbnailText: FastAPI
 ---
 
-**Dependency Injection** (DI) lets a function declare what it needs while another component provides it, reducing coupling and making the code easier to test and maintain.
+**Dependency Injection (DI)** allows a function to declare what it needs while another component provides it. This reduces coupling and makes applications easier to test and maintain.
 
 <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
@@ -15,48 +15,103 @@ thumbnailText: FastAPI
 
 </div>
 
-### The basic idea
+### 1. The Basic Idea
 
-Without DI, a route might create its own database session:
+Without dependency injection, a route might create and manage its own database session:
 
 ```python
 async def get_plants():
     db = AsyncSessionLocal()
-    ...
-    await db.close()
+    try:
+        # Query plants
+        ...
+    finally:
+        await db.close()
 ```
 
-The route now has to know how to create and clean up the database session. With DI:
+The route is responsible for both creating and cleaning up the database session.
+
+With FastAPI's dependency injection, the route declares its requirements using `Depends()`:
 
 ```python
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
 async def get_plants(
     db: AsyncSession = Depends(get_db),
 ):
+    # Query plants using db
     ...
 ```
 
-The route only says: **"I need a database session."** FastAPI takes care of getting it. This separates **what the route needs** from **how that dependency is created**.
+The route only declares what it needs. FastAPI resolves the dependency and manages its lifecycle according to how `get_db` is implemented.
 
-### Dependencies can depend on dependencies
+This separates **what a function needs** from **how that dependency is created**.
 
-DI becomes more useful when dependencies are composed. We have `get_current_admin`:
+### 2. Dependencies Can Depend on Other Dependencies
+
+Dependencies can be composed to share common logic across routes.
+
+For example, an authentication dependency may require a database session to retrieve the current administrator:
 
 ```python
 async def get_current_admin(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> Admin:
+    # Extract and validate the token
+    # Retrieve the administrator from the database
     ...
 ```
 
-`get_current_admin` needs a database session, so it depends on `get_db`.
+Here, `get_current_admin` depends on `get_db`.
 
-### Why DI is useful
+A protected route can then use the authentication dependency:
 
-The main benefit is **loose coupling**. Routes don't need to know how dependencies are created, authentication logic doesn't need to be repeated, and services don't need to depend on FastAPI.
+```python
+@app.get("/api/admin/plants")
+async def get_admin_plants(
+    admin: Admin = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    ...
+```
 
-DI also makes testing easier because dependencies can be replaced. For example, the project replaces the database session factory in tests so routes can use a test database without changing the route implementation.
+FastAPI resolves the dependency chain automatically. By default, dependencies using the same callable and cache settings are reused within a request, so `get_db` can provide the same session to both dependencies.
+
+### 3. Why Dependency Injection Is Useful
+
+**Loose Coupling**
+
+Routes don't need to know how database sessions are created, and authentication logic can be reused across multiple endpoints.
+
+**Reusability**
+
+Common dependencies, such as database sessions, authenticated users, and pagination parameters, can be shared across routes.
+
+**Testability**
+
+Dependencies can be replaced during testing without modifying the route implementation.
+
+For example, a test can override the database dependency:
 
 ```python
 app.dependency_overrides[get_db] = get_test_db
 ```
+
+After testing, clear the override when appropriate:
+
+```python
+app.dependency_overrides.clear()
+```
+
+This allows routes to use a test database instead of the production database. In a larger test suite, remove only the overrides your test added to avoid interfering with other tests.
+
+### Key Takeaways
+
+- `Depends()` declares a dependency that FastAPI resolves.
+- Dependencies can depend on other dependencies.
+- DI separates dependency creation from business logic.
+- `app.dependency_overrides` makes it easier to test routes with alternative implementations.
+
+**The key idea:** A function declares what it needs, while dependency injection determines how those requirements are provided.

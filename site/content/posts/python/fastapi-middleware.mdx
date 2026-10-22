@@ -7,7 +7,9 @@ date: 2026-09-14
 thumbnailText: FastAPI
 ---
 
-Middleware is a layer that sits between the client and your FastAPI application. It can process a request before it reaches the endpoint and process the response before it is sent back to the client.
+Middleware is a layer between the client and your FastAPI application. It processes incoming requests before they reach the endpoint and can modify outgoing responses before they are returned to the client.
+
+Common use cases include request logging, request IDs, timing, security headers, CORS, and compression.
 
 <div style={{ maxWidth: 700, margin: '0 auto' }}>
 
@@ -15,9 +17,9 @@ Middleware is a layer that sits between the client and your FastAPI application.
 
 </div>
 
-## How Middleware Works
+### 1. How Middleware Works
 
-A simple custom middleware looks like this:
+A simple HTTP middleware can measure request processing time:
 
 ```python
 import time
@@ -33,65 +35,46 @@ async def timing_middleware(request: Request, call_next):
 
     response = await call_next(request)
 
-    response.headers["X-Process-Time"] = (
-        f"{time.perf_counter() - start:.4f}"
-    )
+    process_time = time.perf_counter() - start
+    response.headers["X-Process-Time"] = f"{process_time:.4f}"
 
     return response
 ```
 
-- Code **before `call_next()`** runs when the request comes in.
-- `call_next()` passes the request to the next layer.
-- Code **after `call_next()`** runs when the response comes back.
+The request flows through three steps:
 
-### Logging
+1. **Before `call_next()`:** Process the incoming request.
+2. **At `call_next()`:** Pass the request to the next layer and await the response.
+3. **After `call_next()`:** Inspect or modify the response before returning it.
 
-Log information such as:, HTTP method, URL, Status code, Processing time, Request ID
+### 2. Common Middleware Use Cases
 
-For example:
+**Request Logging**
+
+Log information such as the HTTP method, URL path, status code, processing time, and request ID.
+
+Example log output:
 
 ```text
 GET /api/plants → 200 → 42ms
 POST /api/orders → 201 → 85ms
 ```
 
-### Request ID
+This helps developers investigate errors and identify slow requests.
 
-Assign a unique ID to each request so it can be traced through logs and services.
+**Request ID**
 
-```text
-Request
-   ↓
-request_id = abc-123
-   ↓
-Service
-   ↓
-Database
-```
-
-### Security Headers
-
-Add headers such as:
-
-```text
-X-Content-Type-Options
-X-Frame-Options
-Strict-Transport-Security
-```
-
-## request.state
-
-Middleware can attach request-scoped data to `request.state`.
-
-For example, a request ID middleware:
+A request ID uniquely identifies a request, making it easier to trace activity across application logs and services.
 
 ```python
 import uuid
 
+from fastapi import Request
+
 
 @app.middleware("http")
 async def request_id_middleware(request: Request, call_next):
-    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
     request.state.request_id = request_id
 
     response = await call_next(request)
@@ -100,21 +83,51 @@ async def request_id_middleware(request: Request, call_next):
     return response
 ```
 
-It reuses the client's `X-Request-ID` if one was sent, otherwise it generates a new one, and returns it in the response so the client can report it.
+The middleware reuses the incoming `X-Request-ID` when provided; otherwise, it generates a new one. It then attaches the ID to `request.state` and returns it in the response.
 
-A dependency or endpoint can then access it:
+In production, validate incoming request IDs and consider generating your own trusted internal identifier when necessary.
 
-```python
-request.state.request_id
+**Security Headers**
+
+Middleware can add security-related response headers, such as:
+
+```text
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=31536000
 ```
 
-`request.state` is useful for data that belongs to the current request. It should not be treated as global application state.
+These headers help mitigate certain browser-based attacks. Configure HTTPS-related headers according to your deployment environment.
 
-## Two Ways to Write Custom Middleware
+Other common middleware responsibilities include CORS configuration, rate limiting, and GZip compression.
 
-### HTTP Middleware
+### 3. Using `request.state`
 
-The simplest approach is:
+FastAPI's `request.state` stores data associated with the current request.
+
+For example, an endpoint or dependency can access the request ID:
+
+```python
+from fastapi import Request
+
+
+@app.get("/api/plants")
+async def get_plants(request: Request):
+    request_id = request.state.request_id
+    return {"request_id": request_id}
+```
+
+Use `request.state` for request-scoped information such as request IDs, timing metadata, or authenticated context attached by trusted middleware.
+
+It is not global application state. Data stored there belongs to the individual request.
+
+### 4. HTTP Middleware vs. ASGI Middleware
+
+FastAPI supports two common approaches to custom middleware.
+
+**HTTP Middleware**
+
+The `@app.middleware("http")` decorator provides a convenient interface for typical HTTP request/response processing.
 
 ```python
 @app.middleware("http")
@@ -123,11 +136,11 @@ async def logging_middleware(request: Request, call_next):
     return response
 ```
 
-This is usually enough for normal request/response processing.
+Use this approach for straightforward tasks such as timing, logging, and adding response headers.
 
-### ASGI Middleware
+**ASGI Middleware**
 
-ASGI middleware works at a lower level. It is a class that wraps the application and implements `__call__`:
+ASGI middleware wraps the application at a lower level and directly handles the ASGI `scope`, `receive`, and `send` interfaces.
 
 ```python
 class SimpleASGIMiddleware:
@@ -139,16 +152,26 @@ class SimpleASGIMiddleware:
             await self.app(scope, receive, send)
             return
 
-        # inspect or modify the request here
-
+        # Inspect or modify the HTTP request/response flow.
         await self.app(scope, receive, send)
 
 
 app.add_middleware(SimpleASGIMiddleware)
 ```
 
-It works directly with:
+The three ASGI components are:
 
-- `scope` — connection/request information
-- `receive` — receives ASGI messages
-- `send` — sends ASGI messages
+- `scope`: Connection and request metadata.
+- `receive`: Receives ASGI messages, including request-body events.
+- `send`: Sends ASGI messages, including response headers and body events.
+
+ASGI middleware is useful when you need lower-level control over the application interface or need to support multiple ASGI connection types.
+
+### Key Takeaways
+
+- **HTTP middleware** is convenient for common request/response processing.
+- **ASGI middleware** provides lower-level control over the application.
+- **`request.state`** stores data scoped to a single request.
+- Middleware is useful for cross-cutting concerns such as logging, request tracing, timing, and security headers.
+
+Keep middleware focused on shared request-processing concerns. Business logic and resource-specific validation generally belong in dependencies, services, or endpoints.

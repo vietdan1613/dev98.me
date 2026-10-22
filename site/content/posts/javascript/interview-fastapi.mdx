@@ -225,199 +225,309 @@ app.include_router(v2_router)
 
 The downside of URL versioning is that clients tend to hardcode the version into their code, so that's something to be aware of.
 
-## Pydantic and Validation
+## Pydantic
 
-Pydantic is at the core of every FastAPI service. These questions cover validating what comes in and controlling what goes out.
+### 1. What is Pydantic, and how does it work with FastAPI?
 
-### 1. What role does Pydantic play?
+**Expectations:** Validation · Type coercion · Serialization · Request/response schemas · `422`
 
-Pydantic handles data validation and serialization. You define your request and response shapes as Pydantic models, and FastAPI uses them to validate incoming JSON and serialize outgoing responses.
+**Example answer:**
+
+> Pydantic validates incoming data, converts compatible values into expected Python types, and serializes data for API responses. FastAPI uses Pydantic models to validate request bodies and define response schemas.
+>
+> - **`BaseModel`:** Defines the data structure and types.
+> - **`Field()`:** Adds constraints, such as a non-empty name and a positive price.
+> - Invalid data raises a validation error, which FastAPI typically returns as a `422` response for invalid request data.
 
 ```python
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class Item(BaseModel):
-    name: str
-    price: float
-    in_stock: bool = True
-
-@app.post("/items")
-def create_item(item: Item):
-    return item
+class Product(BaseModel):
+    name: str = Field(min_length=1)
+    price: float = Field(gt=0)
 ```
 
-If a client sends a request missing `name` or with `price` as a string, Pydantic rejects it before your function runs. Pydantic is the reason FastAPI gives strong validation with almost no code from you.
+---
 
-### 2. How does request validation work in FastAPI?
+### 2. What is the difference between `field_validator` and `model_validator`?
 
-Request validation runs automatically based on your type hints and Pydantic models. When a request gets to your endpoint, FastAPI parses the body, headers, path, and query parameters and matches them against the types you declared.
+**Expectations:** Single-field rules · Cross-field rules · `mode="after"` · Custom `ValueError`
 
-If anything fails, FastAPI returns a 422 response with a JSON body explaining what went wrong. You don't write the validation logic, and you don't write the error response.
+**Example answer:**
 
-This matters because validation is the most common source of security bugs in APIs. Handing it off to Pydantic eliminates a whole category of mistakes and keeps your endpoint code focused on business logic.
-
-### 3. How should you handle request validation in an API design?
-
-Push validation as close to the edge as possible. If a request is invalid, you want to know before any business logic runs.
-
-Pydantic models handle the structural part. For anything more complex, use Pydantic validators:
+> - **`field_validator`:** Validates an individual field using custom logic.
+> - **`model_validator`:** Validates relationships between multiple fields.
+>
+> For example, `field_validator` can check an SKU format, while `model_validator` ensures the end date is not earlier than the start date.
 
 ```python
-from pydantic import BaseModel, field_validator
+from datetime import date
+from pydantic import BaseModel, field_validator, model_validator
 
-class UserCreate(BaseModel):
-    email: str
-    age: int
+class Promotion(BaseModel):
+    sku: str
+    start_date: date
+    end_date: date
 
-    @field_validator("age")
+    @field_validator("sku")
     @classmethod
-    def age_must_be_adult(cls, v):
-        if v < 18:
-            raise ValueError("Must be 18 or older")
-        return v
+    def validate_sku(cls, value: str) -> str:
+        if not value.startswith("MON-"):
+            raise ValueError("Invalid SKU")
+        return value
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.end_date < self.start_date:
+            raise ValueError("Invalid dates")
+        return self
 ```
 
-The design decision here is where validation lives. Pydantic covers the input shape, and business rules that depend on database state (like "email must be unique") belong in the endpoint, not the model.
+---
 
-### 4. What are response models and why use them?
+### 3. What are `model_validate()` and `model_dump()` used for?
 
-A response model is a Pydantic model you pass to the route decorator to control what the endpoint returns:
+**Expectations:** Validate input · Create instance · Serialize to dict · Type coercion · `from_attributes`
+
+**Example answer:**
+
+> - **`model_validate()`:** Validates input data and creates a Pydantic model instance.
+> - **`model_dump()`:** Converts the model into a Python dictionary.
+>
+> Pydantic converts compatible input values, such as date strings, into their declared Python types. If you need to validate an ORM object's attributes, configure the model with `ConfigDict(from_attributes=True)`.
+>
+> Core distinctions: `BaseModel` defines the schema, `Field()` adds constraints, validators implement custom rules, `model_validate()` creates validated instances, and `model_dump()` serializes them into dictionaries.
 
 ```python
-@app.get("/users/{user_id}", response_model=UserPublic)
-def get_user(user_id: int) -> UserInDB:
-    return db.get_user(user_id)
+data = {
+    "sku": "MON-001",
+    "start_date": "2026-10-22",
+    "end_date": "2026-10-30",
+}
+
+promotion = Promotion.model_validate(data)
+result = promotion.model_dump()
 ```
 
-Even if your function returns a `UserInDB` object with a hashed password field, the response gets filtered through `UserPublic` and only the fields declared there make it into the JSON.
-
-Why use them:
-
-- **Security:** Fields you didn't declare in the response model can't leak by accident.
-- **Documentation:** The OpenAPI schema shows the exact shape clients receive.
-- **Contract stability:** Changing your database model doesn't automatically change your API contract.
-
-### 5. How should response validation shape your API?
-
-Every endpoint should have a response model. Response models do three things at once:
-
-- Filter fields, so you never leak internal data
-- Document the exact response shape in OpenAPI
-- Fail if your code returns something unexpected
-
-The last point is the one most candidates miss. If your function returns a dict with a typo in a key, the response model catches it before it reaches the client.
-
-The tradeoff is boilerplate. Small internal APIs sometimes skip response models to move faster. But for anything a client will use, don't skip response validation.
+---
 
 ## Dependency Injection
 
-Dependencies are how FastAPI shares database sessions, auth, and config across endpoints. Expect follow-up questions on how they work internally.
+### 1. What is Dependency Injection (DI), and why is it useful in FastAPI?
 
-### 1. How does dependency injection work in FastAPI?
+**Expectations:** `Depends()` · Declare vs provide · Loose coupling · Reusability · Testability
 
-Dependency injection in FastAPI is built around the `Depends()` function. You declare a function as a dependency, and FastAPI runs it before your endpoint and passes the result in:
+**Example answer:**
+
+> Dependency Injection allows a function to declare what it needs while another component provides it. FastAPI uses `Depends()` to inject dependencies such as database sessions and authenticated users.
+>
+> Instead of creating and closing database sessions inside routes, the route declares its requirements and FastAPI resolves the dependencies. The session's cleanup depends on how `get_db` is implemented.
+>
+> Benefits include:
+>
+> - **Loose coupling:** Separates business logic from dependency creation.
+> - **Reusability:** Shares authentication, database, and pagination logic across routes.
+> - **Testability:** Replaces dependencies without changing route implementations.
 
 ```python
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
-@app.get("/items")
-def read_items(db: Session = Depends(get_db)):
-    return db.query(Item).all()
+@app.get("/api/plants")
+async def get_plants(
+    db: AsyncSession = Depends(get_db),
+):
+    ...
 ```
 
-Dependencies can depend on other dependencies, so you can compose authentication and permission checks into small reusable pieces.
+---
 
-This matters because you avoid the pattern of every endpoint opening a database session, checking auth, and cleaning up. The dependency system does it for you and keeps endpoints readable.
+### 2. How does dependency composition work, and how do you override dependencies in tests?
 
-### 2. How does dependency injection work internally?
+**Expectations:** Nested `Depends` · Request-scoped reuse · `dependency_overrides` · Test DB
 
-FastAPI resolves dependencies by inspecting function signatures. When a request comes in, FastAPI walks the dependency tree, calls each dependency in order, and caches results within the request scope.
+**Example answer:**
 
-Focus on the caching behavior here. If two dependencies both depend on `get_db`, `get_db` runs once per request, not twice. You can turn caching off with `Depends(get_db, use_cache=False)` when you need a fresh result every time.
-
-Dependencies with `yield` are handled differently from regular ones. FastAPI runs the code before `yield`, injects the yielded value, and then runs the code after `yield` once the response is sent. That's how database sessions get closed even when an endpoint raises an exception.
-
-The downside is that the dependency system adds overhead per request. For endpoints with deep dependency trees, this shows up in benchmarks. Most of the time it's fine.
-
-## Middleware, Errors, and App Lifecycle
-
-Code that runs around your endpoints: on every request, when something fails, at startup and shutdown, or after the response is sent.
-
-### 1. What is middleware and when do you use it?
-
-Middleware is code that runs on every request before your endpoint and every response before it goes back to the client. You register it once and it applies globally:
+> Dependencies can depend on other dependencies. For example, `get_current_admin` can use `get_db` to retrieve an administrator from the database.
+>
+> FastAPI resolves the dependency chain automatically. By default, repeated dependencies using the same callable and cache settings are reused within a request.
+>
+> For testing, replace the production database dependency with a test implementation using `app.dependency_overrides`. This allows routes to use a test database without modifying the application code.
+>
+> Key ideas: `Depends()` declares dependencies, composition lets dependencies reuse one another, and `app.dependency_overrides` makes testing easier.
 
 ```python
+async def get_current_admin(
+    db: AsyncSession = Depends(get_db),
+) -> Admin:
+    ...
+
+
+@app.get("/api/admin/plants")
+async def get_admin_plants(
+    admin: Admin = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    ...
+
+
+app.dependency_overrides[get_db] = get_test_db
+# Run tests...
+app.dependency_overrides.pop(get_db, None)
+```
+
+---
+
+## Middleware
+
+### 1. What is middleware in FastAPI, and how does it work?
+
+**Expectations:** Request/response pipeline · `call_next` · Cross-cutting concerns · Timing/logging/CORS
+
+**Example answer:**
+
+> Middleware sits between the client and the application. It processes requests before they reach the endpoint and can inspect or modify responses before returning them.
+>
+> Common use cases include request logging, request IDs, request timing, CORS, security headers, rate limiting, and GZip compression.
+>
+> The request flow has three steps:
+>
+> 1. **Before `call_next()`:** Process the incoming request.
+> 2. **At `call_next()`:** Pass the request to the next layer and await the response.
+> 3. **After `call_next()`:** Inspect or modify the response.
+
+```python
+import time
+
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+
 @app.middleware("http")
-async def add_process_time_header(request, call_next):
-    start = time.time()
+async def timing_middleware(request: Request, call_next):
+    start = time.perf_counter()
     response = await call_next(request)
-    response.headers["X-Process-Time"] = str(time.time() - start)
+    elapsed = time.perf_counter() - start
+    response.headers["X-Process-Time"] = f"{elapsed:.4f}"
     return response
 ```
 
-Common uses are:
+---
 
-- Request logging
-- CORS handling
-- Adding response headers
-- Measuring latency
+### 2. How do you use `request.state`, and what is the difference between HTTP middleware and ASGI middleware?
 
-Use middleware for cross-cutting concerns that apply to every route. For logic that only applies to specific endpoints, use dependencies instead. Middleware runs on every request and can slow things down if you include heavy logic.
+**Expectations:** Request-scoped state · HTTP `call_next` · ASGI `scope`/`receive`/`send` · Business logic elsewhere
 
-### 2. How do you write custom middleware?
+**Example answer:**
 
-Custom middleware in FastAPI comes in two forms.
-
-The simple form uses the `@app.middleware("http")` decorator and works for most use cases:
+> `request.state` stores data scoped to an individual request, such as a request ID. It is not global application state. An endpoint or dependency can access values like `request.state.request_id`.
+>
+> - **HTTP middleware:** Uses `@app.middleware("http")` with `request` and `call_next`. Convenient for logging, timing, and headers.
+> - **ASGI middleware:** Wraps the application directly with `scope`, `receive`, and `send`, providing lower-level control over ASGI messages.
+>
+> Use HTTP middleware for common request/response processing. Use ASGI middleware when you need lower-level control. Keep business logic in endpoints, dependencies, or services rather than putting it in middleware.
 
 ```python
+import uuid
+
+from fastapi import Request
+
+
 @app.middleware("http")
-async def log_requests(request, call_next):
+async def request_id_middleware(request: Request, call_next):
+    request_id = (
+        request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    )
+    request.state.request_id = request_id
+
     response = await call_next(request)
-    logger.info(f"{request.method} {request.url.path} -> {response.status_code}")
+
+    response.headers["X-Request-ID"] = request_id
     return response
 ```
 
-The advanced form uses Starlette's `BaseHTTPMiddleware` or the raw ASGI middleware interface. Raw ASGI middleware is faster because it skips the request/response abstraction, but you directly handle the ASGI protocol.
+---
 
-The downside of middleware is that it runs on every request, including static files and health checks. If your logging middleware writes to a slow log store, every request will be slowed down. For anything that shouldn't apply globally, use a dependency instead.
+## Exception Handling
 
-### 3. How do you handle exceptions?
+### 1. How do you implement centralized exception handling in FastAPI?
 
-FastAPI has two mechanisms for exception handling.
+**Expectations:** `AppException` · Global handlers · Consistent responses · Validation · Unexpected errors
 
-The first is `HTTPException`, which you raise inside your endpoint when something goes wrong:
+**Example answer:**
+
+> A production API should return consistent error responses instead of handling errors separately in every endpoint.
+>
+> A common approach is to define a custom `AppException` and register global exception handlers. The exception carries the HTTP status, application error code, message, and optional details.
+>
+> Common handlers include:
+>
+> - **`AppException`:** Application-specific errors.
+> - **`HTTPException`:** Standard HTTP errors.
+> - **`RequestValidationError`:** Invalid request data.
+> - **`Exception`:** Unexpected errors.
+>
+> This centralizes error formatting and keeps route handlers focused on their main responsibilities.
 
 ```python
-from fastapi import HTTPException
+class AppException(Exception):
+    def __init__(
+        self,
+        error_code: int,
+        error_message: str,
+        error=None,
+        status_code: int = 500,
+    ):
+        self.error_code = error_code
+        self.error_message = error_message
+        self.error = error
+        self.status_code = status_code
+        super().__init__(error_message)
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int):
-    item = db.get(item_id)
-    if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return item
+
+app.add_exception_handler(
+    AppException, app_exception_handler
+)
+app.add_exception_handler(
+    RequestValidationError, validation_exception_handler
+)
+app.add_exception_handler(
+    Exception, generic_exception_handler
+)
 ```
 
-The second is custom exception handlers, which you register on the app to catch specific exception types globally:
+---
+
+### 2. How do you organize custom exceptions and handle database errors in the service layer?
+
+**Expectations:** Domain exceptions · Service raises errors · Rollback · `raise ... from` · Handlers format HTTP
+
+**Example answer:**
+
+> Create specific exceptions for different application modules while inheriting from `AppException`, such as `DBException`, `AuthException`, `PaymentException`, and `ExternalAPIException`.
+>
+> The service layer raises meaningful exceptions instead of constructing HTTP responses. Use `rollback()` when appropriate, preserve the original cause with `raise ... from exc`, and let the global handler convert the custom exception into a standardized HTTP response.
+>
+> Keep responsibilities separate: services detect and raise errors; global handlers translate them into HTTP responses. Log unexpected failures for debugging, but do not expose internal stack traces or sensitive database details to clients.
 
 ```python
-@app.exception_handler(DatabaseError)
-async def db_exception_handler(request, exc):
-    return JSONResponse(status_code=503, content={"detail": "Database unavailable"})
+try:
+    result = await session.execute(query)
+except SQLAlchemyError as exc:
+    await session.rollback()
+    raise DBException(
+        error_code=1001,
+        error_message="Failed to retrieve client.",
+    ) from exc
 ```
 
-Use `HTTPException` for expected error conditions in a single endpoint. Use custom handlers when you want the same response format for a whole category of errors across the app.
+---
 
-### 4. What are lifespan events and when do you use them?
+## Errors and App Lifecycle
+
+### 1. What are lifespan events and when do you use them?
 
 Lifespan events run code at application startup and shutdown. You use them for anything that needs to happen once per process, like connecting to a database or loading an ML model.
 
@@ -439,7 +549,7 @@ Code before `yield` runs on startup. Code after `yield` runs on shutdown. Both a
 
 The tradeoff is that lifespan events run per worker process, not per app. If you run four Gunicorn workers, your ML model loads four times. For large models, that's a memory problem you solve with shared memory or a separate model server.
 
-### 5. What are background tasks?
+### 2. What are background tasks?
 
 Background tasks let you run code after the response has already been sent to the client. You inject a `BackgroundTasks` object into your endpoint and add functions to it:
 
@@ -457,7 +567,7 @@ The client gets the response immediately. The email sends in the background.
 
 This works for short tasks that don't need retries or persistence. For anything that must not be lost, like payment processing or file conversion, use a real task queue like Celery or RQ. Background tasks run in the same process, so if the process crashes, the task won't complete.
 
-### 6. How do you handle file uploads?
+### 3. How do you handle file uploads?
 
 File uploads use the `File` and `UploadFile` types:
 
@@ -588,355 +698,631 @@ Common sources of accidental blocking:
 
 The fixes are to switch to an async library, run the blocking call in a threadpool with `asyncio.to_thread`, or move the whole endpoint back to sync `def`. FastAPI will run sync endpoints in a threadpool for you, which is often the simplest fix.
 
-## Database
+## SQLAlchemy
 
-Database questions in FastAPI interviews test whether you've actually run a service with a database. The answers matter less than knowing the mistakes that come with them.
+### 1. How do you integrate SQLAlchemy asynchronously with FastAPI and PostgreSQL?
 
-### 1. How do you use SQLAlchemy with FastAPI?
+**Expectations:** `asyncpg` · `AsyncSession` · `async_sessionmaker` · `Depends(get_db)` · No auto-commit
 
-SQLAlchemy is the default choice for FastAPI. You define models with the ORM, create a session factory, and inject sessions into endpoints as dependencies:
+**Example answer:**
 
-```python
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-
-engine = create_engine("postgresql://user:pass@localhost/db")
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-@app.get("/users/{user_id}")
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    return db.query(User).filter(User.id == user_id).first()
-```
-
-There are two common points of confusion:
-
-1. Sync SQLAlchemy in an async endpoint blocks the event loop.
-2. The ORM's lazy loading turns one query into ten if you access related objects in a loop (the N+1 problem).
-
-### 2. What is SQLModel and when do you use it?
-
-SQLModel is a library from the FastAPI author that combines SQLAlchemy and Pydantic. You define one class that works as both a database model and a request/response schema:
+> SQLAlchemy manages database operations, FastAPI handles HTTP requests, and `asyncpg` provides the asynchronous PostgreSQL driver. `AsyncSession` handles database interactions, while dependency injection provides a session to each request.
+>
+> Inject the session into an endpoint using `Depends(get_db)`. The context manager closes the session when the dependency finishes, but does not automatically commit transactions.
 
 ```python
-from sqlmodel import SQLModel, Field
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
 
-class Hero(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    name: str
-    age: int | None = None
-```
+engine = create_async_engine(DATABASE_URL)
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    expire_on_commit=False,
+)
 
-The advantage is less duplication. Without SQLModel, you need to maintain a SQLAlchemy model and a Pydantic model that mirror each other.
-
-The downside is that SQLModel is younger than SQLAlchemy and doesn't cover every edge case. For simple CRUD services, it's a good fit, but for complex schemas with inheritance and custom types, SQLAlchemy is safer.
-
-### 3. How do you access the database asynchronously?
-
-Async database access needs three things: an async driver, an async engine, and async sessions.
-
-For PostgreSQL, the standard setup uses asyncpg with SQLAlchemy's async support:
-
-```python
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
-
-@app.get("/users/{user_id}")
-async def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.id == user_id))
-    return result.scalar_one_or_none()
 ```
 
-Every query needs `await`. Every session method that goes to the database is async. If you miss one, you either get a coroutine object where you expected data or you block the event loop.
+---
 
-Async database code is more verbose than sync, and debugging is harder. Use it when you actually need concurrency, and don't bother for simple internal services with low traffic.
+### 2. How do you define models, query and modify records, and manage database migrations?
 
-### 4. How do you manage database sessions?
+**Expectations:** `DeclarativeBase` · `Mapped` · `Decimal`/`Numeric` · `select` · `add`/`commit`/`refresh` · Alembic · Separate Pydantic schemas
 
-Database sessions in FastAPI are managed with dependencies. The pattern uses `yield` to open a session, hand it to the endpoint, and close it after:
+**Example answer:**
+
+> SQLAlchemy models map Python classes to database tables using `DeclarativeBase`, `Mapped`, and `mapped_column()`. Use `Decimal` with `Numeric` for monetary values to avoid floating-point precision issues.
+>
+> Query with `await db.execute(select(...))`, then `scalars().all()`. Insert with `db.add()`, `await db.commit()`, and `await db.refresh()`. Remember that `add()` is synchronous because it stages the object, while database I/O uses `await`.
+>
+> Manage migrations with Alembic (`init -t async`, `revision --autogenerate`, `upgrade head`). Configure `target_metadata` to use `Base.metadata`, and review autogenerated migrations before applying them.
+>
+> Keep SQLAlchemy models separate from Pydantic schemas: ORM models represent database tables, while Pydantic schemas validate input and define API response structures.
 
 ```python
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from decimal import Decimal
 
-@app.get("/users")
-def read_users(db: Session = Depends(get_db)):
-    return db.query(User).all()
+from sqlalchemy import Numeric, String, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class Plant(Base):
+    __tablename__ = "plants"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+
+
+result = await db.execute(select(Plant))
+plants = result.scalars().all()
+
+plant = Plant(name="Monstera", price=Decimal("250000.00"))
+db.add(plant)
+await db.commit()
+await db.refresh(plant)
 ```
-
-Each request gets its own session. When the response is sent, the session closes.
-
-The tradeoffs show up under load. Sync SQLAlchemy sessions block the event loop, so if you're using async endpoints with a sync ORM, you're not getting async benefits. Fix this by switching to async SQLAlchemy or running sync code in a threadpool.
-
-Connection pool size matters too. If your pool is 10 and you're running 20 concurrent requests, 10 requests wait. Set the pool size based on peak concurrency.
-
-Rules that matter in an interview:
-
-- One session per request.
-- Sessions close in the `finally` block.
-- Don't share sessions with background tasks. Background tasks need their own session, because the request's session may already be closed when the task runs.
-- Don't hold sessions open across the whole request lifecycle if the endpoint only needs them briefly. Long-open sessions hold connections that other requests could use.
-
-### 5. How do you handle database transactions?
-
-SQLAlchemy sessions are transactional by default. Every session opens a transaction on first use and holds it until you commit or roll back:
-
-```python
-def create_order(db: Session, order_data: OrderCreate):
-    order = Order(**order_data.model_dump())
-    db.add(order)
-    db.commit()
-    db.refresh(order)
-    return order
-```
-
-For operations that modify multiple tables, wrap them in a single transaction and commit at the end. If anything raises before the commit, nothing is persisted, and closing the session in the dependency's `finally` block rolls back the open transaction.
-
-```python
-def transfer_funds(db: Session, from_id: int, to_id: int, amount: float):
-    from_account = db.get(Account, from_id)
-    to_account = db.get(Account, to_id)
-    from_account.balance -= amount
-    to_account.balance += amount
-    db.commit()
-```
-
-The mistake to avoid here is committing after every operation inside a multi-step function. That splits your transaction into pieces and leaves the database in a half-updated state if one step fails.
-
-### 6. How do you handle database migrations?
-
-Alembic is the standard tool. It's built by the SQLAlchemy team and works with any SQLAlchemy setup.
-
-The basic workflow:
 
 ```bash
-alembic init alembic
-alembic revision --autogenerate -m "add users table"
+alembic init -t async migrations
+alembic revision --autogenerate -m "create plants"
 alembic upgrade head
 ```
 
-`--autogenerate` diffs your models against the current database schema and generates a migration script. You review the script, edit it if needed, and apply it with `upgrade head`.
-
-Things to remember for the interview:
-
-- Never edit an applied migration. Create a new one to fix mistakes.
-- Autogenerate misses things like column renames and some complex type changes. Always review the generated script.
-- Run migrations before starting the app, not at startup. Migrations at startup break multi-worker deployments, because every worker tries to run them at once.
-
-For zero-downtime deployments, migrations get more complex. You split schema changes into forward-compatible steps so old and new app versions can run against the same database.
-
-### 7. How do you configure connection pooling?
-
-SQLAlchemy manages a connection pool by default. You configure the pool when you create the engine:
-
-```python
-engine = create_engine(
-    "postgresql://user:pass@localhost/db",
-    pool_size=10,
-    max_overflow=20,
-    pool_timeout=30,
-    pool_pre_ping=True,
-)
-```
-
-What the parameters mean:
-
-- `pool_size`: the number of connections kept open. Default is 5, which is low for a production API.
-- `max_overflow`: extra connections allowed above `pool_size` under burst load. These close when idle.
-- `pool_timeout`: how long a request waits for a connection before giving up.
-- `pool_pre_ping`: checks whether a connection is alive before using it. This prevents errors like "server has gone away" after idle periods.
-
-Total connections across all workers must stay under the database's connection limit. If Postgres allows 100 connections and you run 4 workers with `pool_size=10` and `max_overflow=20`, peak usage is 120. You're over the limit.
+---
 
 ## Security
 
-Security questions test whether you can protect an API without getting in your own way. The right answer usually involves standard patterns applied correctly.
+### 1. What are the essential security practices for a production FastAPI application?
 
-### 1. What are the basics of authentication in FastAPI?
+**Expectations:** AuthN/AuthZ · CORS · Rate limiting · Headers · Validation · HTTPS · Secrets
 
-FastAPI comes with security utilities in `fastapi.security` for the common patterns, including HTTP Basic, OAuth2 with password flow, API keys in headers or query strings, and Bearer tokens.
+**Example answer:**
 
-The typical flow is a dependency that extracts credentials from the request and returns the current user:
+> A production API needs multiple layers of security to protect user accounts, data, and application resources.
+>
+> - **Authentication:** Verifies who the user is, for example by validating credentials and JWTs.
+> - **Authorization:** Determines what the user can do, including role permissions and resource ownership.
+> - **CORS:** Restricts which browser origins can access the API.
+> - **Rate limiting:** Limits request frequency to reduce brute-force attacks and abuse. Return `429 Too Many Requests` when limits are exceeded.
+> - **Security headers:** Headers such as `X-Content-Type-Options` and `X-Frame-Options` add browser-level protections.
+> - **Input validation:** Use Pydantic to validate request data and reject invalid input.
+> - **HTTPS:** Encrypts data transmitted between clients and servers.
+> - **Secrets management:** Keep database credentials, API keys, and JWT signing secrets out of source code.
+
+---
+
+### 2. How do you protect authentication, user input, and sensitive data in production?
+
+**Expectations:** JWT validation · Ownership checks · XSS · Argon2id · Env secrets · HTTPS proxies
+
+**Example answer:**
+
+> For authentication and authorization, validate JWT signatures, expiration, and relevant claims. Restrict permissions and check resource ownership where applicable.
+>
+> For input and XSS protection, validate incoming data with Pydantic, use safe database queries, and render untrusted content as text. If accepting HTML, sanitize it with a library such as `nh3`.
+>
+> For passwords and secrets: hash passwords with Argon2id, never log passwords or tokens, load secrets from environment variables or a secrets manager, and use HTTPS while trusting only known reverse proxies for forwarded headers.
+>
+> Security is not a single middleware or library. Authentication identifies users, authorization enforces permissions, validation checks input, and infrastructure controls such as HTTPS, rate limiting, and secrets management provide complementary protection.
 
 ```python
-from fastapi.security import OAuth2PasswordBearer
+import nh3
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    user = decode_token(token)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return user
-
-@app.get("/me")
-def read_me(user: User = Depends(get_current_user)):
-    return user
+clean_content = nh3.clean(user_content)
 ```
 
-Any endpoint that depends on `get_current_user` becomes protected. Unauthenticated requests get a 401, and the endpoint only runs if the token is valid.
+---
 
-For anything beyond the basics, the standard combination is FastAPI's security utilities plus a JWT library like PyJWT or python-jose for token creation and verification.
+## WebSockets
 
-### 2. How does OAuth2 work in FastAPI?
+### 1. What are WebSockets, and how do you implement real-time communication with FastAPI and React?
 
-FastAPI supports OAuth2 through utilities in `fastapi.security`. The password flow is the most common in interviews:
+**Expectations:** Bidirectional · Persistent connection · `accept`/`receive`/`send` · JSON · React hook lifecycle
 
-```python
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+**Example answer:**
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-@app.post("/token")
-def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate(form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token(user)
-    return {"access_token": token, "token_type": "bearer"}
-
-@app.get("/me")
-def read_me(token: str = Depends(oauth2_scheme)):
-    return decode_token(token)
-```
-
-The `OAuth2PasswordBearer` dependency extracts the Bearer token from the `Authorization` header. If it's missing, FastAPI returns 401.
-
-Password flow works for first-party clients where you own both the app and the API. For third-party access, use the authorization code flow with a proper OAuth2 provider like Auth0 or Keycloak.
-
-### 3. How do you implement JWT authentication?
-
-JWT is the token format most FastAPI services use. You create tokens on login and verify them on protected endpoints:
+> WebSockets provide a persistent, bidirectional connection between a client and a server. Unlike traditional HTTP request-response communication, either side can send messages without establishing a new connection for each message.
+>
+> Common use cases include chat applications, real-time notifications, live dashboards, and delivery tracking.
+>
+> The main FastAPI operations are `accept()`, `receive_text()`, `send_text()`, and `close()`. For structured data, use `receive_json()` and `send_json()`.
+>
+> In React, the browser's `WebSocket` API manages the client connection. A custom hook using `useEffect` can create the connection, update state when messages arrive, and close the connection during cleanup.
 
 ```python
-from datetime import datetime, timedelta, timezone
-import jwt
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
+app = FastAPI()
 
-def create_access_token(user_id: int) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=30)
-    payload = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-def decode_access_token(token: str):
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        while True:
+            message = await websocket.receive_text()
+            await websocket.send_text(
+                f"Server received: {message}"
+            )
+    except WebSocketDisconnect:
+        pass
 ```
 
-Things to remember for your interview:
+---
 
-- JWTs are signed, not encrypted. Don't put secrets in the payload.
-- Keep expiry short. Thirty minutes is a common default.
-- For revocation, keep a denylist of invalidated tokens in Redis, because you can't unsign a JWT.
-- Rotate the signing key periodically, and load it from the environment instead of hardcoding it.
+### 2. How do you manage multiple connections and build reliable WebSocket applications?
 
-The common mistake is storing sensitive user data in the JWT and treating it as authoritative. Anyone with the token can read the payload.
+**Expectations:** Connection manager · Broadcast · Auth · Reconnect/backoff · Redis Pub/Sub · `wss://`
 
-### 4. When do you use API keys?
+**Example answer:**
 
-API keys are the simplest form of authentication. A client sends a fixed string in a header or query parameter, and you verify it against a stored value.
+> A connection manager tracks active connections, broadcasts messages, and removes disconnected clients.
+>
+> For production applications, also consider authentication and authorization, disconnect handling with `WebSocketDisconnect`, reconnection with exponential backoff and jitter, Redis Pub/Sub for multi-worker communication, message IDs or acknowledgements when delivery must be guaranteed, and `wss://` over HTTPS.
+>
+> An in-memory connection list only tracks connections within its own process. WebSockets are useful when updates are frequent and low latency matters; for simpler infrequent updates, HTTP polling or Server-Sent Events (SSE) may be easier to maintain.
 
 ```python
-from fastapi.security import APIKeyHeader
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
 
-api_key_header = APIKeyHeader(name="X-API-Key")
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
 
-def verify_api_key(key: str = Depends(api_key_header)):
-    if key not in valid_keys:
-        raise HTTPException(status_code=401, detail="Invalid API key")
-    return key
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
-@app.get("/data", dependencies=[Depends(verify_api_key)])
-def read_data():
-    return {"data": "secret"}
+    async def broadcast(self, message: str):
+        for connection in self.active_connections.copy():
+            await connection.send_text(message)
 ```
 
-API keys work for server-to-server communication, internal services, and public APIs with rate limiting. They don't work well for end-user authentication, because you can't tie an API key to a user session without extra logic.
+---
 
-Hash API keys before storing them and always send them over HTTPS. Query parameters end up in logs and browser history, so headers are safer.
+## Streaming Responses
 
-### 5. How do you configure CORS?
+### 1. What is streaming in FastAPI, and how do you implement real-time AI responses?
 
-CORS lets browsers from other origins call your API. FastAPI handles it with middleware:
+**Expectations:** Progressive chunks · `StreamingResponse` · `yield` · SSE · Forward AI tokens immediately
+
+**Example answer:**
+
+> Streaming sends response data progressively instead of waiting for the entire response to finish. It improves perceived responsiveness, especially for AI chat, logs, and live progress updates.
+>
+> FastAPI provides `StreamingResponse`, which can consume a generator that produces data using `yield`. For structured events, Server-Sent Events (SSE) uses `text/event-stream`, and each event ends with a blank line.
+>
+> For AI streaming, use an asynchronous model SDK with streaming enabled, iterate over the generated chunks, and forward each chunk immediately rather than collecting the complete response first.
 
 ```python
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://example.com"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+app = FastAPI()
+
+
+async def generate():
+    for chunk in ["Hello", " from", " FastAPI"]:
+        yield chunk
+
+
+@app.get("/stream")
+async def stream():
+    return StreamingResponse(
+        generate(),
+        media_type="text/plain",
+    )
+```
+
+```python
+import json
+
+
+def format_sse(data: dict) -> str:
+    return f"data: {json.dumps(data)}\n\n"
+
+
+async def generate_events():
+    yield format_sse({
+        "type": "chunk",
+        "content": "Hello",
+    })
+    yield format_sse({"type": "done"})
+```
+
+---
+
+### 2. How do you consume SSE streams in React, and what production issues should you consider?
+
+**Expectations:** `fetch` · `ReadableStream` · Buffering · Proxy buffering · Cancellation · Keep-alive
+
+**Example answer:**
+
+> For a `POST` streaming endpoint, the browser's `fetch()` API and `ReadableStream` allow React to read chunks incrementally.
+>
+> Network reads do not necessarily align with SSE events. A read may contain a partial event or multiple events, so the client must buffer incomplete data.
+>
+> For production, consider proxy buffering, timeouts for long-running streams, cancellation of upstream AI generation when the client disconnects, structured error events, concurrent stream limits, and keep-alive comment frames.
+>
+> Remember the roles: `StreamingResponse` streams content, SSE structures server-to-client events, and `ReadableStream` lets the browser consume data incrementally.
+
+```javascript
+const response = await fetch("/api/chat/stream", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message: "Explain FastAPI" }),
+});
+
+if (!response.ok || !response.body) {
+  throw new Error("Unable to start stream");
+}
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+let buffer = "";
+
+while (true) {
+  const { value, done } = await reader.read();
+
+  buffer += decoder.decode(value, { stream: !done });
+
+  const events = buffer.split("\n\n");
+  buffer = events.pop() ?? "";
+
+  for (const event of events) {
+    const line = event
+      .split("\n")
+      .find((item) => item.startsWith("data: "));
+
+    if (!line) continue;
+
+    const data = JSON.parse(line.slice(6));
+
+    if (data.type === "chunk") {
+      console.log(data.content);
+    } else if (data.type === "done") {
+      console.log("Streaming complete");
+    } else if (data.type === "error") {
+      console.error(data.message);
+    }
+  }
+
+  if (done) break;
+}
+```
+
+---
+
+## Redis
+
+### 1. What is Redis, and how do you integrate it with FastAPI?
+
+**Expectations:** In-memory store · `redis.asyncio` · Lifespan · `ping`/`aclose` · Per-worker client
+
+**Example answer:**
+
+> Redis is an in-memory data store commonly used for caching, rate limiting, session storage, and temporary data. It can reduce repeated database queries and share data across multiple application workers.
+>
+> FastAPI can use the asynchronous `redis.asyncio` client to communicate with Redis without blocking the event loop during I/O operations. Use FastAPI's lifespan handler to manage the connection lifecycle: `ping()` checks connectivity, `app.state.redis` exposes the client to endpoints, and `aclose()` closes it during shutdown. Each application worker should manage its own client and connection pool.
+
+```python
+import os
+
+import redis.asyncio as redis
+
+redis_client = redis.from_url(
+    os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    decode_responses=True,
 )
 ```
 
-What the parameters mean:
-
-- `allow_origins`: exact origins allowed. Never use `["*"]` with `allow_credentials=True`, because browsers reject that combination.
-- `allow_credentials`: whether cookies and auth headers are sent with cross-origin requests.
-- `allow_methods`: HTTP methods clients can use.
-- `allow_headers`: headers the client is allowed to send.
-
-Developers often set `allow_origins=["*"]` in development and forget to change it in production. That's an open API that any site can call from any user's browser.
-
-### 6. How does dependency-based authorization work?
-
-Authorization in FastAPI usually happens through dependencies. You build small dependencies for each check and compose them:
-
 ```python
-def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
-    return decode_and_load(token)
+from contextlib import asynccontextmanager
 
-def require_admin(user: User = Depends(get_current_user)) -> User:
-    if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin required")
-    return user
+from fastapi import FastAPI
 
-@app.delete("/users/{user_id}")
-def delete_user(user_id: int, admin: User = Depends(require_admin)):
-    return db.delete_user(user_id)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await redis_client.ping()
+    app.state.redis = redis_client
+
+    try:
+        yield
+    finally:
+        await redis_client.aclose()
+
+
+app = FastAPI(lifespan=lifespan)
 ```
 
-Every dependency is testable in isolation, reusable across endpoints, and visible in the OpenAPI docs.
+---
 
-But complex authorization rules can produce a lot of small dependencies. Group them into a permissions module and document what each one does. Otherwise, a couple of months later, nobody remembers which endpoint is protected by which rule.
+### 2. How do you store and retrieve cached data, and what are Redis's common production use cases?
 
-### 7. How do you protect sensitive endpoints?
+**Expectations:** TTL · Cache get/set · Rate limiting · Sessions · Pub/Sub · Not a DB replacement
 
-Protecting endpoints in FastAPI is a mix of authentication, authorization, rate limiting, and input validation.
+**Example answer:**
 
-Checklist for a sensitive endpoint:
+> Redis supports key-value operations with an optional time-to-live (TTL). For example, `ex=300` sets a five-minute TTL, and Redis automatically expires the key after that period.
+>
+> Common production use cases include caching, rate limiting across workers, session storage, Pub/Sub event distribution, and background job queues with suitable libraries.
+>
+> For production, configure Redis through environment variables, protect access with authentication and network controls, validate cache keys, and define expiration and invalidation policies.
+>
+> Redis is often used for fast, temporary or shared application state, while PostgreSQL remains the primary persistent database. Redis is usually an optimization and coordination layer, not a replacement for your main database.
 
-- **Authenticated** via a dependency, so unauthenticated requests get 401.
-- **Authorized** via a role or ownership check, so wrong users get 403.
-- **Rate limited**, so brute force and abuse are slow. Use slowapi or a reverse proxy.
-- **Validated** with Pydantic, so malformed input never runs business logic.
-- **Logged** with the user ID, endpoint, and outcome, so you can audit access.
-- **HTTPS only**, enforced at the reverse proxy.
+```python
+@app.put("/cache/{key}")
+async def set_cache(key: str, value: str, request: Request):
+    client = request.app.state.redis
+    await client.set(key, value, ex=300)
+    return {"message": "Value stored successfully"}
 
-For truly sensitive operations like password changes or payment actions, add step-up authentication. Ask for the password again, or send a code to a second device, even if the user is already logged in.
+
+@app.get("/cache/{key}")
+async def get_cache(key: str, request: Request):
+    value = await request.app.state.redis.get(key)
+
+    if value is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Cache key not found",
+        )
+
+    return {"key": key, "value": value}
+```
+
+---
+
+## Rate Limiting
+
+### 1. What is rate limiting, and how do you implement it in FastAPI?
+
+**Expectations:** Request caps · SlowAPI · `key_func` · `429` · `Request`/`Response` params
+
+**Example answer:**
+
+> Rate limiting controls how many requests a client can make within a specific period. It helps protect APIs against brute-force attacks, automated abuse, and excessive resource consumption.
+>
+> SlowAPI is a rate-limiting library for FastAPI and Starlette. It uses a key function to identify clients, tracks their requests, and returns `429 Too Many Requests` when a limit is exceeded.
+>
+> SlowAPI requires `request: Request` on decorated endpoints; `response: Response` allows rate-limit headers to be attached.
+
+```python
+from fastapi import FastAPI, Request, Response
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
+app = FastAPI()
+
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri="memory://",
+    headers_enabled=True,
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    _rate_limit_exceeded_handler,
+)
+
+
+@app.post("/login")
+@limiter.limit("5/minute")
+async def login(request: Request, response: Response):
+    return {"message": "Login endpoint"}
+```
+
+---
+
+### 2. How do you configure Redis and apply rate limiting in production?
+
+**Expectations:** `memory://` vs Redis · Shared counters · Proxy IPs · Strict sensitive routes · `@limiter.exempt`
+
+**Example answer:**
+
+> SlowAPI supports different storage backends. `memory://` stores counters in the current process and is suitable for local development. `redis://` shares counters across workers and servers, making it more suitable for production deployments.
+>
+> Apply stricter limits to login, password-reset, and expensive AI endpoints. In production, configure Redis authentication and network access securely, trust forwarded client IP headers only from known reverse proxies, monitor rejected requests, return `429` consistently, and exempt health checks when appropriate using `@limiter.exempt`.
+>
+> Key concepts: `key_func` identifies the client, `storage_uri` determines where counters are stored, and `@limiter.limit()` defines endpoint-specific limits. Redis is important when multiple workers must share rate-limit state.
+
+```python
+limiter = Limiter(
+    key_func=get_remote_address,
+    application_limits=["200/minute"],
+    storage_uri="redis://localhost:6379/0",
+    headers_enabled=True,
+)
+
+
+@app.post("/login")
+@limiter.limit("5/minute")
+async def login(request: Request, response: Response):
+    ...
+```
+
+---
+
+## Monitoring
+
+### 1. How do you monitor a FastAPI application in production using Prometheus, Grafana, and Alertmanager?
+
+**Expectations:** Prometheus scrapes · Grafana dashboards · Alertmanager routing · `/metrics` · Exporters
+
+**Example answer:**
+
+> These tools work together to collect metrics, visualize application performance, and notify developers when problems occur.
+>
+> - **Prometheus:** Scrapes and stores metrics from FastAPI and infrastructure exporters.
+> - **Grafana:** Visualizes metrics in dashboards using PromQL queries.
+> - **Alertmanager:** Groups and routes alerts generated by Prometheus.
+> - **Exporters:** Expose infrastructure metrics such as CPU, memory, and container usage.
+> - **Telegram:** Can receive notifications through a configured Alertmanager receiver.
+>
+> The monitoring flow is `FastAPI → Prometheus → Grafana`, and `Prometheus → Alertmanager → Telegram`. Application instrumentation must record the metrics you want to monitor, such as request counts, status codes, response durations, and exceptions.
+
+```python
+from fastapi import FastAPI, Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+app = FastAPI()
+
+
+@app.get("/metrics", include_in_schema=False)
+def metrics():
+    return Response(
+        content=generate_latest(),
+        headers={"Content-Type": CONTENT_TYPE_LATEST},
+    )
+```
+
+---
+
+### 2. How do you configure alerts and secure a monitoring stack on a single VPS?
+
+**Expectations:** Alert rules · `for:` duration · Docker Compose · Bind localhost · Secrets · SLIs
+
+**Example answer:**
+
+> Define alert rules in Prometheus to detect failures. For example, `up{job="fastapi"} == 0` for one minute can trigger a critical `FastAPIDown` alert that Alertmanager routes to Telegram.
+>
+> For a single VPS, Docker Compose can run Prometheus, Grafana, and Alertmanager with persistent volumes. Grafana should use `http://prometheus:9090` as its data source URL when both services share a Docker network.
+>
+> Production best practices include restricting access to `/metrics` and monitoring interfaces, binding monitoring ports to `127.0.0.1` and accessing them through SSH tunnels, storing Telegram bot tokens securely, monitoring request rate, error rate, p95 latency, CPU, memory, database connections, and disk usage, and configuring persistent storage and retention limits for Prometheus.
+>
+> Prometheus collects metrics, Grafana visualizes them, and Alertmanager routes notifications. A useful monitoring system should detect incidents early and help identify their causes, not just display charts.
+
+```yaml
+groups:
+  - name: api-alerts
+    rules:
+      - alert: FastAPIDown
+        expr: up{job="fastapi"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FastAPI is unavailable"
+```
+
+---
+
+## Feature-Based Architecture
+
+### 1. What is feature-based architecture in FastAPI, and how do you organize an application using it?
+
+**Expectations:** Business domains · Feature ownership · `core/`/`db/`/`shared/` · API aggregation · Request flow
+
+**Example answer:**
+
+> Feature-based architecture organizes code by business domain rather than technical responsibility. Instead of placing all routers, schemas, services, and models into global folders, each feature owns its related code.
+>
+> Each directory has a specific responsibility:
+>
+> - `main.py`: Initializes FastAPI, middleware, exception handlers, and application lifecycle.
+> - `api/`: Aggregates routers from individual features.
+> - `core/`: Provides shared infrastructure, such as configuration, database sessions, and security utilities.
+> - `db/`: Defines the SQLAlchemy declarative base and registers ORM models for database tooling such as Alembic.
+> - `shared/`: Contains reusable functionality genuinely needed by multiple features.
+> - `features/`: Contains business-specific routers, services, Pydantic schemas, ORM models, and dependencies.
+>
+> The typical request flow is `HTTP Request → Router → Service → Database Session / ORM Models → Database`.
+
+```text
+app/
+├── main.py
+├── api/
+│   └── router.py
+├── core/          # Shared configuration and infrastructure
+├── db/            # SQLAlchemy base and model registry
+├── shared/        # Reusable cross-feature utilities
+└── features/
+    ├── plants/
+    │   ├── router.py
+    │   ├── service.py
+    │   ├── schemas.py
+    │   └── models.py
+    └── orders/
+        ├── router.py
+        ├── service.py
+        ├── schemas.py
+        └── models.py
+```
+
+```python
+from fastapi import APIRouter
+
+from app.features.plants.router import router as plants_router
+from app.features.orders.router import router as orders_router
+
+api_router = APIRouter()
+
+api_router.include_router(
+    plants_router,
+    prefix="/plants",
+    tags=["Plants"],
+)
+api_router.include_router(
+    orders_router,
+    prefix="/orders",
+    tags=["Orders"],
+)
+```
+
+> This lets `main.py` register one application-level router while each feature maintains its own endpoints.
+
+---
+
+### 2. How do you manage dependencies between features and avoid circular imports?
+
+**Expectations:** One-directional deps · Service interfaces · No circular imports · `shared/` · Minimal modules
+
+**Example answer:**
+
+> Features sometimes need to use each other's functionality. For example, the orders feature may need to check whether a plant is available before creating an order.
+>
+> A maintainable approach is to expose a clear service function or interface, rather than accessing another feature's internal implementation. The orders feature can call the plants service instead of duplicating plant-related business logic.
+>
+> Follow these principles:
+>
+> - Keep dependencies one-directional: Features may use `core/` infrastructure, but `core/` should not import business features.
+> - Avoid circular imports: For example, `plants` importing `orders` while `orders` also imports `plants`.
+> - Use shared abstractions or orchestration: For complex workflows involving multiple features, a coordinating service can manage the interactions.
+> - Move genuinely shared code into `shared/`: Avoid turning it into a miscellaneous folder.
+> - Keep modules minimal: A feature does not need every possible file if it does not require that functionality.
+>
+> Feature-based architecture is most useful when an application has multiple business domains, grows beyond a small set of endpoints, or needs clearer boundaries for testing and team development. For a small API, a simpler structure may be sufficient.
+>
+> The goal is not merely to organize folders. It is to create clear business boundaries that reduce coupling, prevent circular dependencies, and make features easier to test and change independently.
+
+```python
+# app/features/plants/service.py
+async def check_plant_availability(
+    plant_id: int,
+) -> bool:
+    # Check plant availability
+    ...
+```
+
+---
 
 ## Performance and Scaling
 
@@ -1136,133 +1522,75 @@ Log the request ID on every line, propagate it through async code, and include i
 
 ## Testing
 
-Testing questions check whether you write tests that make sense, or the kind that just make coverage look good.
+### 1. How do you test FastAPI applications using Pytest and HTTPX?
 
-### 1. How do you use TestClient?
+**Expectations:** `pytest` · HTTPX · `ASGITransport` · Fixtures · `dependency_overrides` · Test DB
 
-`TestClient` is FastAPI's built-in test client. It wraps your app in a fake HTTP transport, so you can hit endpoints without running a server:
+**Example answer:**
 
-```python
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-def test_read_user():
-    response = client.get("/users/1")
-    assert response.status_code == 200
-    assert response.json()["id"] == 1
-```
-
-`TestClient` sends real HTTP-shaped requests through your ASGI app, so middleware, dependencies, and error handlers all run. Tests catch the same bugs your production stack would.
-
-Under the hood, `TestClient` uses httpx and runs synchronously. For async tests (for example, when your test itself needs to `await` async code), use httpx's `AsyncClient` with `ASGITransport`.
-
-### 2. How do you structure tests with pytest?
-
-pytest is the standard test runner for FastAPI. A basic directory structure:
-
-```text
-app/
-    main.py
-    dependencies.py
-tests/
-    conftest.py
-    test_users.py
-    test_orders.py
-```
-
-`conftest.py` holds shared fixtures like the test client and a test database session:
+> `pytest` runs automated tests, while HTTPX sends requests to the FastAPI application. Using `ASGITransport`, you can test endpoints without starting a live Uvicorn server.
+>
+> Key concepts include:
+>
+> - **Fixtures:** Share reusable setup, such as HTTP clients and database sessions.
+> - **Dependency overrides:** Replace production dependencies with test implementations using `app.dependency_overrides`.
+> - **Test database:** Keep tests isolated from production data and clean up test changes.
 
 ```python
 import pytest
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
+
 from app.main import app
 
-@pytest.fixture
-def client():
-    return TestClient(app)
 
-@pytest.fixture
-def auth_headers():
-    return {"Authorization": "Bearer test-token"}
+@pytest.mark.asyncio
+async def test_health():
+    transport = ASGITransport(app=app)
 
-def test_protected_route(client, auth_headers):
-    response = client.get("/me", headers=auth_headers)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        response = await client.get("/health")
+
     assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 ```
 
-Fixtures replace repeated setup code. They also make it easier to swap in test doubles, like an in-memory database instead of Postgres.
+```bash
+pytest -v
+```
 
-Aim for one test per behavior, not one assertion per test. If a test checks that a user gets created and the response contains the right fields, both assertions belong together.
+---
 
-### 3. How do you mock dependencies in FastAPI?
+### 2. What types of tests should you write for a FastAPI application?
 
-FastAPI's `dependency_overrides` is pretty much all you need:
+**Expectations:** Unit · Integration · E2E · Status codes · Response body · Side effects
+
+**Example answer:**
+
+> A good test suite covers successful requests, failure scenarios, and interactions between application components.
+>
+> - **Unit tests:** Test individual functions and business rules in isolation.
+> - **Integration tests:** Verify routes, dependencies, and database operations work together.
+> - **End-to-end tests:** Verify complete application workflows.
+>
+> Important scenarios include successful creation and retrieval (`201`, `200`), missing resources (`404`), invalid request data (`422`), missing authentication (`401`), and duplicate resources (`409`, if defined by the API).
+>
+> Organize tests by responsibility, for example `tests/unit/`, `tests/integration/`, and `tests/e2e/`. Check response bodies, database changes, and relevant side effects—not just status codes.
 
 ```python
-def override_get_db():
-    return TestSession()
+@pytest.mark.anyio
+async def test_create_plant_with_invalid_price(client):
+    response = await client.post(
+        "/plants",
+        json={"name": "Monstera", "price": -10},
+    )
 
-def override_get_current_user():
-    return User(id=1, email="test@example.com")
-
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user] = override_get_current_user
-
-def test_read_me(client):
-    response = client.get("/me")
-    assert response.status_code == 200
-    assert response.json()["id"] == 1
+    assert response.status_code == 422
 ```
 
-You override the dependency once, and every endpoint that uses it gets the test version. Clear the overrides after each test, or set them up in a fixture with `yield` so cleanup happens for you.
-
-### 4. How do you write integration tests?
-
-Integration tests hit real dependencies (usually a test database) and check that everything works together correctly.
-
-A general way to set it up:
-
-```python
-@pytest.fixture(scope="function")
-def db():
-    engine = create_engine("postgresql://user:pass@localhost/test_db")
-    SQLModel.metadata.create_all(engine)
-    session = Session(engine)
-    yield session
-    session.close()
-    SQLModel.metadata.drop_all(engine)
-
-def test_create_and_read_user(client, db):
-    app.dependency_overrides[get_db] = lambda: db
-    response = client.post("/users", json={"email": "a@b.com"})
-    assert response.status_code == 201
-    user_id = response.json()["id"]
-    response = client.get(f"/users/{user_id}")
-    assert response.json()["email"] == "a@b.com"
-```
-
-Integration tests are slower and more fragile than unit tests, because they depend on the database being available and in a clean state.
-
-For teams with a lot of integration tests, tools like pytest-postgresql and testcontainers spin up ephemeral databases per test run. That's slower but gives you complete isolation.
-
-### 5. How do you approach API testing overall?
-
-Good FastAPI test suites usually have three layers:
-
-- **Unit tests:** pure functions, business logic, and Pydantic validators. Fast, no I/O, run in milliseconds.
-- **Endpoint tests:** `TestClient` with mocked dependencies. Covers routing, validation, serialization, and dependency wiring.
-- **Integration tests:** `TestClient` with a real database and real dependencies. Covers the full request path.
-
-General patterns to follow:
-
-- Test the contract, not the implementation. Call `/users/1` and check the response; don't check that a specific function got called.
-- Cover the error paths as thoroughly as the happy paths. 401, 403, 404, 422, and 500 should all be covered.
-- Keep tests independent. Each test should set up its own data and clean up after itself.
-- Run tests in parallel where possible, but only if your integration tests can handle it.
-
-Testing is about confidence. High coverage with weak assertions doesn't catch anything. Prefer a smaller test suite that covers the real business logic.
+---
 
 ## Scenario-Based Questions
 
