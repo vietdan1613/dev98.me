@@ -1,5 +1,5 @@
 ---
-title: "Introduction to LangChain"
+title: "Introduction to LangChain: Benefits, Limitations, and Applications"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#AI']
@@ -7,93 +7,198 @@ date: 2026-10-04
 thumbnailText: AI
 ---
 
-[**LangChain**](https://www.langchain.com/) is an open-source framework for building applications powered by **LLMs**. It provides reusable components for common AI tasks, so instead of implementing everything from scratch, we can simply connect the components we need.
+LangChain is an open-source framework for building applications powered by Large Language Models (LLMs). It provides reusable components for connecting language models with documents, vector databases, external APIs, and other data sources.
 
-For our **Chat with PDF** application, we'll mainly use LangChain for four things: **loading documents → chunking → storing embeddings → retrieving relevant documents**.
+In this article, we will explore LangChain's architecture, advantages, limitations, and role in building a PDF question-answering application using Retrieval-Augmented Generation (RAG).
 
 ![PDF → LangChain → Weaviate → Chat](./imgs/langchain-intro.jpg)
 
-## 1. Document Loader
+### 1. What Is LangChain?
 
-First, we need to read the content from our PDF. LangChain provides many **Document Loaders** for different data sources. For PDFs, we can use `PyMuPDFLoader`:
+LangChain simplifies the development of LLM applications by providing standardized interfaces and reusable components.
+
+Instead of implementing every integration from scratch, developers can use existing components for tasks such as loading documents, splitting text, generating embeddings, retrieving relevant information, and interacting with language models.
+
+For example, a basic PDF-based RAG application can use LangChain to connect a document loader, a text splitter, a vector store, and an LLM.
+
+### 2. Advantages of LangChain
+
+**Standardized Interfaces**
+
+LangChain provides common interfaces for many supported model providers and integrations.
+
+For example, different chat models can be initialized using provider-specific classes:
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
+
+model = ChatOpenAI(model="YOUR_OPENAI_MODEL")
+
+# Alternatively, use an Anthropic model:
+# model = ChatAnthropic(model="YOUR_ANTHROPIC_MODEL")
+```
+
+Switching providers may require only a few code changes when the application uses compatible interfaces. However, model capabilities, configuration options, and response behavior can still differ.
+
+**Reusable Components**
+
+LangChain provides components for common LLM application tasks.
+
+Loading PDF documents:
 
 ```python
 from langchain_community.document_loaders import PyMuPDFLoader
 
-loader = PyMuPDFLoader("docs/monopoly.pdf")
+loader = PyMuPDFLoader("docs/rag-paper.pdf")
 documents = loader.load()
 ```
 
-The result is a list of **`Document`** objects. Each document contains `page_content` for the actual content and `metadata` for information such as the file path and page number.
-
-## 2. Chunking
-
-PDFs can be quite large, so we need to split them into smaller **chunks** before generating embeddings. LangChain provides several text splitters. In this project, we'll use `RecursiveCharacterTextSplitter`:
+Splitting text into chunks:
 
 ```python
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=700,
-    chunk_overlap=100,
+    chunk_size=1000,
+    chunk_overlap=200
 )
 
 chunks = text_splitter.split_documents(documents)
 ```
 
-The nice thing about `split_documents()` is that it splits the content while keeping the original document metadata.
-
-## 3. Embeddings + Weaviate
-
-Once we have the chunks, we need to generate **embeddings** and store them in a Vector Database so we can search by semantic meaning.
-
-We already worked with [**Weaviate**](/weaviate-vector-databases/) in the previous section. This time, we can use Weaviate through LangChain:
+Storing embeddings in ChromaDB:
 
 ```python
-from langchain_weaviate import WeaviateVectorStore
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
 
-vectorstore = WeaviateVectorStore.from_documents(
+vectorstore = Chroma.from_documents(
     documents=chunks,
-    embedding=embeddings,
-    client=client,
-    index_name="PDFDocuments",
+    embedding=OpenAIEmbeddings(
+        model="YOUR_SUPPORTED_EMBEDDING_MODEL"
+    )
 )
 ```
 
-Here, **LangChain acts as the integration layer**, while **Weaviate remains our Vector Database**. LangChain gives us a common interface, so we can work with the vector store without dealing with all of its low-level details.
+These components reduce the amount of integration code developers need to write. They can also be combined with retrieval and generation components to implement a RAG pipeline.
 
-## 4. Retriever
+### 3. Limitations of LangChain
 
-Finally, we need to find the chunks that are most relevant to the user's question. LangChain provides a **Retriever** for this:
+Despite its benefits, LangChain introduces trade-offs that developers should consider.
 
-```python
-retriever = vectorstore.as_retriever(
-    search_kwargs={"k": 4}
-)
+**Learning Curve**
 
-documents = retriever.invoke(
-    "How much money does each player start with?"
-)
+LangChain has many abstractions, interfaces, and integrations. Beginners may find it difficult to understand how the components interact, especially when debugging a complex chain.
+
+For small applications, using a provider's SDK directly may be simpler.
+
+**Dependency and Version Management**
+
+LangChain's ecosystem includes separate packages for core interfaces and third-party integrations. APIs and package requirements can change between releases.
+
+To reduce compatibility problems:
+
+- Pin dependency versions.
+- Read migration guides before upgrading.
+- Follow the documentation for the installed package version.
+- Test integrations after making changes.
+
+**Alternative Frameworks**
+
+Several alternatives address overlapping use cases:
+
+- **LangGraph:** Supports stateful, multi-step agent workflows.
+- **LlamaIndex:** Focuses on connecting LLMs with data and retrieval pipelines.
+- **Pydantic AI:** Provides typed tools and structured workflows for AI applications.
+- **OpenAI Agents SDK:** Provides components for building agent-based applications using OpenAI's ecosystem.
+- **Direct provider SDKs:** Offer a lightweight approach when only a few API calls or tools are required.
+
+No single framework is best for every project. The choice depends on application complexity, integration requirements, and the amount of abstraction the team wants.
+
+### 4. Understanding LangChain's Package Structure
+
+LangChain uses multiple packages to separate core abstractions from provider integrations.
+
+| Package | Purpose |
+| --- | --- |
+| `langchain` | High-level components for building LLM applications. |
+| `langchain-core` | Core interfaces, messages, prompts, and runnable abstractions. |
+| `langchain-openai` | Integration with OpenAI models and embeddings. |
+| `langchain-anthropic` | Integration with Anthropic models. |
+| `langchain-community` | Community-maintained integrations and utilities. |
+| `langchain-text-splitters` | Utilities for splitting documents into chunks. |
+| `langchain-chroma` | Integration with Chroma vector stores. |
+
+Install only the packages required by your application.
+
+For example:
+
+```bash
+pip install langchain-community langchain-text-splitters langchain-chroma langchain-openai pymupdf
 ```
 
-The Retriever searches Weaviate and returns the relevant documents. We can then pass these documents together with the user's question to an LLM to generate the final answer.
+Keeping integrations in separate packages helps manage dependencies and makes it easier to install only the components you need.
 
-So the data pipeline for our **Chat with PDF** application looks like this:
+### 5. Building a PDF Chatbot with LangChain
+
+A common application of LangChain is a chatbot that answers questions using uploaded PDF documents.
+
+The architecture follows a standard RAG workflow.
+
+**Step 1: Document Loading**
+
+Use a document loader such as `PyMuPDFLoader` to extract text and metadata from a PDF.
+
+**Step 2: Text Chunking**
+
+Split the extracted text into smaller chunks using `RecursiveCharacterTextSplitter`. Chunking makes document retrieval more manageable and helps fit relevant content into the model's context window.
+
+**Step 3: Embedding and Storage**
+
+Convert the chunks into vector embeddings and store them in ChromaDB.
+
+**Step 4: Retrieval**
+
+When the user asks a question, retrieve the chunks most relevant to the query.
+
+**Step 5: Answer Generation**
+
+Pass the retrieved chunks and the user's question to the LLM. The model uses this context to generate an answer.
+
+A Gradio interface can provide a chat UI for users to upload documents and ask questions.
 
 ```text
-PDF
- ↓
+PDF Document
+     |
+     v
 Document Loader
- ↓
-Chunking
- ↓
-Embeddings + Weaviate
- ↓
-Retriever
- ↓
-LLM
- ↓
-Answer
+     |
+     v
+Text Splitter
+     |
+     v
+Embedding Model
+     |
+     v
+Chroma Vector Store
+     |
+     v
+Retrieve Relevant Chunks
+     |
+     v
+LLM + User Question
+     |
+     v
+Generated Answer
 ```
 
-That's basically how LangChain helps us connect the different pieces together. Next, we'll implement each step and build the actual **Chat with PDF** application.
+For production applications, consider adding source citations, document-level access controls, retrieval evaluation, error handling, and mechanisms for updating or deleting indexed documents.
+
+### Conclusion
+
+LangChain provides reusable components that simplify the development of LLM applications, particularly those involving document processing, embeddings, vector databases, and RAG.
+
+Its main benefits are standardized interfaces and a broad integration ecosystem. Its main trade-offs are additional abstractions, dependency management, and the need to understand its component architecture.
+
+For a PDF question-answering application, start with three core components: document loaders, text splitters, and vector stores. Once the basic retrieval pipeline is working, you can add an LLM and a chat interface to build a complete RAG application.

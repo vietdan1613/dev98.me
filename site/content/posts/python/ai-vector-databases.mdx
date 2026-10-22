@@ -1,0 +1,153 @@
+---
+title: "Understanding Vector Databases: Efficient Storage and Similarity Search"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#AI']
+date: 2026-10-01
+thumbnailText: AI
+---
+
+Embeddings represent text, images, and other data as numerical vectors. However, generating embeddings is only part of the process. Applications also need an efficient way to store, organize, and retrieve these vectors.
+
+This is where **Vector Databases** become useful.
+
+### 1. What Is a Vector Database?
+
+A Vector Database is a database designed to store and search vector representations of data, commonly called embeddings.
+
+Each vector can be associated with additional information, such as the original text, product details, or document metadata.
+
+For example, an online store might store a product description alongside its embedding:
+
+```json
+{
+    "id": "product_001",
+    "text": "Pink windbreaker jacket",
+    "embedding": [0.12, -0.34, 0.56, ...]
+}
+```
+
+The embedding allows the application to find products with similar representations, even when their descriptions do not contain exactly the same words.
+
+### 2. Why Do We Need Vector Databases?
+
+Suppose an application stores 10,000 embeddings and needs to find the vectors most similar to a query.
+
+A straightforward approach is to calculate the similarity between the query vector and every stored vector.
+
+For example, cosine similarity can be calculated as follows:
+
+```python
+import numpy as np
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (
+        np.linalg.norm(a) * np.linalg.norm(b)
+    )
+```
+
+This approach works, but searching every vector becomes increasingly expensive as the dataset grows.
+
+Vector Databases improve retrieval efficiency through indexing structures and algorithms such as **Approximate Nearest Neighbor (ANN) search**.
+
+Instead of exhaustively comparing every vector, ANN algorithms search for highly relevant candidates more efficiently, usually trading a small amount of retrieval accuracy for speed.
+
+Vector Databases also commonly provide:
+
+- Persistent vector storage.
+- Similarity search.
+- Metadata filtering.
+- Index management.
+- Scalable retrieval for larger datasets.
+
+A traditional database is not necessarily unsuitable for vector search. Modern relational and document databases can also support vector operations through extensions or built-in capabilities.
+
+### 3. How Vector Search Works
+
+A typical vector search workflow consists of the following steps:
+
+1. Convert documents or products into embeddings using an embedding model.
+2. Store the embeddings and associated metadata in a Vector Database.
+3. Convert the user's search query into an embedding using a compatible model.
+4. Retrieve the nearest vectors according to the selected similarity or distance metric.
+5. Return the corresponding documents or products.
+
+For example, a user searches for:
+
+```text
+áo gió màu hồng cánh sen
+```
+
+The system can retrieve products described as pink windbreakers or similar jackets, even if their descriptions use different wording.
+
+With ChromaDB, a basic query can look like this:
+
+```python
+results = collection.query(
+    query_texts=["pink windbreaker jacket"],
+    n_results=2
+)
+
+print(results)
+```
+
+ChromaDB can generate query embeddings automatically when the collection has a compatible embedding function configured. Otherwise, you can supply query embeddings directly.
+
+### 4. Common Applications
+
+Vector Databases are useful for applications that need to find related information based on similarity.
+
+- **Semantic search:** Retrieve documents based on meaning rather than exact keyword matches.
+- **Recommendation systems:** Find products or content with similar characteristics.
+- **Image retrieval:** Search for visually similar images using image embeddings.
+- **AI chatbots:** Retrieve relevant documents to provide context for an LLM.
+- **Anomaly detection:** Identify vectors that differ significantly from typical examples.
+
+One particularly important application is Retrieval-Augmented Generation (RAG).
+
+In a RAG system, the Vector Database stores embeddings of documents. When a user asks a question, the system retrieves relevant content and supplies it to an LLM to help generate a more grounded answer.
+
+### 5. Popular Vector Databases
+
+Different solutions offer different trade-offs in deployment complexity, scalability, cost, and integration.
+
+**Dedicated Vector Databases**
+
+| Database | Description |
+| --- | --- |
+| ChromaDB | A convenient option for learning, prototyping, and local applications. |
+| Qdrant | An open-source vector search engine with filtering and deployment options. |
+| Weaviate | Supports vector search, metadata filtering, and hybrid retrieval. |
+| Milvus | Designed for large-scale vector search workloads. |
+| Pinecone | A managed vector database service. |
+
+**Traditional Databases with Vector Search**
+
+You do not always need a dedicated Vector Database.
+
+Several existing database systems support vector storage and similarity search:
+
+- **PostgreSQL with pgvector:** Store vectors alongside relational data.
+- **SQLite with sqlite-vec:** Explore vector search in lightweight local applications.
+- **Redis:** Supports vector search through its search capabilities.
+- **Elasticsearch:** Supports vector retrieval and hybrid search.
+
+For applications that already use PostgreSQL, pgvector can be an attractive choice because it avoids introducing a separate database service.
+
+### 6. Do You Always Need a Vector Database?
+
+No. For small datasets, you can store embeddings in memory and calculate similarities directly.
+
+For example, a small product catalog may contain only a few hundred or a few thousand vectors. An exhaustive search can be sufficient and easier to implement.
+
+A Vector Database becomes more useful when you need persistent storage, efficient indexing, metadata filtering, concurrent access, or larger-scale retrieval.
+
+The right choice depends on your workload rather than the assumption that every AI application requires a dedicated vector database.
+
+### Conclusion
+
+Vector Databases make it easier to store and retrieve embeddings efficiently. By combining vector representations with similarity search, applications can discover related documents, products, images, and other information.
+
+They are particularly valuable in RAG systems, where retrieving relevant context helps an LLM answer questions using external knowledge.
+
+In the next step, you can implement a simple vector search engine using embeddings and cosine similarity before moving on to a dedicated solution such as ChromaDB, Qdrant, or PostgreSQL with pgvector.

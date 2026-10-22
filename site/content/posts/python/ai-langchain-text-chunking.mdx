@@ -1,0 +1,136 @@
+---
+title: "Text Chunking with LangChain: RecursiveCharacterTextSplitter"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#AI']
+date: 2026-10-05
+thumbnailText: AI
+---
+
+Text chunking is an important step in Retrieval-Augmented Generation (RAG). Before storing documents in a vector database, we split them into smaller pieces so the system can retrieve relevant information more efficiently.
+
+In this article, we will explore LangChain's `RecursiveCharacterTextSplitter`, a simple and widely used approach to text chunking.
+
+### 1. Installation
+
+Install the `langchain-text-splitters` package:
+
+```bash
+pip install langchain-text-splitters
+```
+
+This example can run locally or in Google Colab without a GPU.
+
+### 2. Understanding RecursiveCharacterTextSplitter
+
+`RecursiveCharacterTextSplitter` splits text into smaller chunks using a prioritized list of separators.
+
+Its main parameters are:
+
+- **`chunk_size`**: The target maximum chunk length, measured using the configured length function. By default, this is 4,000 characters.
+- **`chunk_overlap`**: The target number of overlapping characters between consecutive chunks. The default is 200.
+- **`length_function`**: The function used to measure text length. The default is `len()`.
+- **`separators`**: The separators used to split text, in priority order. The default is `["\n\n", "\n", " ", ""]`.
+
+The splitter tries larger structural boundaries first, such as paragraphs and newlines, before falling back to smaller boundaries when necessary.
+
+**Why Do We Need Chunk Overlap?**
+
+Relevant information may span two adjacent chunks. Without overlap, splitting text at the wrong boundary can separate related sentences or concepts.
+
+Overlap preserves some content from the end of one chunk at the beginning of the next, improving the chance of retrieving the relevant context.
+
+For example:
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=100,
+    chunk_overlap=40,
+)
+```
+
+Here, the splitter targets chunks of approximately 100 characters with approximately 40 characters of overlap.
+
+The overlap is a target rather than a guarantee for every boundary. Actual chunk lengths depend on the input text and available separators.
+
+### 3. Comparing Paragraph-Based and Character-Based Chunking
+
+Let's compare two approaches using the same sample document.
+
+**Paragraph-Based Chunking**
+
+A simple implementation splits the document wherever two newline characters occur:
+
+```python
+def chunk_document_by_paragraph(doc):
+    return doc.split("\n\n")
+```
+
+This approach preserves paragraphs as individual chunks, making it easy to understand and implement.
+
+However, paragraph lengths can vary significantly. A long paragraph may exceed the desired context size, while a short paragraph may contain too little information to be useful.
+
+**Character-Based Chunking**
+
+With LangChain, we can split the same document using `RecursiveCharacterTextSplitter`:
+
+```python
+def chunk_document_by_character(doc, text_splitter):
+    return text_splitter.split_text(doc)
+```
+
+Example usage:
+
+```python
+chunks = chunk_document_by_character(
+    text_to_chunk,
+    text_splitter,
+)
+
+for index, chunk in enumerate(chunks):
+    print(f"Chunk {index}:")
+    print(chunk)
+```
+
+Compared with paragraph-based splitting, this approach produces more consistently sized chunks while attempting to preserve natural text boundaries.
+
+For example, a sentence that crosses a chunk boundary may appear partially in both chunks because of the configured overlap.
+
+### 4. Choosing a Chunking Strategy
+
+The best chunking strategy depends on the document format and the structure of its content.
+
+| Document type | Recommended approach |
+| --- | --- |
+| PDF | Split by paragraphs, pages, or semantic sections. |
+| Source code | Split by files, classes, functions, or modules. |
+| JSON | Preserve meaningful objects and their structure. |
+| Markdown | Split by headings and sections. |
+| HTML | Extract relevant content, convert to Markdown if appropriate, then split by structure. |
+
+For example, splitting source code every 100 characters may separate a function's definition from its implementation. Splitting by function or class is often more useful because it preserves meaningful code units.
+
+Similarly, Markdown documents can benefit from heading-based splitting, which keeps related content together.
+
+### 5. Other Text Splitters in LangChain
+
+LangChain provides several text splitters for different document structures:
+
+- **`CharacterTextSplitter`**: Splits text using a specified separator.
+- **`RecursiveCharacterTextSplitter`**: Tries multiple separators in priority order to preserve natural boundaries.
+- **`MarkdownHeaderTextSplitter`**: Splits Markdown according to headings.
+- **`HTMLHeaderTextSplitter`**: Splits HTML based on heading structure.
+- **`HTMLSectionSplitter`**: Splits HTML into sections using structural information.
+- **`MarkdownTextSplitter`**: A Markdown-oriented splitter based on recursive character splitting.
+
+Choose a splitter based on the structure of your source data rather than using the same strategy for every document.
+
+### Conclusion
+
+Text chunking is a fundamental step in building a RAG pipeline. It determines how documents are divided before embedding and retrieval, which can affect the relevance and quality of generated answers.
+
+`RecursiveCharacterTextSplitter` is a practical starting point because it supports configurable chunk sizes, overlap, and prioritized separators.
+
+As your application grows, consider document-specific strategies such as heading-based chunking for Markdown or structure-aware chunking for source code. The goal is to create chunks that are small enough for efficient retrieval while preserving enough context to remain meaningful.

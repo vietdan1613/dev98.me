@@ -7,6 +7,411 @@ date: 2000-01-12
 thumbnailText: Daily
 ---
 
+## Large Language Models (LLMs)
+
+### 1. How do Large Language Models generate text, and what roles do tokens, tokenizers, and context windows play?
+
+**Expectations:** Next-token prediction · Tokenizer / BPE · Context window · Greedy / beam / sampling · Temperature · Top-k / Top-p
+
+**Example answer:**
+
+> A Large Language Model (LLM) is a machine learning model trained to understand and generate text. Most modern generative LLMs predict the next token based on the tokens that came before it.
+>
+> For example, given `Today the weather is`, the model assigns probabilities to possible next tokens. A decoding strategy selects a token, adds it to the sequence, and repeats the process until generation stops. LLMs learn patterns from training data through millions or billions of parameters.
+>
+> Three important concepts are:
+>
+> - **Tokenizer:** Converts text into tokens and maps them to numerical token IDs. Tokens may represent words, subwords, or punctuation. Subword methods such as Byte Pair Encoding (BPE) balance vocabulary size and flexibility.
+> - **Context window:** Defines how many tokens a model can process in a single context, including input and potentially generated output.
+> - **Decoding strategy:** Determines how the next token is selected.
+
+| Strategy | How it works |
+| --- | --- |
+| Greedy decoding | Selects the highest-probability token at each step. |
+| Beam search | Keeps multiple promising candidate sequences. |
+| Sampling | Selects tokens according to their probability distribution. |
+
+> Sampling can be controlled using temperature (lower values generally make outputs more predictable; higher values encourage diversity), top-k (limits sampling to the `k` most probable tokens), and top-p (limits sampling to the smallest group of tokens whose cumulative probability reaches a specified threshold).
+
+---
+
+### 2. What is the difference between foundation models, instruction-tuned models, local LLMs, and fine-tuning?
+
+**Expectations:** Foundation vs instruction-tuned · Inference vs fine-tuning vs training · Local LLM · API parameters · Start with inference
+
+**Example answer:**
+
+> These concepts describe different aspects of working with language models.
+>
+> **Foundation vs. instruction-tuned models**
+>
+> - **Foundation (base) model:** Learns language patterns from large datasets, often through next-token prediction.
+> - **Instruction-tuned model:** Receives additional training to follow instructions and respond more appropriately to user requests.
+>
+> Chat models commonly use structured messages with roles such as `system`, `user`, and `assistant`.
+
+| Approach | Meaning |
+| --- | --- |
+| Inference | Use an already-trained model to generate responses. |
+| Fine-tuning | Continue training a pretrained model on a specific dataset to adapt its behavior. |
+| Training from scratch | Train a model from an initial state using large datasets and substantial computing resources. |
+
+> For most developers, inference is the most practical starting point.
+>
+> A **local LLM** runs on your own computer or infrastructure rather than relying entirely on a remotely hosted model. Tools such as LM Studio simplify downloading and running compatible models and can expose a local API for application integration.
+>
+> Advantages include greater control over data processing, potential savings on recurring API costs, and offline usage when resources are available. Disadvantages include hardware requirements, setup complexity, and potentially lower performance from smaller models.
+>
+> When integrating a model through a generation API, common parameters include `model`, `messages`, `temperature` and `top_p`, `max_tokens` or an equivalent limit, `n` for multiple choices when supported, and `stream` for incremental output. Exact parameters vary by provider and model.
+>
+> You do not need to train an LLM from scratch to build AI applications. Start with inference and API integration, then explore local deployment, fine-tuning, and retrieval-augmented generation (RAG) as your use case requires.
+
+---
+
+## Function Calling in LLMs
+
+### 1. What is function calling in LLMs, and how does the complete workflow work?
+
+**Expectations:** Tool selection · Structured arguments · App executes · Five-step loop · Schema · Model proposes
+
+**Example answer:**
+
+> Function calling allows an LLM to select an appropriate tool and generate structured arguments based on a user's natural-language request. It connects the model to external capabilities such as APIs, Python functions, databases, and other services.
+>
+> The LLM typically does not execute the function itself. Instead, the application executes the requested function.
+>
+> The workflow consists of five steps:
+>
+> 1. **Define tools:** Provide function names, descriptions, and parameter schemas.
+> 2. **Select a tool:** The LLM determines whether a tool is needed.
+> 3. **Generate arguments:** The LLM returns a structured tool call.
+> 4. **Execute the function:** The application validates the arguments and runs the function.
+> 5. **Generate the final response:** The application sends the tool result back to the LLM.
+>
+> In a real application, the LLM might generate the function name `calculate_total` and arguments `{"price": 20, "quantity": 3}`. Your application validates these arguments, executes the function, and passes the result back to the model.
+>
+> A well-defined schema helps the model generate arguments in the expected format. Provider-specific options such as `strict` depend on API and model support.
+>
+> Key distinction: The LLM proposes the tool call; your application controls whether and how it executes.
+
+```python
+def calculate_total(price: float, quantity: int) -> float:
+    return price * quantity
+
+result = calculate_total(price=20.0, quantity=3)
+print(result)  # 60.0
+```
+
+```python
+weather_tool = {
+    "type": "function",
+    "function": {
+        "name": "get_current_weather",
+        "description": "Get the current weather in a city.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {"type": "string"},
+                "unit": {
+                    "type": "string",
+                    "enum": ["celsius", "fahrenheit"]
+                }
+            },
+            "required": ["location", "unit"],
+            "additionalProperties": False
+        },
+        "strict": True
+    }
+}
+```
+
+---
+
+### 2. How do you implement function calling safely, and how does it relate to MCP?
+
+**Expectations:** Validate args · AuthZ · Confirm sensitive ops · Limit tools · Function calling vs MCP
+
+**Example answer:**
+
+> A production implementation needs more than simply parsing JSON and calling a Python function.
+>
+> Important best practices:
+>
+> - **Validate arguments:** Never blindly trust model-generated input. Use type checks, Pydantic models, and business-rule validation.
+> - **Handle errors:** Catch API and function failures and return appropriate results to the model.
+> - **Control tool access:** Allow only approved functions and explicitly map tool names to implementations.
+> - **Check authorization:** Verify the user's permissions before accessing data or performing actions.
+> - **Require confirmation for sensitive actions:** Operations such as purchases, deletions, and financial transactions may need explicit user approval.
+> - **Limit available tools:** Expose only the tools relevant to the current task.
+> - **Generate schemas consistently:** Pydantic and JSON Schema can help reduce duplicated definitions, although schema generation alone does not create a complete provider-specific tool definition.
+
+| Concept | Purpose |
+| --- | --- |
+| Function calling | Lets an LLM select a tool and generate structured arguments. |
+| MCP (Model Context Protocol) | Standardizes how AI applications connect to external tools and data sources. |
+
+> An MCP server can expose tools through a standardized interface. A compatible AI application can then use an LLM's tool-calling capabilities to decide when to invoke them.
+>
+> MCP does not replace model reasoning, argument validation, or authorization.
+>
+> Remember the distinction between deciding, executing, and validating. The model decides which tool to request, application code executes it, and application-level checks enforce security and correctness.
+
+---
+
+## Embeddings
+
+### 1. What are embeddings, and how do they help AI understand semantic similarity?
+
+**Expectations:** Vectors · Map analogy · Embedding models · Cosine / Euclidean / Dot product · Semantic search use cases
+
+**Example answer:**
+
+> Embeddings are numerical vectors that represent data such as text, images, or other content. They allow machine learning systems to compare relationships between inputs based on learned patterns.
+>
+> Think of a vector as a point on a map. Imagine a map where locations represent meaning rather than geography. Words and sentences with similar meanings tend to be placed near one another, while unrelated concepts may be farther apart. Actual embeddings usually have hundreds or thousands of dimensions.
+>
+> For example, "I love dogs" and "I like puppies" may have similar embeddings, while "The stock market is rising" may be less similar to those sentences.
+>
+> An embedding model converts text into a vector of numbers. For example, `all-MiniLM-L12-v2` produces a 384-dimensional vector. These numbers are learned representations, not manually assigned meanings.
+>
+> To compare two embeddings, common methods include cosine similarity (angle between vectors), Euclidean distance (straight-line distance), and the dot product. Similarity scores depend on the model and should not be interpreted as exact probabilities.
+>
+> Embeddings are useful for semantic search, recommendations, clustering, classification, and anomaly detection.
+
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer("all-MiniLM-L12-v2")
+embedding = model.encode("I love dogs.")
+print(embedding.shape)  # (384,)
+```
+
+```python
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import cos_sim
+
+model = SentenceTransformer("all-MiniLM-L12-v2")
+
+sentences = [
+    "I love dogs.",
+    "I like puppies.",
+    "The stock market is rising."
+]
+
+embeddings = model.encode(sentences)
+score = cos_sim(embeddings[0], embeddings[1])
+print(score.item())
+```
+
+---
+
+### 2. What is RAG, and how do you build a simple RAG application step by step?
+
+**Expectations:** Retrieve then generate · Chunk · Embed · Vector DB · Prompt with context · Production concerns
+
+**Example answer:**
+
+> Retrieval-Augmented Generation (RAG) combines information retrieval with an LLM. Instead of relying only on its learned knowledge, the LLM receives relevant information retrieved from an external knowledge source.
+>
+> Imagine building a chatbot for a plant shop. You want it to answer questions using your own product information rather than guessing.
+>
+> The RAG workflow:
+>
+> 1. **Prepare documents:** Product descriptions, FAQs, documentation.
+> 2. **Chunk and embed:** Split documents into smaller pieces and convert them into vectors.
+> 3. **Store in a vector database:** Save vectors alongside document text and metadata.
+> 4. **Embed the user's question:** Use the same compatible embedding model.
+> 5. **Retrieve relevant chunks:** Search for vectors similar to the query.
+> 6. **Generate the answer:** Give the retrieved context and question to the LLM.
+>
+> For a production RAG system, replace in-memory similarity search with a vector database such as Weaviate or Qdrant. A real implementation should also consider chunking strategy, retrieval quality, access permissions, source citations, and what happens when no relevant documents are found.
+>
+> Embeddings turn content into searchable vectors; a vector database stores and retrieves those vectors efficiently; RAG supplies the retrieved context to an LLM. These are three distinct components that work together.
+
+```python
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import cos_sim
+
+model = SentenceTransformer("all-MiniLM-L12-v2")
+
+documents = [
+    "Monstera plants prefer bright, indirect light.",
+    "Water a Monstera when the top layer of soil dries out.",
+    "Snake plants tolerate low-light conditions."
+]
+
+document_vectors = model.encode(documents)
+
+question = "How much light does a Monstera need?"
+query_vector = model.encode(question)
+
+scores = cos_sim(query_vector, document_vectors)[0]
+best_index = scores.argmax().item()
+context = documents[best_index]
+
+prompt = f"""Answer the question using only the context below.
+
+Context:
+{context}
+
+Question:
+{question}
+
+If the context does not contain the answer, say you don't know.
+"""
+```
+
+---
+
+## AI Gateway with FastAPI
+
+### 1. What is an AI Gateway, and how would you design one in FastAPI?
+
+**Expectations:** Central layer · Provider Protocol · Model routing · SSE streaming · Concurrent context · Decouple providers
+
+**Example answer:**
+
+> An AI Gateway is a centralized layer between your application and LLM providers such as OpenAI, DeepSeek, and Gemini. It separates business logic from provider-specific implementations and manages model routing, streaming, caching, and security.
+>
+> Instead of coupling FastAPI directly to one provider (`Client → FastAPI → OpenAI`), use a gateway architecture: `Client → FastAPI → AI Gateway → OpenAI / DeepSeek / Gemini`, with security, cache, model router, provider abstraction, and streaming inside the gateway.
+>
+> **Provider abstraction:** Define a common interface so every provider exposes consistent methods. Each provider implements the interface, and the gateway can switch providers without requiring changes throughout the application.
+>
+> **Model routing:** Choose a model based on request complexity, cost, latency, capabilities, and user permissions. Simple tasks use a cheaper model; complex tasks use a more capable model.
+>
+> **Streaming:** Normalize provider-specific streaming responses into a consistent Server-Sent Events (SSE) format using FastAPI's `StreamingResponse`, so a React frontend consumes one event format regardless of provider.
+>
+> **Concurrent operations:** If retrieving RAG documents, user information, and conversation history are independent, execute them concurrently with `asyncio.TaskGroup` to reduce latency.
+
+```python
+from typing import Protocol, AsyncIterator
+
+
+class LLMProvider(Protocol):
+    async def generate(self, messages, model: str):
+        ...
+
+    def stream(
+        self,
+        messages,
+        model: str,
+    ) -> AsyncIterator[str]:
+        ...
+```
+
+```python
+import asyncio
+
+
+async def gather_context():
+    async with asyncio.TaskGroup() as group:
+        rag_task = group.create_task(search_rag())
+        user_task = group.create_task(get_user())
+        history_task = group.create_task(get_history())
+
+    return (
+        rag_task.result(),
+        user_task.result(),
+        history_task.result(),
+    )
+```
+
+---
+
+### 2. How does an AI Gateway reduce costs and improve security?
+
+**Expectations:** Semantic cache · Model routing · Streaming · Parallelism · Guardrails · Layered security
+
+**Example answer:**
+
+> An AI Gateway centralizes optimization and security policies instead of duplicating them across API endpoints.
+>
+> **Cost and performance optimization**
+>
+> - **Semantic caching:** Use embeddings to identify semantically similar queries and reuse suitable cached responses.
+> - **Model routing:** Use less expensive models for simpler tasks.
+> - **Streaming:** Return generated content incrementally instead of waiting for the complete response.
+> - **Parallel execution:** Retrieve independent context sources concurrently.
+>
+> Semantic caching requires careful controls. A similar question does not always have the same correct answer, especially for changing information such as product prices. Cache keys, similarity thresholds, expiration, permissions, and data freshness should be considered.
+>
+> **Security and guardrails**
+>
+> - Validate incoming requests and enforce usage limits.
+> - Protect API keys and restrict access to providers.
+> - Detect potential prompt injection and apply layered defenses.
+> - Detect or redact personally identifiable information (PII) where appropriate.
+> - Enforce authorization before retrieving sensitive information or executing actions.
+>
+> No single prompt-injection filter is completely reliable. Security requires multiple layers, including access control, input validation, and safe tool execution.
+>
+> Start with a provider abstraction and a normalized API. Add model routing, streaming, caching, concurrency, and guardrails as needed. The main goal is to make the AI integration easier to maintain, optimize, and secure without tying application logic to a single LLM provider.
+
+---
+
+## Text Chunking in RAG
+
+### 1. What is text chunking in RAG, and how does `RecursiveCharacterTextSplitter` work?
+
+**Expectations:** Split before embed · Prioritized separators · `chunk_size` / `chunk_overlap` · Preserve natural boundaries · Overlap trade-off
+
+**Example answer:**
+
+> Text chunking is the process of splitting documents into smaller pieces before generating embeddings and storing them in a vector database. It helps retrieve relevant information without passing entire documents to the LLM.
+>
+> LangChain's `RecursiveCharacterTextSplitter` splits text using prioritized separators. By default, it tries `["\n\n", "\n", " ", ""]`. It attempts to preserve paragraphs first, then lines, then words, and finally individual characters when necessary.
+>
+> Important parameters include `chunk_size` (target maximum length; default 4,000 characters), `chunk_overlap` (target overlap; default 200), `length_function` (defaults to `len()`), and `separators`.
+>
+> Overlap matters when important information crosses a chunk boundary. Without overlap, related context may be split between two chunks. Overlap preserves some text from the previous chunk in the next chunk, but it also increases storage and redundancy.
+
+```python
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+splitter = RecursiveCharacterTextSplitter(
+    chunk_size=100,
+    chunk_overlap=40,
+)
+
+chunks = splitter.split_text(document)
+
+for index, chunk in enumerate(chunks):
+    print(f"Chunk {index}: {chunk}")
+```
+
+---
+
+### 2. How do you choose the right chunking strategy for different document types?
+
+**Expectations:** Structure-aware splitting · Document-type table · LangChain splitters · Evaluate retrieval quality
+
+**Example answer:**
+
+> The best strategy depends on the structure and meaning of the source document.
+
+| Document type | Recommended strategy |
+| --- | --- |
+| PDF | Split by paragraphs, pages, or semantic sections. |
+| Source code | Split by functions, classes, or modules. |
+| JSON | Preserve meaningful objects and structure. |
+| Markdown | Split by headings and sections. |
+| HTML | Extract relevant content and split by structure. |
+
+> LangChain also provides several splitters: `CharacterTextSplitter`, `RecursiveCharacterTextSplitter`, `MarkdownHeaderTextSplitter`, `HTMLHeaderTextSplitter`, `HTMLSectionSplitter`, and `MarkdownTextSplitter`.
+>
+> Paragraph-based chunking is simple, but paragraph lengths can vary considerably. Recursive character splitting provides more consistent chunk sizes while attempting to preserve natural boundaries.
+>
+> For source code, splitting every fixed number of characters could separate a function definition from its implementation. Structure-aware splitting is usually more suitable.
+>
+> Chunking affects retrieval quality, not just document size. Choose boundaries that preserve meaningful context, tune chunk size and overlap for your data, and evaluate retrieval results rather than assuming one strategy works for every document.
+
+```python
+def chunk_by_paragraph(document: str) -> list[str]:
+    return document.split("\n\n")
+```
+
+---
+
 # 1. LLM Fundamentals
 
 ## 1. Why do LLMs need huge training data?

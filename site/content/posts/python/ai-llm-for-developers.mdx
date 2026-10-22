@@ -1,5 +1,5 @@
 ---
-title: "What Developers Need to Know About LLMs"
+title: "AI: LLMs"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#AI']
@@ -7,141 +7,111 @@ date: 2026-09-28
 thumbnailText: AI
 ---
 
-If you are a developer building applications with LLMs, you do not need to understand every detail of how a model is trained. However, understanding how an LLM generates text, how tokens work, and how different types of models are used will help you build better AI applications.
+Large Language Models (LLMs) are machine learning models trained to understand and generate text. Most modern generative LLMs are trained to predict the next token based on the tokens that came before it.
 
-![How LLMs work — tokens, context, and decoding](./imgs/llm-for-developers.jpg)
+### 1. How LLMs Generate Text
 
-## How Does an LLM Generate Text?
-
-At a basic level, an LLM predicts the next **token** based on the tokens that came before it. The model assigns probabilities to possible next tokens and selects one according to a decoding strategy.
-
-For example:
+Given the input:
 
 ```text
-The developer opened the ...
+Today the weather is
 ```
 
-The model might assign probabilities such as:
+The model predicts possible next tokens and assigns probabilities to them. A decoding strategy selects the next token, which is then added to the input. This process repeats until the model finishes generating its response.
 
-```text
-editor   → 45%
-browser  → 25%
-terminal → 15%
-laptop   → 10%
-...
-```
+LLMs contain millions or billions of learned parameters that capture patterns in their training data.
 
-The selected token is added to the sequence, and the model repeats the process until it finishes generating the response.
+### 2. Decoding Strategies
 
-### Decoding Strategies
+Decoding determines how a model selects the next token.
 
-**Greedy decoding** always selects the token with the highest probability. It is simple and deterministic, but it can produce repetitive or less interesting results.
+- **Greedy Decoding:** Selects the token with the highest probability at each step.
+- **Beam Search:** Explores multiple candidate sequences and keeps the most promising ones.
+- **Sampling:** Randomly selects tokens according to their probability distribution.
 
-**Beam search** keeps several of the most promising sequences instead of following only one. It can be useful for some structured generation tasks, although it is less common for open-ended chatbot generation.
+Several parameters can influence sampling:
 
-**Sampling** introduces randomness into the selection process. This allows the model to generate more diverse responses, but too much randomness can also produce low-quality or unexpected results.
+- **Temperature:** Controls the sharpness of the probability distribution. Lower values generally produce more predictable outputs, while higher values encourage diversity.
+- **Top-k:** Restricts sampling to the k most probable tokens.
+- **Top-p:** Restricts sampling to the smallest set of tokens whose cumulative probability reaches a specified threshold.
 
-Several parameters can control this behavior. **Temperature** controls how strongly the model favors high-probability tokens. **Top-k** limits sampling to the k most likely tokens, while **top-p** samples from the smallest set of tokens whose combined probability reaches a specified threshold.
+These techniques offer different trade-offs between predictability, diversity, and generation quality.
 
-In practice, these parameters are useful when you want to balance **predictability, diversity, and creativity**.
+### 3. Tokens and Tokenizers
 
-## Tokens and Tokenizers
+LLMs process numerical representations rather than raw text. A tokenizer converts text into tokens and maps them to numerical token IDs.
 
-Tokens are one of the most important concepts when working with LLM APIs. A token is a small unit of text that the model processes. Depending on the tokenizer, a token can represent a complete word, part of a word, punctuation, or other characters.
+A token can represent a complete word, part of a word, punctuation, or another text unit.
 
-A **tokenizer** converts text into tokens that can be represented as numbers and processed by the model.
+Common tokenization approaches include:
 
-There are three common approaches:
+- **Character-based:** Splits text into individual characters.
+- **Word-based:** Splits text into words.
+- **Subword-based:** Splits text into frequently occurring subword units.
 
-* **Character-based:** splits text into individual characters.
-* **Word-based:** splits text into complete words.
-* **Subword-based:** splits text into words or smaller pieces.
+Subword tokenization, including Byte Pair Encoding (BPE), is widely used because it balances vocabulary size and flexibility.
 
-Modern LLMs commonly use subword-based tokenization because it provides a good balance between vocabulary size, efficiency, and the ability to handle new or uncommon words.
+The **context window** defines how many tokens a model can process in a single context. It includes input content and, depending on the model and API, may also account for generated output.
 
-For developers, tokens matter because they affect **context limits, API costs, latency, and model performance**.
+### 4. Foundation Models vs. Instruction Models
 
-## Context Size
+There are two important categories of language models:
 
-The **context window** is the maximum amount of information a model can consider in a single interaction. It can include system instructions, conversation history, user messages, documents, and tool results.
+- **Foundation or base models:** Learn language patterns from large datasets, often through next-token prediction.
+- **Instruction-tuned models:** Receive additional training to follow instructions and respond more appropriately to user requests.
 
-For example:
+For example, a base model may continue a text sequence, while an instruction-tuned model is better suited to answering questions or following a task description.
 
-```text
-System instructions
-        +
-Conversation history
-        +
-User request
-        +
-Retrieved documents
-        +
-Tool results
-        ↓
-   Context Window
-        ↓
-       LLM
-```
+Chat models also commonly use structured message formats with roles such as `system`, `user`, and `assistant`. Correct formatting helps the model interpret the conversation as intended.
 
-A larger context window allows an application to work with more information, but it can also increase processing costs and latency.
+### 5. Text Generation API Parameters
 
-## Foundation Models vs. Instruction Models
+When using a text generation API, several parameters control how the model behaves:
 
-Another important distinction is between **foundation models** and **instruction/chat models**.
+| Parameter | Purpose |
+| --- | --- |
+| `model` | Specifies the model to use. |
+| `messages` | Provides conversation messages and their roles. |
+| `max_tokens` or an equivalent output limit | Limits generated output length, depending on the API. |
+| `temperature` | Controls sampling randomness. |
+| `top_p` | Controls nucleus sampling. |
+| `n` | Requests multiple output choices when supported. |
+| `stream` | Returns output incrementally instead of waiting for the complete response. |
 
-A foundation model is trained primarily to learn general patterns from large amounts of data. A simplified example is a base language model that learns to predict the next token.
+Available parameters and their exact meanings depend on the provider and model.
 
-An instruction or chat model is further trained to follow human instructions and produce responses in a conversational format.
+### 6. What Is a Local LLM?
 
-For example:
+A Local LLM runs on your own computer or infrastructure instead of relying entirely on a remotely hosted model.
 
-```text
-Foundation Model
-        ↓
-Instruction / Preference Tuning
-        ↓
-Instruction Model
-        ↓
-Chat Application
-```
+**Advantages**
 
-This distinction is important because developers usually want an instruction-tuned model when building a chatbot rather than a raw foundation model.
+- Greater control over where data is processed.
+- Potentially lower recurring API costs.
+- Offline usage when the model and required resources are available locally.
+- More control over model selection and deployment.
 
-## Prompt Structure
+**Disadvantages**
 
-When working with chat-based LLM APIs, messages are typically separated by their roles. A common structure includes **system/developer instructions**, **user messages**, and **assistant responses**.
+- Requires sufficient RAM, memory bandwidth, and potentially GPU resources.
+- Model setup and optimization can require additional work.
+- Smaller local models may perform less effectively on complex tasks.
+- Hardware, electricity, and maintenance still have costs.
 
-For example:
+Tools such as **LM Studio** make it easier to download and run compatible models locally. It can also expose a local API that supports integration with applications using compatible OpenAI-style API formats.
 
-```text
-System:
-You are a helpful programming assistant.
+### 7. Using vs. Fine-Tuning vs. Training an LLM
 
-User:
-Explain React Query.
+These are three different activities:
 
-Assistant:
-React Query is a library for...
-```
+- **Inference:** Run an already-trained model to generate responses.
+- **Fine-tuning:** Continue training a pretrained model on a more specific dataset to adapt its behavior.
+- **Training from scratch:** Train a model from an initial state using a large dataset and substantial computing resources.
 
-The exact roles and API format depend on the provider and API version, but the idea is the same: developers provide instructions and context that guide the model's behavior.
+For most developers, starting with inference is the most practical approach. Fine-tuning can come later when a specific use case requires it.
 
-Clear instructions are especially important when working with smaller models because they may be less capable of interpreting ambiguous prompts.
+### Conclusion
 
-## Local LLM vs. Cloud API
+Understanding LLMs starts with tokenization, next-token prediction, decoding strategies, and context windows. From there, developers can explore model inference, API integration, local deployment, fine-tuning, and retrieval-augmented generation (RAG).
 
-Developers generally have two options when integrating an LLM: use a **cloud API** or run a **local LLM**.
-
-A simple decision might look like this:
-
-```text
-Personal project / Prototype
-        ↓
-     Cloud API
-
-Privacy / Offline / Infrastructure Control
-        ↓
-     Local LLM
-```
-
-There is no universal choice. The right approach depends on factors such as **cost, privacy, model capability, latency, infrastructure, and expected traffic**.
+You do not need to train a large model from scratch to build useful AI applications. Learning how to select, run, and integrate existing models is an excellent starting point.

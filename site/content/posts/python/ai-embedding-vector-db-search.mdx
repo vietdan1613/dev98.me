@@ -1,5 +1,5 @@
 ---
-title: "Embedding + Vector Database"
+title: "Understanding Embeddings: Turning Data into Vectors"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#AI']
@@ -7,183 +7,203 @@ date: 2026-09-30
 thumbnailText: AI
 ---
 
-Embedding allows us to represent text as vectors. When words have similar meanings, an embedding model tends to place their vectors close to each other in vector space.
+Embeddings are a fundamental concept in modern AI applications. They enable machines to represent text, images, and other types of data as numerical vectors, making it possible to measure similarity and discover relationships between different pieces of information.
+
+### 1. What Are Embeddings?
+
+Words can have similar meanings even when they look different. For example, "fruit" and "produce" are related, while the word "bank" can refer to a financial institution or the side of a river.
+
+Computers cannot reliably determine semantic similarity by comparing words alone. Embedding models address this problem by converting data into numerical vectors.
+
+A useful analogy is a map. Cities that are close in geography appear near each other on a map. In embedding space, items that are close in meaning appear near each other as points. You do not need to read every coordinate to see that "dog" and "puppy" sit closer together than "dog" and "stock market."
 
 For example:
-
-```text
-Kitten → Embedding → Vector A
-Cat    → Embedding → Vector B
-```
-
-Because `Kitten` and `Cat` have similar meanings, their vectors will tend to point in similar directions. We can measure this using **Cosine Similarity**.
-
-This allows us to search by **meaning**, instead of only matching exact keywords.
-
-## 1. Create a Simple Vector Database
-
-First, let's create a simple Vector Database to store items and their corresponding embeddings:
-
-```python
-import numpy as np
-
-
-class SimpleVectorDB:
-    def __init__(self):
-        self.items = []
-        self.embeddings = []
-
-    def add_item(self, item: str, embedding: np.ndarray):
-        self.items.append(item)
-        self.embeddings.append(embedding)
-
-    def find_similar(
-        self,
-        query_embedding: np.ndarray,
-        top_k: int = 3
-    ):
-        if not self.embeddings:
-            return []
-
-        embeddings = np.array(self.embeddings)
-
-        similarities = np.dot(
-            embeddings,
-            query_embedding
-        ) / (
-            np.linalg.norm(embeddings, axis=1)
-            * np.linalg.norm(query_embedding)
-        )
-
-        top_indices = np.argsort(similarities)[::-1][:top_k]
-
-        return [
-            (self.items[i], similarities[i])
-            for i in top_indices
-        ]
-```
-
-The `find_similar()` function calculates **Cosine Similarity** between the query vector and all vectors stored in the database, then returns the `top_k` most similar results.
-
-For example:
-
-```text
-Kitten
-  ↓
-Query Vector
-  ↓
-┌───────────────┐
-│ Cat     0.84  │
-│ Bird    0.35  │
-│ Dog     0.33  │
-└───────────────┘
-```
-
-Since `Cat` has the highest similarity score, it is returned first.
-
-## 2. Create Embeddings and Store Them
-
-We'll use `sentence-transformers` to generate embeddings.
-
-Install the required libraries:
-
-```bash
-pip install numpy sentence-transformers
-```
-
-Initialize the embedding model:
 
 ```python
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer(
-    "paraphrase-MiniLM-L6-v2"
-)
+model = SentenceTransformer("all-MiniLM-L12-v2")
 
-db = SimpleVectorDB()
+embedding = model.encode("dog")
+
+print(embedding)
 ```
 
-Here is our dictionary:
+The output is a vector containing 384 floating-point values for this model.
 
-```python
-dictionary = [
-    "Cat",
-    "Dog",
-    "Fish",
-    "Bird",
-    "Elephant",
-    "King",
-    "Knight",
-    "Man",
-    "Woman",
-]
+```text
+[0.348, -0.384, -0.116, 0.203, ...]
 ```
 
-Now we generate an embedding for each word and store it in the database:
+These values represent a learned numerical representation of the input. They are not manually assigned labels or directly interpretable features.
 
-```python
-for item in dictionary:
-    embedding = model.encode(item)
+**The key idea:** Embeddings represent data in a form that allows machine learning systems to compare semantic or contextual relationships.
 
-    db.add_item(
-        item,
-        embedding
-    )
-```
+### 2. Why Are Embeddings Important?
+
+Embeddings support many AI applications by transforming unstructured data into numerical representations that can be compared and analyzed.
+
+Common use cases include:
+
+- **Semantic search:** Find relevant documents even when they do not contain the exact search terms.
+- **Clustering:** Group similar documents, products, or messages.
+- **Recommendation systems:** Suggest products or content based on similarity.
+- **Classification:** Use vector representations as features for categorizing data.
+- **Anomaly detection:** Identify items that differ significantly from typical examples.
+
+For example, a search for "winter jacket" could retrieve products described as "warm outdoor coat" even when the exact words differ.
+
+Traditional keyword search focuses on matching terms, while embedding-based search can identify relationships in meaning.
+
+### 3. Embedding Models
+
+An embedding model converts an input into a vector representation.
+
+Different models are trained on different datasets and objectives, so their embeddings can vary in quality, dimensionality, language support, and computational cost.
+
+Some notable approaches include:
+
+- **Word2Vec:** Learns word representations from surrounding word contexts.
+- **BERT:** Produces contextual representations of tokens; additional pooling or training objectives can be used to obtain useful sentence embeddings.
+- **Sentence Transformers:** Provides models designed for producing sentence and text embeddings.
+- **Modern embedding APIs:** Offer pretrained models for semantic search, retrieval, and other applications.
+
+Examples of embedding models include:
+
+| Model | Description |
+| --- | --- |
+| `text-embedding-3-small` | OpenAI embedding model suitable for many general-purpose applications. |
+| `text-embedding-3-large` | Higher-capability OpenAI embedding model with greater default dimensionality. |
+| `gemini-embedding-001` | Google's embedding model. |
+| `BAAI/bge-m3` | Multilingual embedding model suitable for retrieval tasks. |
+| `all-MiniLM-L12-v2` | Compact Sentence Transformers model producing 384-dimensional embeddings. |
+
+The best choice depends on the task, language, latency requirements, cost, and deployment environment. A larger vector does not automatically guarantee better search results.
+
+### 4. Measuring Similarity Between Embeddings
+
+Once data has been converted into vectors, we can compare those vectors mathematically.
+
+Common similarity and distance measures include:
+
+- **Cosine similarity:** Measures the angle between two vectors.
+- **Euclidean distance:** Measures the straight-line distance between two vectors.
+- **Dot product:** Measures the product of corresponding vector components and their sum.
+
+Cosine similarity is widely used for text retrieval because it focuses on the direction of vectors rather than their magnitude.
 
 For example:
 
+```python
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.util import cos_sim
+
+model = SentenceTransformer("all-MiniLM-L12-v2")
+
+sentences = [
+    "I love dogs.",
+    "I like puppies.",
+    "The stock market is rising."
+]
+
+embeddings = model.encode(sentences)
+
+similarity = cos_sim(
+    embeddings[0],
+    embeddings[1]
+)
+
+print(similarity.item())
+```
+
+The result indicates how similar the first two sentence embeddings are according to cosine similarity. The exact value depends on the model.
+
+### 5. Embeddings and Vector Databases
+
+Generating embeddings is only part of the process. Real applications often need to store thousands or millions of vectors and retrieve the most relevant ones efficiently.
+
+This is where vector databases become useful.
+
+A typical semantic search workflow looks like this:
+
+1. Convert documents or products into embeddings.
+2. Store the vectors alongside their associated content and metadata.
+3. Convert the user's search query into an embedding using a compatible model.
+4. Search for vectors that are most similar to the query vector.
+5. Return the associated documents or products.
+
+Vector databases support efficient similarity search, often using approximate nearest-neighbor algorithms.
+
+They can also support metadata filtering, allowing an application to combine semantic similarity with conditions such as product category, language, or availability.
+
+### 6. Embeddings in RAG Applications
+
+Retrieval-Augmented Generation (RAG) combines document retrieval with an LLM.
+
+For example, a customer-support chatbot can use embeddings to retrieve relevant documentation before generating an answer.
+
+The workflow is:
+
 ```text
-"Cat"
- ↓
+Documents
+    ↓
+Chunking
+    ↓
 Embedding Model
- ↓
-[0.48, -0.25, -0.18, ...]
+    ↓
+Vector Database
+
+User Question
+    ↓
+Embedding Model
+    ↓
+Similarity Search
+    ↓
+Relevant Documents
+    ↓
+LLM
+    ↓
+Final Answer
 ```
 
-The `paraphrase-MiniLM-L6-v2` model generates a **384-dimensional vector**.
+A step-by-step RAG example:
 
-The important part is that the embedding model has learned semantic relationships between words. Therefore, words such as `Cat` and `Kitten` tend to have similar vector representations.
-
-## 3. Create the Search Function
-
-When a user enters a query, we also need to convert the query into an embedding:
+1. **Prepare source content:** Collect support articles, product docs, or FAQs.
+2. **Chunk the documents:** Split long text into smaller passages so each chunk stays focused and fits within model limits.
+3. **Embed each chunk:** Run the same embedding model on every chunk and store the vectors in a vector database with the original text and metadata.
+4. **Embed the user question:** Convert the question with the same embedding model used for the documents.
+5. **Retrieve top matches:** Search the vector database for the most similar chunks, optionally filtering by metadata such as product or language.
+6. **Build the LLM prompt:** Provide the retrieved chunks as context along with the user's question.
+7. **Generate the answer:** Ask the LLM to answer using only the retrieved context when possible, and to say when the context is insufficient.
 
 ```python
-def search(query: str):
-    # Convert the query into an embedding
-    query_embedding = model.encode(query)
+# Simplified RAG retrieval + generation sketch
+query = "How do I reset my password?"
 
-    # Find similar vectors
-    results = db.find_similar(query_embedding)
+query_embedding = model.encode(query)
+matches = vector_db.search(query_embedding, top_k=3)
 
-    print(f"Query: {query}")
-    print("Similar items:")
+context = "\n\n".join(match["text"] for match in matches)
 
-    for item, similarity in results:
-        print(
-            f"  {item}: {similarity:.4f}"
-        )
+prompt = f"""Use the context below to answer the question.
+If the answer is not in the context, say you do not know.
+
+Context:
+{context}
+
+Question:
+{query}
+"""
+
+# Pass `prompt` to your LLM API and return the generated answer.
 ```
 
-## 4. Run the Application
+The embedding model helps retrieve relevant context, while the LLM uses that context to generate a response.
 
-Let's try a queriy.
+Embeddings alone do not guarantee factual answers. Retrieval quality still depends on the embedding model, document chunking, search strategy, and the quality of the source data.
 
-```python
-search("Kitten")
-```
+### Conclusion
 
-Possible output:
+Embeddings provide a numerical representation of data that makes semantic comparison possible. They are widely used in semantic search, recommendations, clustering, and retrieval-augmented generation.
 
-```text
-Query: Kitten
-Similar items:
-  Cat: 0.8422
-  Bird: 0.3590
-  Dog: 0.3309
-```
-
-Notice that neither `Kitten` exists in our dictionary, but the system can still find `Cat`.
-
-That's because we are **not comparing the text directly**. Instead, we convert the text into vectors and compare their positions in vector space.
+Understanding embeddings is an important first step toward learning vector databases and building AI applications that can search and retrieve information based on meaning rather than exact keyword matches.

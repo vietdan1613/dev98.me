@@ -1,5 +1,5 @@
 ---
-title: "Function Calling: How Does It Work?"
+title: "Function Calling in LLMs: Connecting AI to External Tools"
 category: Python
 author: Daniel Nguyen
 tags: ['#Python', '#AI']
@@ -7,186 +7,234 @@ date: 2026-09-29
 thumbnailText: AI
 ---
 
-When building an AI chatbot, there is one important limitation: **an LLM can generate text, but it cannot directly execute your application code**.
+Large Language Models (LLMs) can understand natural language and generate responses, but they cannot directly interact with external systems unless they are connected to tools. **Function calling** enables an LLM to select appropriate functions and generate the arguments needed to execute them.
 
-For example, if the user asks:
+### 1. What Is Function Calling?
 
-> “What’s the weather like in Hanoi today?”
+Function calling, also known as tool use, allows an LLM to translate a user's natural-language request into a structured function call.
 
-The LLM itself cannot call your weather API. This is where **Function Calling** comes in.
+For example, an LLM can help an application:
 
-Function Calling allows us to give the LLM a list of available functions. The LLM analyzes the user's request, chooses the appropriate function, and returns the **function name + arguments**. Our application then executes that function and sends the result back to the LLM.
+- Retrieve weather information from an external API.
+- Look up stock prices.
+- Perform calculations using Python functions.
+- Read and summarize web pages.
+- Create images using an image-generation pipeline.
+- Extract structured information from documents, such as resumes.
 
+The LLM decides which tool is appropriate and provides its arguments. Your application executes the function and handles the result.
 
-## How does the flow work?
+### 2. How Function Calling Works
 
-The overall flow is:
+A typical function-calling workflow consists of five steps:
+
+1. **Define tools:** Provide the LLM with function names, descriptions, and parameter schemas.
+2. **Analyze the request:** The LLM determines whether a tool is needed.
+3. **Generate a tool call:** The LLM returns the selected function name and arguments.
+4. **Execute the function:** Your application validates the arguments and runs the corresponding function.
+5. **Generate the final response:** Send the tool result back to the LLM so it can formulate a natural-language answer.
 
 ![Function Calling flow — User → Application → LLM → Execute → Final answer](./imgs/function-calling-flow.png)
 
-The important thing to understand is:
+The important distinction is that the LLM usually does not execute your Python function itself. It generates a structured request, and your application performs the actual execution.
 
-> **The LLM does not execute the function. It only decides which function should be called and what arguments should be passed.**
+### 3. Defining a Function Schema
 
-Your application is responsible for actually executing the function.
+Tools are commonly described using a JSON Schema that specifies the function name, purpose, and parameters.
 
-## 1. Define your functions
-
-For example:
+For example, a weather tool can be defined as follows:
 
 ```python
-def get_current_weather(location: str, unit: str):
-    """Get the current weather in a given location"""
-    return "It's very cold, 7°C"
-
-
-def get_stock_price(symbol: str):
-    pass
-
-
-def view_website(url: str):
-    pass
-```
-
-We then describe these functions to the LLM through `tools`.
-
-```python
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "The city name"
-                    },
-                    "unit": {
-                        "type": "string",
-                        "enum": ["celsius", "fahrenheit"],
-                        "description": "The temperature unit"
-                    }
+weather_tool = {
+    "type": "function",
+    "function": {
+        "name": "get_current_weather",
+        "description": "Get the current weather in a city.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "The city name."
                 },
-                "required": ["location", "unit"]
-            }
-        }
+                "unit": {
+                    "type": "string",
+                    "enum": ["celsius", "fahrenheit"],
+                    "description": "The temperature unit."
+                }
+            },
+            "required": ["location", "unit"],
+            "additionalProperties": False
+        },
+        "strict": True
     }
-]
+}
 ```
 
-The LLM uses the **name, description, and parameters** to understand when and how a function should be used. Using `enum` is also useful when a parameter only accepts a fixed set of values.
+A good schema helps the model understand when to use the tool and which arguments it must provide. Enums can restrict arguments to predefined values, while required fields help enforce the expected structure.
 
-## 2. Send the request to the LLM
+The `strict` option is supported by compatible OpenAI APIs and models; exact schema requirements vary by provider.
 
-```python
-response = client.chat.completions.create(
-    model="gpt-5.4-mini",
-    messages=[
-        {
-            "role": "user",
-            "content": "What's the weather in Hanoi today?"
-        }
-    ],
-    tools=tools
-)
-```
+### 4. Implementing Function Calling with Python
 
-The LLM analyzes the request and may return:
-
-```python
-tool_call = response.choices[0].message.tool_calls[0]
-
-print(tool_call.function.name)
-# get_current_weather
-
-print(tool_call.function.arguments)
-# {"location":"Hanoi","unit":"celsius"}
-```
-
-The model has essentially said:
+Consider the request:
 
 ```text
-Call: get_current_weather
+What is the weather like in Hanoi today?
+```
 
-Arguments:
+The model might generate a tool call with these arguments:
+
+```json
 {
     "location": "Hanoi",
     "unit": "celsius"
 }
 ```
 
-This is the core idea of Function Calling: **the model requests a tool call instead of directly answering the user.**
-
-## 3. Execute the function
-
-Now your application takes those arguments and runs the actual function:
+Your application can parse the arguments and execute the function.
 
 ```python
 import json
 
+def get_current_weather(
+    location: str,
+    unit: str
+) -> str:
+    # Replace this example with a real weather API.
+    return f"Current weather in {location}: 7°C"
+
 arguments = json.loads(
-    tool_call.function.arguments
+    '{"location": "Hanoi", "unit": "celsius"}'
 )
 
-weather_result = get_current_weather(
-    arguments["location"],
-    arguments["unit"]
-)
+result = get_current_weather(**arguments)
 
-print(weather_result)
-# It's very cold, 7°C
+print(result)
 ```
 
-In a real application, this function could call a weather API, query a database, call another service, or execute some business logic.
-
-So remember:
-
-> **LLM decides what to call. Your application executes it.**
-
-## 4. Send the result back to the LLM
-
-We then send the tool result back:
-
-```python
-messages.append(response.choices[0].message)
-
-messages.append({
-    "role": "tool",
-    "tool_call_id": tool_call.id,
-    "content": weather_result
-})
-```
-
-The LLM now has the complete context:
+Output:
 
 ```text
-User:
-What's the weather in Hanoi today?
-
-Assistant:
-Call get_current_weather(
-    location="Hanoi",
-    unit="celsius"
-)
-
-Tool:
-"It's very cold, 7°C"
+Current weather in Hanoi: 7°C
 ```
 
-We call the LLM again:
+This example demonstrates local function execution. The returned temperature is hardcoded, so it is not actual live weather data.
+
+In a real application, you would send the tool definition to the LLM, inspect its response, execute the requested function, and return the result to the model.
+
+### 5. Completing the Tool-Calling Loop
+
+The full workflow requires another LLM request after executing the function.
+
+With OpenAI's Chat Completions API, the process looks like this:
 
 ```python
-final_response = client.chat.completions.create(
-    model="gpt-5.4-mini",
-    messages=messages
+import json
+from openai import OpenAI
+
+client = OpenAI()
+
+messages = [
+    {
+        "role": "user",
+        "content": "What is the weather in Hanoi?"
+    }
+]
+
+response = client.chat.completions.create(
+    model="YOUR_SUPPORTED_MODEL",
+    messages=messages,
+    tools=[weather_tool]
 )
 
-print(final_response.choices[0].message.content)
+assistant_message = response.choices[0].message
+
+if assistant_message.tool_calls:
+    messages.append(assistant_message)
+
+    for tool_call in assistant_message.tool_calls:
+        if tool_call.function.name == "get_current_weather":
+            arguments = json.loads(
+                tool_call.function.arguments
+            )
+
+            result = get_current_weather(**arguments)
+
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": result
+            })
+
+    final_response = client.chat.completions.create(
+        model="YOUR_SUPPORTED_MODEL",
+        messages=messages
+    )
+
+    print(final_response.choices[0].message.content)
+else:
+    print(assistant_message.content)
 ```
 
-The LLM can now turn the raw tool result into a natural response:
+Replace `YOUR_SUPPORTED_MODEL` with a model available to your account that supports tool calling.
 
-> “It’s 7°C in Hanoi today, so you might want to wear something warm.”
+This example illustrates the basic loop. Production implementations should also validate arguments, handle exceptions, check API responses, and support multiple tool calls when returned.
+
+### 6. Generating Tool Schemas Automatically
+
+Manually maintaining function schemas can become difficult when a function has many parameters or changes frequently.
+
+Python's `inspect` module and Pydantic can help generate schema information from function definitions and type annotations.
+
+For example:
+
+```python
+from pydantic import TypeAdapter
+
+def calculate_total(
+    price: float,
+    quantity: int
+) -> float:
+    """Calculate the total price."""
+    return price * quantity
+
+schema = TypeAdapter(calculate_total).json_schema()
+
+print(schema)
+```
+
+This generates a JSON Schema describing the function's input structure. However, generating the schema alone does not create a complete tool definition. You still need to provide the function name, description, and any provider-specific formatting required by the API.
+
+For complex applications, dedicated schema-generation utilities can reduce duplicated definitions and help keep tool contracts consistent.
+
+### 7. Best Practices
+
+When implementing function calling, consider the following practices:
+
+- **Use descriptive names:** Prefer `get_current_weather` over vague names such as `get_data`.
+- **Write clear descriptions:** Explain what each function does and when it should be used.
+- **Define strict parameter schemas:** Specify types, required fields, enums, and additional-property restrictions where supported.
+- **Validate every argument:** Model-generated arguments should not automatically be trusted.
+- **Handle errors:** Return useful error information when an API or function fails.
+- **Limit available tools:** Provide relevant tools instead of exposing every function to every request.
+- **Protect sensitive operations:** Require appropriate authorization and confirmation for actions such as purchases, deletions, or financial transactions.
+- **Keep execution under application control:** The model proposes tool calls; your code determines whether and how to execute them.
+
+### 8. Function Calling and MCP
+
+Function calling and the Model Context Protocol (MCP) solve related but different problems.
+
+**Function calling** is a model interaction pattern in which the LLM selects a tool and generates structured arguments.
+
+**MCP** is an open protocol for connecting AI applications to external tools and data sources through a standardized interface.
+
+An MCP server can expose tools to compatible clients, while those clients can use an LLM's tool-calling capabilities to decide when to invoke them. MCP does not replace the underlying model's reasoning or eliminate the need for authorization and validation.
+
+### Conclusion
+
+Function calling extends LLM applications beyond text generation by connecting language models to APIs, Python functions, databases, and other external systems.
+
+The essential workflow is straightforward: define tools, let the model select a function and generate arguments, execute the function in your application, and return the result to the model.
+
+This pattern is a fundamental building block for AI assistants and agents that need to retrieve information, perform calculations, or take actions in external systems.
