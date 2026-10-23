@@ -649,6 +649,194 @@ Development mode optimizes feedback for engineers. Production builds optimize ou
 
 If a bug appears only in production, check environment variables, build-time assumptions, server/runtime differences, and caching.
 
+## Supabase with Next.js
+
+### 1. What is Supabase, and what services does it provide?
+
+**Expectations:** PostgreSQL · Auth · Storage · Auto APIs · Realtime · Edge Functions · pgvector
+
+**Example answer:**
+
+> Supabase is a backend platform built around PostgreSQL that provides database operations, authentication, file storage, APIs, realtime updates, Edge Functions, and developer tools.
+>
+> Its main components include PostgreSQL for structured data, Auth for email/password, magic links, OTP, and OAuth, Storage for files, auto-generated APIs for CRUD, Realtime for database changes, Edge Functions for server-side integrations, and pgvector for vector search in AI applications.
+>
+> In Next.js, you can query a table with the Supabase client. This eliminates the need to create a separate API endpoint for every basic database operation. Complex business logic can still use Next.js Route Handlers, Server Actions, or Edge Functions.
+
+```ts
+const { data, error } = await supabase
+  .from("posts")
+  .select("*");
+```
+
+---
+
+### 2. What is Row Level Security (RLS), and why is it important?
+
+**Expectations:** Row authorization · `auth.uid()` · `using` / `with check` · Database-level enforcement
+
+**Example answer:**
+
+> Row Level Security (RLS) controls which database rows a user can read, insert, update, or delete. It is particularly important when a frontend accesses Supabase directly.
+>
+> For example, users should only be able to update their own posts. Here, `auth.uid()` identifies the authenticated user, `using` determines which existing rows the user can update, and `with check` validates the resulting rows. This assumes the `posts` table contains a `user_id` column.
+>
+> RLS enforces authorization at the database level, rather than relying only on frontend checks. Policies should be defined for every operation the application permits.
+
+```sql
+alter table posts enable row level security;
+
+create policy "Users can update own posts"
+on posts
+for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+```
+
+---
+
+### 3. How do you manage file storage and authentication in Supabase?
+
+**Expectations:** Bucket upload · Public vs signed URLs · Auth methods · Server-side sessions · Secrets on server
+
+**Example answer:**
+
+> Storage holds the actual files, while PostgreSQL commonly stores their paths or metadata. For publicly accessible files, generate a public URL. For private files, use private buckets and signed URLs.
+>
+> Supabase Auth supports email/password, magic links, OTP, and OAuth. In Next.js, authentication should use an appropriate server-side session strategy when protecting server-rendered pages or backend operations. Keep privileged API keys on the server and enforce access policies for protected data and files.
+
+```ts
+const { data, error } = await supabase.storage
+  .from("blog-media")
+  .upload("posts/monstera.webp", file);
+```
+
+```ts
+const { data, error } =
+  await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+```
+
+---
+
+### 4. What is the difference between Supabase Realtime, Database Webhooks, and Database Triggers?
+
+**Expectations:** Client updates · HTTP workflows · DB-level automation · Distinct purposes
+
+**Example answer:**
+
+> These features respond to database changes but serve different purposes.
+>
+> Realtime delivers changes to connected clients, such as a live order status. Database Webhooks send HTTP requests when configured events occur, such as notifying a service when an order is created. Database Triggers execute database logic when configured events occur, such as creating a profile after user signup.
+>
+> Realtime is useful for live interfaces, webhooks for backend integrations, and triggers for database-level automation.
+
+| Feature | Purpose | Example |
+| --- | --- | --- |
+| Realtime | Delivers changes to connected clients | Live order status |
+| Database Webhooks | Sends HTTP requests when configured events occur | Notify a service when an order is created |
+| Database Triggers | Executes database logic when configured events occur | Create a profile after user signup |
+
+```text
+New Order
+   ├── Realtime → Update customer UI
+   ├── Webhook → Trigger notification workflow
+   └── Trigger → Perform database-level logic
+```
+
+---
+
+### 5. What are Supabase Edge Functions, and when should you use them?
+
+**Expectations:** Server-side Deno · Secrets · Third-party APIs · Auth on sensitive ops · CLI deploy
+
+**Example answer:**
+
+> Supabase Edge Functions are server-side functions for operations that should not run in the browser. Common use cases include calling third-party APIs, using secret API keys, processing payments, handling webhooks, integrating AI APIs, and sending emails.
+>
+> Create and deploy a function with the Supabase CLI, then invoke it from Next.js. Sensitive functions should implement appropriate authentication and authorization. Keep secrets on the server rather than exposing them to browser code.
+
+```bash
+supabase functions new hello
+supabase functions deploy hello
+```
+
+```ts
+const { data, error } =
+  await supabase.functions.invoke("hello", {
+    body: { name: "Viet" },
+  });
+```
+
+---
+
+### 6. How can Supabase support AI applications and RAG?
+
+**Expectations:** pgvector · Matching dimensions · Embed → store → search → LLM · Same Postgres platform
+
+**Example answer:**
+
+> Supabase supports AI applications through PostgreSQL's `pgvector` extension, which stores and searches numerical embeddings. The vector dimension must match the embedding model being used.
+>
+> A typical RAG pipeline converts documents and user queries into embeddings, retrieves relevant documents using similarity search, and passes the retrieved context to an LLM to generate an answer. Supabase can therefore provide both relational application data and vector search within the same PostgreSQL platform.
+
+```sql
+create extension if not exists vector;
+
+create table documents (
+  id uuid primary key,
+  content text,
+  embedding vector(1536)
+);
+```
+
+```text
+Documents
+   ↓
+Embedding Model
+   ↓
+PostgreSQL + pgvector
+   ↓
+Similarity Search
+   ↓
+Relevant Documents
+   ↓
+LLM
+   ↓
+Answer
+```
+
+---
+
+### 7. How do you manage database migrations, TypeScript types, and monitoring in Supabase?
+
+**Expectations:** Versioned migrations · Generated `Database` types · Logs / monitoring · CLI workflow · Security boundary
+
+**Example answer:**
+
+> Supabase provides developer tools to manage database changes and application reliability.
+>
+> Database migrations store schema changes in version-controlled SQL files so they can be reviewed and applied consistently. Generated TypeScript types improve autocomplete and compile-time checking when used with `createClient<Database>()`, but they do not replace runtime validation of untrusted input.
+>
+> Use Supabase Logs and monitoring to investigate API errors, database failures, authentication issues, Edge Function errors, request volume, performance, and storage usage. The CLI also supports local development, migrations, type generation, function deployment, and database management.
+>
+> Understand the security boundary between Next.js and Supabase: RLS protects database access, server-side code handles privileged operations, migrations keep schemas reproducible, and `pgvector` enables semantic retrieval for RAG applications.
+
+```bash
+supabase migration new add_slug
+supabase db push
+```
+
+```bash
+supabase gen types typescript \
+  --project-id YOUR_PROJECT_ID \
+  > database.types.ts
+```
+
+---
+
 ## Senior Next.js Questions
 
 ### 1. How would you design a product detail route?
