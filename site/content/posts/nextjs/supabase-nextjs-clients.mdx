@@ -1,0 +1,455 @@
+---
+title: "Supabase: Clients in Next.js"
+category: Next.js
+author: Daniel Nguyen
+tags: ['#NextJS', '#Supabase']
+date: 2026-10-30
+thumbnailText: Next.js
+---
+
+When integrating Supabase into a Next.js application, using a single client for everything can lead to authentication issues, security risks, and unexpected dynamic rendering.
+
+A better approach is to separate Supabase clients by responsibility.
+
+In this tutorial, we'll build a production-oriented setup using **Next.js 16, TypeScript, `@supabase/ssr`, and `@supabase/supabase-js`**.
+
+### 1. Install Dependencies
+
+```bash
+npm install @supabase/supabase-js @supabase/ssr
+```
+
+Create `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
+
+SUPABASE_SECRET_KEY=sb_secret_xxx
+```
+
+The publishable key can be used in browser code when Row Level Security (RLS) is configured correctly.
+
+The secret key must remain server-side.
+
+### 2. Project Structure
+
+```text
+src/
+├── lib/
+│   └── supabase/
+│       ├── client.ts
+│       ├── server.ts
+│       ├── static.ts
+│       ├── admin.ts
+│       └── database.types.ts
+│
+├── app/
+│   ├── auth/
+│   │   └── confirm/
+│   │       └── route.ts
+│   └── products/
+│       └── page.tsx
+│
+└── proxy.ts
+```
+
+Each client has a specific responsibility:
+
+| Client | Environment | Purpose |
+| --- | --- | --- |
+| Browser | Client Components | Auth, Realtime |
+| Server | Server Components, Actions | Cookie-based Auth |
+| Static | Server, no request cookies | Public pages, ISR |
+| Admin | Trusted server code | Privileged operations |
+
+### 3. Browser Client
+
+`src/lib/supabase/client.ts`
+
+```ts
+"use client";
+
+import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "./database.types";
+
+export function createClient() {
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
+}
+```
+
+Use this client inside Client Components.
+
+Example: Sign in with email and password.
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    window.location.assign("/dashboard");
+  }
+
+  return (
+    <form onSubmit={handleLogin}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+
+      <button type="submit">Sign in</button>
+
+      {error && <p role="alert">{error}</p>}
+    </form>
+  );
+}
+```
+
+The browser client manages browser-side authentication state and works with the SSR cookie-based session architecture.
+
+### 4. Server Client
+
+`src/lib/supabase/server.ts`
+
+```ts
+import "server-only";
+
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { Database } from "./database.types";
+
+export async function createClient() {
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server Components cannot write cookies.
+            // The Proxy handles session refresh.
+          }
+        },
+      },
+    }
+  );
+}
+```
+
+Use this client when accessing authenticated user data on the server.
+
+Example: Protected dashboard.
+
+```tsx
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    redirect("/login");
+  }
+
+  return <h1>Welcome, {data.user.email}</h1>;
+}
+```
+
+`getUser()` validates the user with Supabase Auth. For authorization, always enforce permissions through RLS or trusted server-side checks rather than trusting session data alone.
+
+### 5. Static Client for ISR
+
+Public pages should not need to read authentication cookies.
+
+`src/lib/supabase/static.ts`
+
+```ts
+import "server-only";
+
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
+
+export function createStaticClient() {
+  return createSupabaseClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
+}
+```
+
+Example: Public product catalog with ISR.
+
+`src/app/products/page.tsx`
+
+```tsx
+import { createStaticClient } from "@/lib/supabase/static";
+
+export const revalidate = 3600;
+
+export default async function ProductsPage() {
+  const supabase = createStaticClient();
+
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("id, name, price")
+    .eq("is_published", true);
+
+  if (error) {
+    throw new Error("Failed to load products");
+  }
+
+  return (
+    <main>
+      <h1>Products</h1>
+
+      <ul>
+        {products?.map((product) => (
+          <li key={product.id}>
+            {product.name} - ${product.price}
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+```
+
+This example assumes a `products` table with the selected columns and an RLS policy allowing anonymous users to read published products.
+
+Because this client doesn't access cookies or headers, it is suitable for statically rendered public pages. The page must also avoid other request-dependent APIs or configurations that would force dynamic rendering.
+
+### 6. Admin Client
+
+Some operations require elevated privileges, such as internal maintenance jobs, administrative workflows, or trusted background processing.
+
+`src/lib/supabase/admin.ts`
+
+```ts
+import "server-only";
+
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
+
+export function createAdminClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+
+  if (!url || !secretKey) {
+    throw new Error("Missing Supabase admin configuration");
+  }
+
+  return createClient<Database>(url, secretKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+```
+
+Example: Trusted server-side operation.
+
+```ts
+import "server-only";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export async function getPendingReviews() {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("post_reviews")
+    .select("*")
+    .eq("status", "pending");
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+```
+
+**Important:** The Admin Client does not automatically authorize the caller. Only invoke privileged functions after appropriate authentication and role checks, or from trusted background jobs.
+
+Secret-key access can bypass RLS. Never expose this client through an unauthenticated API route.
+
+### 7. Refresh Sessions with Next.js Proxy
+
+With cookie-based authentication, expired access tokens must be refreshed and updated in both the incoming request and outgoing response.
+
+Next.js 16 uses `proxy.ts` rather than `middleware.ts`.
+
+`src/lib/supabase/proxy.ts`
+
+```ts
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import type { Database } from "./database.types";
+
+export async function updateSession(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+
+          response = NextResponse.next({ request });
+
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  await supabase.auth.getClaims();
+
+  return response;
+}
+```
+
+`src/proxy.ts`
+
+```ts
+import type { NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/proxy";
+
+export async function proxy(request: NextRequest) {
+  return updateSession(request);
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};
+```
+
+`getClaims()` validates JWT claims and triggers token refresh when necessary. It is not a replacement for server-side authorization checks against your application roles or permissions.
+
+**Production note:** When session cookies are refreshed, avoid caching responses that contain `Set-Cookie` headers in a shared CDN cache. If your project already has a `proxy.ts` for internationalization or other routing logic, integrate session refresh into the existing proxy instead of creating a second one.
+
+### 8. Generate TypeScript Database Types
+
+Generate types from your Supabase project:
+
+```bash
+npx supabase gen types typescript \
+  --project-id YOUR_PROJECT_ID \
+  --schema public \
+  > src/lib/supabase/database.types.ts
+```
+
+Now all four clients can share the same `Database` type.
+
+This provides typed table names, query results, inserts, updates, and RPC definitions.
+
+Regenerate the types whenever the database schema changes.
+
+### 9. Example RLS Policy
+
+For the public products page, enable RLS and permit reading only published products:
+
+```sql
+alter table public.products
+enable row level security;
+
+create policy "Public can read published products"
+on public.products
+for select
+to anon, authenticated
+using (is_published = true);
+```
+
+This assumes the table exists and the relevant roles have the necessary table privileges.
+
+RLS is the actual database security boundary. A publishable key is not sufficient protection without correctly configured database permissions.
+
+### 10. Best Practices
+
+1. **Separate clients by responsibility.** Do not use a cookie-aware client for every server-side query.
+2. **Keep secret keys server-only.** Never expose privileged credentials in Client Components.
+3. **Enforce RLS.** Frontend route protection does not replace database authorization.
+4. **Preserve ISR.** Use a cookie-independent client for public static content.
+5. **Use Proxy for session refresh.** Keep authentication cookies synchronized between browser and server.
+6. **Prefer least privilege.** Use narrowly scoped RPCs or RLS policies instead of exposing broad Admin Client operations.
+7. **Generate database types.** Keep TypeScript definitions aligned with migrations.
+
+### Conclusion
+
+A production-ready Supabase integration benefits from four clearly separated responsibilities:
+
+```text
+Browser Client → Browser Auth & Realtime
+Server Client  → Authenticated server requests
+Static Client  → Public data & ISR
+Admin Client   → Trusted privileged operations
+```
+
+The key principle is simple: **Use the least privileged client that satisfies the operation, and avoid introducing request-specific state into public static pages.**
