@@ -1,0 +1,83 @@
+---
+title: "AI: LLMs"
+category: Python
+author: Daniel Nguyen
+tags: ['#Python', '#AI']
+date: 2026-10-28
+thumbnailText: AI
+---
+
+**Large Language Models (LLMs)** power many modern AI applications, from chatbots and coding assistants to autonomous **AI Agents**. Models such as GPT, Llama, Gemini, and DeepSeek can understand natural language, generate text, and solve a wide range of problems.
+
+### 1. What Is a Large Language Model?
+
+An **LLM** is an AI model trained on large amounts of text to learn patterns in language and generate meaningful responses. Most modern LLMs are based on the **Transformer architecture**, which uses a mechanism called **attention** to determine how different **tokens** relate to one another.
+
+There are three common Transformer architectures:
+
+- **Encoder-only:** Designed primarily for understanding text. Example: BERT.
+- **Decoder-only:** Designed primarily for generating text. Examples: GPT-style models and Llama.
+- **Encoder-decoder:** Combines input encoding with output generation. Examples: T5 and BART.
+
+Most generative LLMs used in AI Agents today are **decoder-only** models.
+
+### 2. How Do LLMs Generate Text?
+
+The fundamental objective of many generative LLMs is to **predict the next token** based on the tokens that came before it. A **token** can represent a complete word, part of a word, punctuation, or another text unit. For example, given the input: `Artificial intelligence is`
+
+The model estimates the probabilities of possible next tokens, such as `transforming`, `changing`, or `powerful`. After selecting a token, the model adds it to the sequence and predicts the next one. This process is called **autoregressive generation**. The generation continues until the model produces a **stopping token** or reaches another generation limit.
+
+Although **next-token prediction** sounds simple, learning to perform it across enormous amounts of data allows models to develop sophisticated representations of language and patterns.
+
+### 3. Understanding Attention and Context Length
+
+**Attention** is one of the key mechanisms behind the Transformer architecture. It allows a model to weigh the relevance of different tokens when processing a sequence.
+
+For example, consider: "The developer put the code in the repository because it was easier to maintain." To interpret the sentence, the model needs to understand relationships between different words rather than treating every word independently. Attention helps the model represent these relationships.
+
+Another important concept is **context length**, which refers to the number of tokens a model can process within its **context window**. A larger context window can accommodate more information, such as longer documents or conversation histories. However, it does not guarantee that the model will use every piece of information equally well.
+
+### 4. How Are LLMs Trained?
+
+LLM development commonly involves several stages.
+
+**Pre-training:** The model learns statistical patterns from large datasets, often by predicting missing or subsequent tokens.
+
+**Fine-tuning:** The model is further trained on selected examples to improve its performance on particular tasks, such as following instructions or generating code.
+
+**Alignment and post-training:** Additional techniques can help models produce more useful responses and follow human instructions more reliably.
+
+Some models also undergo training specifically designed to improve **reasoning** or **tool use**. These stages help transform a general-purpose language model into a model better suited to practical applications.
+
+### 5. Why Are LLMs Important for AI Agents?
+
+An LLM provides the **reasoning** and **language** capabilities that many AI Agents rely on. For example, suppose a user asks: "Find information about the latest AI trends and send me a summary."
+
+An Agent can use its LLM to:
+
+- **Understand** the user's objective.
+- **Determine** which tools are needed.
+- **Select** a search tool.
+- **Interpret** the search results.
+- **Generate** a summary.
+- **Decide** whether additional actions are necessary.
+
+The LLM does not automatically have access to the internet or the ability to send emails. These capabilities must be provided through **tools** and **application logic**. This distinction is fundamental: **the LLM provides intelligence, while the Agent's architecture enables that intelligence to interact with external systems.**
+
+### 6. Using LLMs in Practice
+
+Developers generally have two options for running LLMs.
+
+**Cloud APIs:** Access hosted models through providers such as OpenAI or Hugging Face. This approach reduces local hardware requirements but may introduce API costs and network latency.
+
+**Local Inference:** Run models on your own hardware using tools such as Ollama. This provides greater control over the deployment environment, although performance depends on available resources and model size.
+
+The right choice depends on **cost**, **privacy**, **latency**, **hardware**, and application requirements.
+
+### Conclusion
+
+LLMs are the foundation of many modern AI applications. Built primarily on **Transformer architectures**, they learn language patterns and generate text through **token prediction**. Understanding **tokens**, **attention**, **context length**, **training**, and **inference** provides a strong foundation for working with these models.
+
+For AI Agent developers, however, understanding the LLM itself is only the beginning. The next step is learning how models structure conversational outputs, call tools, and participate in multi-step workflows.
+
+**An LLM can generate the next token, but an AI Agent uses model outputs to work toward a goal.**
